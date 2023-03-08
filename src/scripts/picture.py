@@ -15,7 +15,7 @@ def button_cb(event):
     cv.imwrite(image_path, cv_image)
 
 
-def capture_images(camera, directory: str, config: dict):
+def capture_images():
     """Captures images from the camera and saves them to the given directory
     :param camera: Camera object
     :param directory: Directory to save the images to
@@ -30,3 +30,6 @@ def capture_images(camera, directory: str, config: dict):
     rate = Rate(1)
     while not turtle.is_shutting_down():
         rate.sleep()
+
+if __name__ == '__main__':
+    capture_images()
