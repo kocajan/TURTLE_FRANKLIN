@@ -3,15 +3,13 @@ import numpy as np
 import cv2 as cv
 from robolab_turtlebot import Turtlebot, Rate
 
-counter = 0
-
 
 def button_cb(event):
     turtle = Turtlebot(rgb=True)
     turtle.wait_for_rgb_image()
     image = turtle.get_rgb_image()
     cv_image = np.array(image.getData(), dtype="uint8").reshape((image.getRows(), image.getCols(), 3))
-    image_path = os.path.join('camera', f'{counter}.png')
+    image_path = os.path.join('camera', f'{"test"}.png')
     cv.imwrite(image_path, cv_image)
 
 
@@ -21,7 +19,7 @@ def capture_images():
     :param directory: Directory to save the images to
     :param config: Configuration file
     """
-    os.makedirs(directory, exist_ok=True)
+    #os.makedirs(directory, exist_ok=True)
 
     turtle = Turtlebot()
 
