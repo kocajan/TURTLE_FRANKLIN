@@ -11,6 +11,7 @@ def button_cb(event):
     cv_image = np.array(image.getData(), dtype="uint8").reshape((image.getRows(), image.getCols(), 3))
     image_path = os.path.join('camera', f'{"test"}.png')
     cv.imwrite(image_path, cv_image)
+    print(f"Saved image to {image_path}")
 
 
 def capture_images():
