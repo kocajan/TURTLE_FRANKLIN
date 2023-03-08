@@ -2,10 +2,13 @@ from __future__ import print_function
 
 import sys
 
+import time
+
 from robolab_turtlebot import Turtlebot
 
 from scipy.misc import imsave
 
+time.sleep(3)
 turtle = Turtlebot(rgb=True)
 turtle.wait_for_rgb_image()
 rgb = turtle.get_rgb_image()
