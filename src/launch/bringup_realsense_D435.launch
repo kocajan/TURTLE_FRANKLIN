@@ -1,0 +1,6 @@
+<launch>
+    <param name="turtlebot_camera" value="d435" />
+    <include file="$(find robolab_turtlebot)/launch/bringup.launch"/>
+    <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+    </include>
+</launch>
