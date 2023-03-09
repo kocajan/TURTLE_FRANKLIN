@@ -1,7 +1,6 @@
 import os
 import sys
 import numpy as np
-#from scipy.misc import imsave
 import imageio
 
 # setting path
@@ -10,18 +9,24 @@ sys.path.append('home/TUTLE_FRANKLIN/src/robolab_turtlebot')
 from robolab_turtlebot import Turtlebot, Rate
 
 counter = 0
+shoot = True
 
 
 def button_cb(event):
     global counter
-    turtle = Turtlebot(rgb=True)
-    turtle.wait_for_rgb_image()
-    rgb = turtle.get_rgb_image()
-    image_path = os.path.join('camera', f'{counter}.png')
-    #imsave(image_path, rgb)
-    imageio.imwrite(image_path, rgb)
-    print(f"Saved image to {image_path}")
-    counter += 1
+    global shoot
+    if shoot:
+        turtle = Turtlebot(rgb=True)
+        turtle.wait_for_rgb_image()
+        bgr = turtle.get_rgb_image()
+        image_path = os.path.join('camera/shoot2', f'{counter}.png')
+        rgb = bgr[...,::-1]
+        imageio.imwrite(image_path, rgb)
+        print(f"Saved image to {image_path}")
+        counter += 1
+        shoot = False
+    else:
+        shoot = True
 
 
 def capture_images():
@@ -30,7 +35,9 @@ def capture_images():
     :param directory: Directory to save the images to
     :param config: Configuration file
     """
-    #os.makedirs(directory, exist_ok=True)
+    path = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(path, 'camera/shoot2')
+    os.makedirs(path, exist_ok=True)
 
     turtle = Turtlebot()
 
