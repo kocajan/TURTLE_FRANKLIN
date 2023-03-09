@@ -1,6 +1,12 @@
 import os
+import sys
 import numpy as np
-from scipy.misc import imsave
+#from scipy.misc import imsave
+import imageio
+
+# setting path
+sys.path.append('home/TUTLE_FRANKLIN/src/robolab_turtlebot')
+
 from robolab_turtlebot import Turtlebot, Rate
 
 counter = 0
@@ -12,7 +18,8 @@ def button_cb(event):
     turtle.wait_for_rgb_image()
     rgb = turtle.get_rgb_image()
     image_path = os.path.join('camera', f'{counter}.png')
-    imsave(image_path, rgb)
+    #imsave(image_path, rgb)
+    imageio.imwrite(image_path, rgb)
     print(f"Saved image to {image_path}")
     counter += 1
 
