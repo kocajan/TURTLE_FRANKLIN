@@ -1,17 +1,20 @@
 import os
 import numpy as np
-import cv2 as cv
+from scipy.misc import imsave
 from robolab_turtlebot import Turtlebot, Rate
+
+counter = 0
 
 
 def button_cb(event):
+    global counter
     turtle = Turtlebot(rgb=True)
     turtle.wait_for_rgb_image()
-    image = turtle.get_rgb_image()
-    cv_image = np.array(image.getData(), dtype="uint8").reshape((image.getRows(), image.getCols(), 3))
-    image_path = os.path.join('camera', f'{"test"}.png')
-    cv.imwrite(image_path, cv_image)
+    rgb = turtle.get_rgb_image()
+    image_path = os.path.join('camera', f'{counter}.png')
+    imsave(image_path, rgb)
     print(f"Saved image to {image_path}")
+    counter += 1
 
 
 def capture_images():
