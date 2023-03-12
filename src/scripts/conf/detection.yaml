@@ -1,26 +1,36 @@
 colors:
-  0:
-    color: 'green'
+  green:
+    tag: 'green'
     rgb: [ 0, 255, 0 ]
-    lower: [ 36, 54, 78 ] #[ 46, 64, 88 ]
-    upper: [ 79, 166, 144 ] #[ 69, 156, 134 ]
-  1:
-    color: 'blue'
+    lower: [ 36, 54, 78 ]
+    upper: [ 79, 166, 144 ]
+
+  blue:
+    tag: 'blue'
     rgb: [ 0, 0, 255 ]
-    lower: [ 94, 115, 61 ] #[ 94, 106, 61 ]
-    upper: [ 111, 255, 150 ] #[ 101, 255, 127 ]
-  2:
-    color: 'red'
+    lower: [ 94, 115, 61 ]
+    upper: [ 111, 255, 150 ]
+
+  red:
+    tag: 'red'
     rgb: [ 255, 0, 0 ]
     lower: [ 0, 144, 124 ]
-    upper: [ 15, 255, 185 ] #[ 7, 255, 167 ]
-  3:
-    color: 'magenta'
+    upper: [ 15, 255, 185 ]
+
+  magenta:
+    tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 106, 35, 66 ] #[ 123, 94, 66 ]
-    upper: [ 165, 145, 125 ] #[ 135, 143, 102 ]
-  4:
-    color: 'yellow'
+    lower: [ 106, 35, 66 ]
+    upper: [ 165, 145, 125 ]
+
+  yellow:
+    tag: 'yellow'
     rgb: [ 255, 255, 0 ]
     lower: [ 19, 118, 106 ]
     upper: [ 29, 255, 203 ]
+
+map:
+  tag: 'map'
+  dimensions: [ 5, 5 ]
+
+min_detected_area: 300

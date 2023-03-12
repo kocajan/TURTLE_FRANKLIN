@@ -1,0 +1,28 @@
+# Note: Dimensions are in meters
+robot:
+  tag: 'robot'
+  radius: 0.2
+  height: 0.4
+  camera_height: 0.2
+
+garage:
+  tag: 'garage'
+  color: 'yellow'
+  length: 0.6
+  width: 0.5
+  height: 0.4
+
+gate:
+  tag: 'gate'
+  color: 'magenta'
+  slopes_width: 0.05
+  slopes_height: 0.4
+  slopes_distance: 0.6
+
+obstacle:
+  tag: 'obstacle'
+  color: 'red_green_blue'
+  radius: 0.05
+  height: 0.4
+
+
