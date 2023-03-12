@@ -104,12 +104,16 @@ def set_up_gate(contours: list, map: Map, color: str, objects_cfg: dict) -> None
     :param objects_cfg: The 'objects config'.
     :return: None
     """
-    for contour in contours:
-        # Create the gate object
-        cf_gate = objects_cfg['gate']
-        gate = Gate(cf_gate['width'], cf_gate['height'], color, contour)
-        # Add the gate to the map
-        map.add_gate(gate)
+    if len(contours) > 2:
+        # Make number of contours equal to 2 (the gate has 2 slopes) by removing what?
+        # TODO: Think it through
+        pass
+    elif len(contours) < 0:
+        return
+    # We have found at least one slope of the gate
+    cf_gate = objects_cfg['gate']
+    gate = Gate(cf_gate['slopes_width'], cf_gate['slopes_height'], color, contours, cf_gate['slopes_distance'])
+    map.set_gate(gate)
 
 
 def set_up_obstacles(contours: list, map: Map, color: str, objects_cfg: dict) -> None:

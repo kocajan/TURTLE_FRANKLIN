@@ -9,11 +9,15 @@ class Map:
     def __init__(self, dimensions):
         self.dimensions = dimensions
         self.garage = None
+        self.gate = None
         self.obstacles = []
         self.robot = None
 
     def set_garage(self, garage):
         self.garage = garage
+
+    def set_gate(self, gate):
+        self.gate = gate
 
     def set_robot(self, robot):
         self.robot = robot
@@ -100,13 +104,16 @@ class Garage:
 
 
 class Gate:
-    def __init__(self, width, height, color, contour, world_coordinates=None, orientation=None):
+    def __init__(self, width, height, color, contours, slopes_distance, world_coordinates=None, orientation=None):
+        # all this information is related to the slopes of the gate
         self.width = width
         self.height = height
         self.color = color
-        self.contour = contour
+        self.contours = contours
+        self.slopes_distance = slopes_distance
         self.world_coordinates = world_coordinates
         self.orientation = orientation
+        self.num_slopes = len(contours)
 
     def set_orientation(self, orientation):
         self.orientation = orientation
