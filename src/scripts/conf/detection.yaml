@@ -39,5 +39,6 @@ map:
     gate: 3
     obstacle: 4
     unknown: 5
+    path: 6
 
 min_detected_area: 300

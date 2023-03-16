@@ -240,7 +240,7 @@ if __name__ == '__main__':
     map.add_obstacle(obstacle2)
     map.add_obstacle(obstacle3)
     map.set_gate(gate)
-
+    
     # visualize the map
     # map.visualize()
 
