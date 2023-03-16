@@ -47,5 +47,6 @@ def capture_images():
     while not turtle.is_shutting_down():
         rate.sleep()
 
+
 if __name__ == '__main__':
     capture_images()

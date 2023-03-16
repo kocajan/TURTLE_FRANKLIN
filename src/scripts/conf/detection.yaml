@@ -32,5 +32,12 @@ colors:
 map:
   tag: 'map'
   dimensions: [ 5, 5 ]
+  resolution: 0.01
+  id:
+    robot: 1
+    garage: 2
+    gate: 3
+    obstacle: 4
+    unknown: 5
 
 min_detected_area: 300
