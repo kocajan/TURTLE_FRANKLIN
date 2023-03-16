@@ -41,7 +41,7 @@ class Map:
     def get_image(self):
         return self.image
 
-    def fill_world_map(self, detection_cfg: dict):
+    def fill_world_map(self, detection_cfg: dict, path=None):
         """
         Fill the world map with the found objects.
         :param detection_cfg: The configuration file for the object detection.
@@ -82,6 +82,12 @@ class Map:
                 x = int(slope[0] / self.resolution) + self.world_map.shape[0] // 2
                 y = int(slope[1] / self.resolution)
                 cv.circle(self.world_map, (x, y), radius, gate_id, -1)
+
+        if path != None:
+            for i in range(len(self.world_map)):
+                for j in range(len(self.world_map[0])):
+                    if (i, j) in path:
+                        self.world_map[i][j] = map_cfg['id']['path']
 
         # show 8-bit map
         cmap = ListedColormap(["white", "black", "yellow", "magenta", "red", "green"])
@@ -154,6 +160,9 @@ class Obstacle:
 
     def set_world_coordinates(self, world_coordinates):
         self.world_coordinates = world_coordinates
+
+    def get_contour(self):
+        return self.contour
 
 
 class Garage:
@@ -240,7 +249,7 @@ if __name__ == '__main__':
     map.add_obstacle(obstacle2)
     map.add_obstacle(obstacle3)
     map.set_gate(gate)
-
+    
     # visualize the map
     # map.visualize()
 
@@ -249,3 +258,8 @@ if __name__ == '__main__':
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     map.fill_world_map(detection_cfg)
 
+    cv.rectangle(map.world_map, (100, 100), (100+300, 100+50), 3, -1)
+
+    from a_star2 import astar
+    path = astar(map.world_map, (0, 250), (280, 280))
+    map.fill_world_map(detection_cfg, path)
