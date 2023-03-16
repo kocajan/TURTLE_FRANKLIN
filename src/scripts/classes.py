@@ -84,7 +84,6 @@ class Map:
                 cv.circle(self.world_map, (x, y), radius, gate_id, -1)
 
         # show 8-bit map
-
         cmap = ListedColormap(["white", "black", "yellow", "magenta", "red", "green"])
         self.plot_examples([cmap], self.world_map)
 
