@@ -2,6 +2,7 @@ import numpy as np
 import heapq
 import matplotlib.pyplot as plt
 
+
 def astar(maze, start, goal):
     """
     Implementation of A* algorithm for finding the shortest path in a maze from start to goal.
@@ -9,7 +10,8 @@ def astar(maze, start, goal):
     """
     # Define the heuristic function (Manhattan distance)
     def heuristic(a, b):
-        return abs(b[0] - a[0]) + abs(b[1] - a[1])
+        # return abs(b[0] - a[0]) + abs(b[1] - a[1]) # Manhattan distance
+        return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)  # Euclidean distance
 
     # Initialize the open and closed sets
     open_set = []

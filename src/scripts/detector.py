@@ -1,7 +1,8 @@
 import numpy as np
 import cv2 as cv
 
-from classes import Map, Obstacle, Garage, Gate
+from objects import Obstacle, Garage, Gate
+from map import Map
 
 
 class Detector:
@@ -140,7 +141,7 @@ class Detector:
             cf_obstacle = self.objects_cfg['obstacle']
             obstacle = Obstacle(cf_obstacle['radius'], cf_obstacle['height'], color, contours, rect)
             # Add the obstacle to the map
-            self.map.add_obstacle(obstacle)
+            self.map.set_obstacle(obstacle)
 
     # END: RGB image processing
 
@@ -151,10 +152,11 @@ class Detector:
         Process the point cloud to detect how far things are.
         :return: None
         """
+        # TODO
         pass
 
     # HELPER FUNCTIONS
-
+    # TODO
     # END: Point cloud processing
 
     # SETTERS
@@ -173,6 +175,9 @@ class Detector:
     def set_objects_cfg(self, objects_cfg):
         self.objects_cfg = objects_cfg
 
+    def set_processed_rgb(self, processed_rgb):
+        self.processed_rgb = processed_rgb
+
     # GETTERS
     def get_rgb_img(self):
         return self.rgb_img
@@ -188,3 +193,6 @@ class Detector:
 
     def get_objects_cfg(self):
         return self.objects_cfg
+
+    def get_processed_rgb(self):
+        return self.processed_rgb

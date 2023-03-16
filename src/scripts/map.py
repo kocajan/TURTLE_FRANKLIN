@@ -97,8 +97,8 @@ class Map:
     def set_gate(self, gate):
         self.gate = gate
 
-    def set_obstacles(self, obstacles):
-        self.obstacles = obstacles
+    def set_obstacle(self, obstacle):
+        self.obstacles.append(obstacle)
 
     def set_robot(self, robot):
         self.robot = robot

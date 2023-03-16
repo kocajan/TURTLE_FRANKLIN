@@ -23,16 +23,42 @@ class Visualizer:
         """
         Visualize the RGB image
         """
+        copy_img = self.rgb_img.copy()
+
+        # draw contours of the gate
+        if self.gate is not None:
+            gate_contours = self.gate.get_contours()
+            cv.drawContours(copy_img, gate_contours, -1, (255, 0, 0), 1)
+
+        # draw contours of the garage
+        if self.garage is not None:
+            garage_contours = self.garage.get_contour()
+            cv.drawContours(copy_img, garage_contours, -1, (255, 0, 0), 1)
+
+        # draw contours of the obstacles
+        for obstacle in self.obstacles:
+            cv.drawContours(copy_img, obstacle.get_contour(), -1, (255, 0, 0), 1)
+
+        # draw bounding rect of the gate
+        if self.gate is not None:
+            rects = self.gate.get_bounding_rect()
+            for rect in rects:
+                box = cv.boxPoints(rect)
+                box = np.int0(box)
+                cv.drawContours(copy_img, [box], 0, (250, 128, 114), 2)
+
+        # draw bounding rects of the obstacles
+        for obstacle in self.obstacles:
+            rect = obstacle.get_bounding_rect()
+            box = cv.boxPoints(rect)
+            box = np.int0(box)
+            cv.drawContours(copy_img, [box], 0, (0, 255, 0), 1)
+
         for output in self.processed_rgb_imgs:
             output = cv.cvtColor(output, cv.COLOR_GRAY2BGR)
             final = np.concatenate((copy_img, output), axis=1)
-            cv.imshow(color['tag'], final)
+            cv.imshow("RGB", final)
             cv.waitKey(0)
-
-        # bounding boxes
-        box = cv.boxPoints(rect)
-        box = np.int0(box)
-        cv.drawContours(img, [box], 0, (0, 0, 255), 1)
 
     def visualize_map(self):
         """
