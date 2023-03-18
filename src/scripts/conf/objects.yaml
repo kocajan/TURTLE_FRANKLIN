@@ -1,6 +1,7 @@
 # Note: Dimensions are in meters
 robot:
   tag: 'robot'
+  color: 'black'
   radius: 0.18
   height: 0.385
   camera_height: 0.35

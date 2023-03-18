@@ -123,9 +123,22 @@ class Detector:
         elif len(bounding_rects) == 0:
             return
         # We have found at least one slope of the gate
+
+        # Calculate the lowest points of the gate
+        lowest_points = []
+        if len(bounding_rects) == 2:
+            lowest_points.append(self.calculate_lowest_point_of_rect(bounding_rects[0], True))
+            lowest_points.append(self.calculate_lowest_point_of_rect(bounding_rects[1], False))
+
+        # Create the gate object
         cf_gate = self.objects_cfg['gate']
         gate = Gate(cf_gate['slopes_width'], cf_gate['slopes_height'], cf_gate['color'], contours, bounding_rects,
-                    cf_gate['slopes_distance'])
+                    cf_gate['slopes_distance'], lowest_points)
+
+        # Calculate the gate's orientation
+        gate.calculate_orientation()
+
+        # Add the gate to the map
         self.map.set_gate(gate)
 
     def set_up_obstacles(self, contours: list, bounding_rects: list, color: str) -> None:
@@ -142,6 +155,47 @@ class Detector:
             obstacle = Obstacle(cf_obstacle['radius'], cf_obstacle['height'], color, contours, rect)
             # Add the obstacle to the map
             self.map.set_obstacle(obstacle)
+
+    def calculate_lowest_point_of_rect(self, rect: tuple, left: bool) -> tuple:
+        """
+        Calculate the lowest and the leftmost/rightmost point of the rectangle.
+        :param rect: The rectangle.
+        :param left: True if the left point is to be calculated, False if the right point is to be calculated.
+        :return: The lowest point of the rectangle.
+        """
+        # Get corners of the rectangle
+        corners = cv.boxPoints(rect)
+        corners = np.int0(corners)
+
+        # Set left or right point on the bottom part of the image
+        img_height = self.rgb_img.shape[0]
+        img_width = self.rgb_img.shape[1]
+
+        if left:
+            ref_point = (0, img_height)
+        else:
+            ref_point = (img_width, img_height)
+
+        # Get the lowest point of the corners
+        lowest_point = corners[0]
+        min_dist = self.calculate_distance(ref_point, corners[0])
+        for corner in corners:
+            dist = self.calculate_distance(ref_point, corner)
+            if dist < min_dist:
+                min_dist = dist
+                lowest_point = corner
+
+        return lowest_point
+
+    @staticmethod
+    def calculate_distance(point1: tuple, point2: tuple) -> float:
+        """
+        Calculate the distance between two points.
+        :param point1: The first point.
+        :param point2: The second point.
+        :return: The distance between the points.
+        """
+        return np.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
     # END: RGB image processing
 

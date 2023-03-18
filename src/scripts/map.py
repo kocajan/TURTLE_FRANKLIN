@@ -64,7 +64,7 @@ class Map:
             gate_id = map_cfg['id']['gate']
 
             # Convert real world radius to map radius
-            radius = self.conv_real_to_map(self.gate.get_radius())
+            radius = self.conv_real_to_map(self.gate.get_width()/2)
             for slope in self.gate.get_world_coordinates():
                 # Convert real world parameters to map parameters
                 x = self.conv_real_to_map(slope[0], add=True)
