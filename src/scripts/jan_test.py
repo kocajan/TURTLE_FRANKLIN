@@ -86,9 +86,9 @@ def map_visualization_test() -> None:
     # visualize the map in the world
     map.fill_world_map()
 
-    # cv.rectangle(map.world_map, (100, 100), (100 + 300, 100 + 50), 3, -1)
+    cv.rectangle(map.world_map, (100, 100), (100 + 300, 100 + 50), 3, -1)
 
-    path = astar(map.world_map, (0, 250), (280, 280))
+    path = map.find_way((0, 250), (280, 280))
 
     vis = Visualizer(None, None, map, None, detection_cfg)
     vis.visualize_map(path)

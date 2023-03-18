@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import heapq
 
 
 class Map:
@@ -17,9 +18,91 @@ class Map:
         self.world_map = np.zeros((x, y), dtype=np.uint8)
 
     # Functionalities
-    def fill_world_map(self):
+    def find_way(self, start, goal) -> np.ndarray:
+        """
+        Use A* algorithm to find the way from the robot to the garage on the map.
+        :param start: The starting point.
+        :param goal: The ending point.
+        :return: The path from the robot to the garage. The path is a list of points.
+        """
+        # Initialize the open and closed sets
+        open_set = []
+        closed_set = set()
+
+        # Add the starting node to the open set
+        heapq.heappush(open_set, (0, start))
+
+        # Initialize the cost dictionary and parent dictionary
+        cost = {start: 0}
+        parent = {start: None}
+
+        # Iterate until the goal is reached or the open set is empty
+        while open_set:
+            # Pop the node with the lowest cost from the open set
+            current_cost, current_node = heapq.heappop(open_set)
+
+            # Check if the goal has been reached
+            if current_node == goal:
+                path = []
+                while current_node:
+                    path.append(current_node)
+                    current_node = parent[current_node]
+                return path[::-1]
+
+            # Add the current node to the closed set
+            closed_set.add(current_node)
+
+            # Check the neighbors of the current node
+            for i, j in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                neighbor = current_node[0] + i, current_node[1] + j
+
+                # Check if the neighbor is within the maze bounds and is not an obstacle
+                if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] \
+                        and self.world_map[neighbor] < 2:
+
+                    # Compute the tentative cost for the neighbor
+                    tentative_cost = cost[current_node] + 1
+
+                    # Check if the neighbor has already been evaluated or if the tentative cost is lower
+                    if neighbor in closed_set and tentative_cost >= cost.get(neighbor, float('inf')):
+                        continue
+
+                    # Add the neighbor to the open set and update the cost and parent dictionaries
+                    if tentative_cost < cost.get(neighbor, float('inf')):
+                        cost[neighbor] = tentative_cost
+                        priority = tentative_cost + self.heuristic(goal, neighbor)
+                        heapq.heappush(open_set, (priority, neighbor))
+                        parent[neighbor] = current_node
+        # If the goal cannot be reached
+        return None
+
+    def heuristic(self, a, b) -> float:
+        """
+        Calculate the heuristic distance between two points.
+        :param a: The first point.
+        :param b: The second point.
+        :return: The heuristic distance between the two points.
+        """
+        heuristic = self.detection_cfg['map']['heuristic']
+        if heuristic == "euclidean":
+            return np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+        elif heuristic == "manhattan":
+            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        elif heuristic == 'chebyshev':
+            return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+        elif heuristic == "octile":
+            dx = abs(a[0] - b[0])
+            dy = abs(a[1] - b[1])
+            return dx + dy + (np.sqrt(2) - 2) * min(dx, dy)
+        elif heuristic == "none":
+            return 0
+        else:
+            raise ValueError("Unknown heuristic")
+
+    def fill_world_map(self) -> None:
         """
         Fill the world map with the objects which were found by detector.
+        :return: None
         """
         map_cfg = self.detection_cfg['map']
 
@@ -73,7 +156,7 @@ class Map:
                 # Draw the slope
                 cv.circle(self.world_map, (x, y), radius, gate_id, -1)
 
-    def conv_real_to_map(self, realc, add=False):
+    def conv_real_to_map(self, realc, add=False) -> int:
         """
         Convert realc to map.
         :param realc: The real dims.

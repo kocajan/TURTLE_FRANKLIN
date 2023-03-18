@@ -33,6 +33,7 @@ map:
   tag: 'map'
   dimensions: [ 5, 5 ]
   resolution: 0.01
+  heuristic: 'manhattan' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
   id:
     robot: 1
     garage: 2
