@@ -6,7 +6,6 @@ from objects import Robot, Obstacle, Gate, Garage
 from detector import Detector
 from map import Map
 from visualizer import Visualizer
-from a_star2 import astar
 
 
 def image_man(img: np.ndarray) -> None:
@@ -86,7 +85,7 @@ def map_visualization_test() -> None:
     # visualize the map in the world
     map.fill_world_map()
 
-    cv.rectangle(map.world_map, (100, 100), (100 + 300, 100 + 50), 3, -1)
+    # cv.rectangle(map.world_map, (100, 100), (100 + 300, 100 + 50), 3, -1)
 
     path = map.find_way((0, 250), (280, 280))
 
@@ -95,7 +94,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "map"
+    test = "image"
     if test == "image":
         for i in range(16):
             if i == 3:
