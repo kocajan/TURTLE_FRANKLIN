@@ -111,18 +111,18 @@ class Detector:
     def set_up_gate(self, contours: list, bounding_rects: list) -> None:
         """
         Create Gate object for the found gate of certain color and add it to the map.
-        :param contours: The contours (in this case simplified by the bounding box of the actual contour) of slopes
+        :param contours: The contours (in this case simplified by the bounding box of the actual contour) of pillars
                         of the gate.
         :param bounding_rects: The bounding rectangles of the gate.
         :return: None
         """
         if len(bounding_rects) > 2:
-            # Make number of contours equal to 2 (the gate has 2 slopes) by removing what?
+            # Make number of contours equal to 2 (the gate has 2 pillars) by removing what?
             # TODO: Think it through
             pass
         elif len(bounding_rects) == 0:
             return
-        # We have found at least one slope of the gate
+        # We have found at least one pillar of the gate
 
         # Calculate the lowest points of the gate
         lowest_points = []
@@ -132,11 +132,15 @@ class Detector:
 
         # Create the gate object
         cf_gate = self.objects_cfg['gate']
-        gate = Gate(cf_gate['slopes_width'], cf_gate['slopes_height'], cf_gate['color'], contours, bounding_rects,
-                    cf_gate['slopes_distance'], lowest_points)
+        cf_garage = self.objects_cfg['garage']
+
+        garage_dimensions_lwh = (cf_garage['length'], cf_garage['width'], cf_garage['height'])
+
+        gate = Gate(cf_gate['pillars_width'], cf_gate['pillars_height'], cf_gate['color'], contours, bounding_rects,
+                    cf_gate['pillars_distance'], lowest_points, garage_dimensions_lwh)
 
         # Calculate the gate's orientation
-        gate.calculate_orientation()
+        gate.calculate_orientation_rgb()
 
         # Add the gate to the map
         self.map.set_gate(gate)

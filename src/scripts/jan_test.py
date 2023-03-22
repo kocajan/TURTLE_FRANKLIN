@@ -42,13 +42,19 @@ def map_visualization_test() -> None:
     garage.set_orientation(0)
 
     # create a gate
-    wid = objects_cfg['gate']['slopes_width']
-    hei = objects_cfg['gate']['slopes_height']
-    slopes_dis = objects_cfg['gate']['slopes_distance']
+    wid = objects_cfg['gate']['pillars_width']
+    hei = objects_cfg['gate']['pillars_height']
+    pillars_dis = objects_cfg['gate']['pillars_distance']
     col = objects_cfg['gate']['color']
 
-    gate = Gate(wid, hei, col, None, [], slopes_dis, None)
-    gate.set_world_coordinates([(0, 3), (0.6, 3)])
+    gate = Gate(wid, hei, col, None, [1, 2], pillars_dis, None, (garage.get_length(), garage.get_width(), garage.get_height()))
+    length = garage.get_length()
+    p1 = (0, 3)
+    angle = 160
+    angle = np.deg2rad(angle)
+    p2 = (p1[0] + np.cos(angle) * length, p1[1] + np.sin(angle) * length)
+    gate.set_world_coordinates([p1, p2])
+    gate.calculate_orientation()
 
     # create a robot
     rad = objects_cfg['robot']['radius']
@@ -85,7 +91,8 @@ def map_visualization_test() -> None:
     # visualize the map in the world
     map.fill_world_map()
 
-    # cv.rectangle(map.world_map, (100, 100), (100 + 300, 100 + 50), 3, -1)
+    cv.rectangle(map.world_map, (0, 50), (400, 50 + 50), 3, -1)
+    cv.rectangle(map.world_map, (100, 200), (500, 200+50), 3, -1)
 
     path = map.find_way((0, 250), (280, 280))
 
@@ -94,8 +101,9 @@ def map_visualization_test() -> None:
 
     return path
 
+
 def main():
-    test = "image"
+    test = "map"
     if test == "image":
         for i in range(16):
             if i == 3:
