@@ -92,6 +92,7 @@ def map_visualization_test() -> None:
     vis = Visualizer(None, None, map, None, detection_cfg)
     vis.visualize_map(path)
 
+    return path
 
 def main():
     test = "image"
