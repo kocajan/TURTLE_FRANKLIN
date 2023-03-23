@@ -20,8 +20,8 @@ def button_cb(event):
         turtle = Turtlebot(rgb=True, pc=True)
 
         # Set path to save image and point cloud
-        image_path = os.path.join('camera/shoot3', f'RGB{counter}.png')
-        point_cloud_path = os.path.join('camera/shoot3', f'PC{counter}.npy')
+        image_path = os.path.join('camera/shoot5', f'RGB{counter}.png')
+        point_cloud_path = os.path.join('camera/shoot5', f'PC{counter}.npy')
 
         # Capture RGB image
         turtle.wait_for_rgb_image()
@@ -59,7 +59,7 @@ def capture_images():
     :param config: Configuration file
     """
     path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, 'camera/shoot3')
+    path = os.path.join(path, 'camera/shoot5')
     os.makedirs(path, exist_ok=True)
 
     turtle = Turtlebot()
