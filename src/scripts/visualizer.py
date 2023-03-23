@@ -32,8 +32,9 @@ class Visualizer:
 
         # draw contours of the garage
         if self.garage is not None:
-            garage_contours = self.garage.get_contour()
-            cv.drawContours(copy_img, garage_contours, -1, (255, 0, 0), 1)
+            garage_contours = self.garage.get_contours()
+            for contour in garage_contours:
+                cv.drawContours(copy_img, [contour], -1, (0, 0, 255), 1)
 
         # draw contours of the obstacles
         for obstacle in self.obstacles:
@@ -84,7 +85,7 @@ class Visualizer:
         """
         Visualize the map
         """
-        color_map = ListedColormap(["white", "black", "yellow", "magenta", "red", "green", "blue"])
+        color_map = ListedColormap(["white", "black", "yellow", "magenta", "red", "gray", "blue", "green"])
         color_map = [color_map]
         world_map = self.map.get_world_map()
 
@@ -96,6 +97,6 @@ class Visualizer:
         n = len(color_map)
         fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
         for [ax, cmap] in zip(axs.flat, color_map):
-            psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=5)
+            psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=self.detection_cfg["map"]["max_id"])
             fig.colorbar(psm, ax=ax)
         plt.show()

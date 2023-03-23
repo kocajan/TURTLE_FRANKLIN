@@ -110,13 +110,14 @@ class Map:
         # Gate
         pillars = []
         if self.gate is not None:
-           pillars = self.fill_in_gate()
+            pillars = self.fill_in_gate()
 
         # Garage (if the gate has been found we can predict position of the garage)
         self.fill_in_garage(pillars)
 
         # Obstacles
         for obstacle in self.obstacles:
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
             self.fill_in_obstacle(obstacle)
 
         # Robot
@@ -152,19 +153,13 @@ class Map:
             cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
-
-    @staticmethod
-    def calculate_next_point(point, angle, distance) -> tuple:
-        """
-        Calculate the next point based on the current point, the angle and the distance.
-        :param point: The current point.
-        :param angle: The angle.
-        :param distance: The distance.
-        :return: The next point.
-        """
-        x = point[0] + distance * np.cos(angle)
-        y = point[1] + distance * np.sin(angle)
-        return int(x), int(y)
+        # TODO
+        elif len(pillars) == 1:
+            pass
+        elif len(pillars) == 0:
+            pass
+        else:
+            raise ValueError("The gate has more than 2 pillars.")
 
     def fill_in_gate(self) -> list:
         """
@@ -174,7 +169,7 @@ class Map:
         gate_id = self.detection_cfg['map']['id']['gate']
 
         # Convert real world radius to map radius
-        radius = self.conv_real_to_map(self.gate.get_width() / 2)
+        radius = self.conv_real_to_map(self.gate.get_width())
         pillars = []
         for pillar in self.gate.get_world_coordinates():
             # Convert real world parameters to map parameters
@@ -226,6 +221,40 @@ class Map:
         if add:
             mapc += self.world_map.shape[0] // 2
         return mapc
+
+    def draw_restricted_area(self, center, size) -> None:
+        """
+        Draw restricted area around objects on the map.
+        :param center: Center of the object.
+        :param size: Size of the object.
+        """
+        # Convert real world parameters to map parameters
+        x = self.conv_real_to_map(center[0], add=True)
+        y = self.conv_real_to_map(center[1])
+        size = self.conv_real_to_map(size)
+
+        # Add half of the robot radius to the radius plus safety margin
+        size += self.conv_real_to_map(self.robot.get_radius()) \
+                  + self.conv_real_to_map(self.detection_cfg['map']['safety_margin'])
+
+        # Get id of the restricted area
+        id = self.detection_cfg['map']['id']['restricted']
+
+        # Draw the restricted area as a square
+        cv.rectangle(self.world_map, (x - size, y - size), (x + size, y + size), id, -1)
+
+    @staticmethod
+    def calculate_next_point(point, angle, distance) -> tuple:
+        """
+        Calculate the next point based on the current point, the angle and the distance.
+        :param point: The current point.
+        :param angle: The angle.
+        :param distance: The distance.
+        :return: The next point.
+        """
+        x = point[0] + distance * np.cos(angle)
+        y = point[1] + distance * np.sin(angle)
+        return int(x), int(y)
 
     # END: Map filling
 

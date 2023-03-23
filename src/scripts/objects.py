@@ -50,12 +50,12 @@ class Obstacle:
 
 
 class Garage:
-    def __init__(self, length, width, height, color, contour):
+    def __init__(self, length, width, height, color, contours):
         self.length = length
         self.width = width
         self.height = height
         self.color = color
-        self.contour = contour
+        self.contours = contours
         self.world_coordinates = None
         self.orientation = None
 
@@ -72,8 +72,8 @@ class Garage:
     def set_color(self, color):
         self.color = color
 
-    def set_contour(self, contour):
-        self.contour = contour
+    def set_contours(self, contours):
+        self.contours = contours
 
     def set_world_coordinates(self, world_coordinates):
         self.world_coordinates = world_coordinates
@@ -94,8 +94,8 @@ class Garage:
     def get_color(self):
         return self.color
 
-    def get_contour(self):
-        return self.contour
+    def get_contours(self):
+        return self.contours
 
     def get_world_coordinates(self):
         return self.world_coordinates

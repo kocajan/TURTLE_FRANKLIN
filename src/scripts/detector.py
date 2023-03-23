@@ -88,22 +88,20 @@ class Detector:
         :return: None
         """
         # Find a contour with the biggest area
-        biggest_contour = None
-        biggest_area = 0
+        big_contours = []
         for cnt in contours:
             area = cv.contourArea(cnt)
-            if area > biggest_area and area > 2000:
-                biggest_area = area
-                biggest_contour = cnt
+            if area > 2000:
+                big_contours.append(cnt)
 
         # Garage not found
-        if biggest_contour is None:
+        if len(big_contours) == 0:
             return
 
         # Create the garage object
         cf_garage = self.objects_cfg['garage']
         garage = Garage(cf_garage['length'], cf_garage['width'], cf_garage['height'], cf_garage['color'],
-                        biggest_contour)
+                        big_contours)
 
         # Add the garage to the map
         self.map.set_garage(garage)
