@@ -50,12 +50,12 @@ class Obstacle:
 
 
 class Garage:
-    def __init__(self, length, width, height, color, contour):
+    def __init__(self, length, width, height, color, contours):
         self.length = length
         self.width = width
         self.height = height
         self.color = color
-        self.contour = contour
+        self.contours = contours
         self.world_coordinates = None
         self.orientation = None
 
@@ -72,8 +72,8 @@ class Garage:
     def set_color(self, color):
         self.color = color
 
-    def set_contour(self, contour):
-        self.contour = contour
+    def set_contours(self, contours):
+        self.contours = contours
 
     def set_world_coordinates(self, world_coordinates):
         self.world_coordinates = world_coordinates
@@ -94,8 +94,8 @@ class Garage:
     def get_color(self):
         return self.color
 
-    def get_contour(self):
-        return self.contour
+    def get_contours(self):
+        return self.contours
 
     def get_world_coordinates(self):
         return self.world_coordinates
@@ -105,31 +105,48 @@ class Garage:
 
 
 class Gate:
-    def __init__(self, width, height, color, contours, bounding_rects, slopes_distance, lowest_points,
-                 world_coordinates=None, orientation=None, center=None):
-        # all this information is related to the slopes of the gate
+    def __init__(self, width, height, color, contours, bounding_rects, pillars_distance, lowest_points,
+                 garage_dimensions_lwh, world_coordinates=None, orientation=None, orientation_rgb=None, center=None):
+        # all this information is related to the pillars of the gate
         self.width = width
         self.height = height
         self.color = color
         self.contours = contours
         self.bounding_rect = bounding_rects
-        self.slopes_distance = slopes_distance
+        self.pillars_distance = pillars_distance
         self.lowest_points = lowest_points
+        self.garage_dimensions_lwh = garage_dimensions_lwh
         self.world_coordinates = world_coordinates
         self.orientation = orientation
+        self.orientation_rgb = orientation_rgb
         self.center = center
-        self.num_slopes = len(bounding_rects)
+        self.num_pillars = len(bounding_rects)
 
     def calculate_orientation(self) -> None:
         """
-        Calculate the orientation of the gate.
+        Calculate the orientation of the gate from the analysed depth picture (world coordinates).
+        :return: None
+        """
+        if self.num_pillars != 2:
+            return
+
+        # Get the real world coordinates of the pillars
+        x1, y1 = self.world_coordinates[0]
+        x2, y2 = self.world_coordinates[1]
+
+        # Calculate the angle between the gate and the horizontal axis
+        self.orientation = np.arctan2(y1 - y2, x1 - x2) if y1 >= y2 else np.arctan2(y2 - y1, x2 - x1)
+
+    def calculate_orientation_rgb(self) -> None:
+        """
+        Calculate the orientation of the gate from the analysed RGB picture.
         :return: None
         """
 
-        if self.num_slopes != 2:
+        if self.num_pillars != 2:
             return
 
-        # Get the lowest points of the slopes
+        # Get the lowest points of the pillars
         x1, y1 = self.lowest_points[0]
         x2, y2 = self.lowest_points[1]
 
@@ -137,7 +154,7 @@ class Gate:
         self.center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
 
         # Calculate the angle between the gate and the horizontal axis
-        self.orientation = np.arctan2(y1 - y2, x1 - x2)
+        self.orientation_rgb = np.arctan2(y1 - y2, x1 - x2)
 
     # Setters
     def set_width(self, width):
@@ -155,11 +172,14 @@ class Gate:
     def set_bounding_rect(self, bounding_rects):
         self.bounding_rect = bounding_rects
 
-    def set_slopes_distance(self, slopes_distance):
-        self.slopes_distance = slopes_distance
+    def set_pillars_distance(self, pillars_distance):
+        self.pillars_distance = pillars_distance
 
     def set_lowest_points(self, lowest_points):
         self.lowest_points = lowest_points
+
+    def set_garage_dimensions_lwh(self, garage_dimensions_lwh):
+        self.garage_dimensions_lwh = garage_dimensions_lwh
 
     def set_world_coordinates(self, world_coordinates):
         self.world_coordinates = world_coordinates
@@ -167,11 +187,14 @@ class Gate:
     def set_orientation(self, orientation):
         self.orientation = orientation
 
+    def set_orientation_rgb(self, orientation_rgb):
+        self.orientation_rgb = orientation_rgb
+
     def set_center(self, center):
         self.center = center
 
-    def set_num_slopes(self, num_slopes):
-        self.num_slopes = num_slopes
+    def set_num_pillars(self, num_pillars):
+        self.num_pillars = num_pillars
 
     # Getters
     def get_width(self):
@@ -189,11 +212,14 @@ class Gate:
     def get_bounding_rect(self):
         return self.bounding_rect
 
-    def get_slopes_distance(self):
-        return self.slopes_distance
+    def get_pillars_distance(self):
+        return self.pillars_distance
 
     def get_lowest_points(self):
         return self.lowest_points
+
+    def get_garage_dimensions_lwh(self):
+        return self.garage_dimensions_lwh
 
     def get_world_coordinates(self):
         return self.world_coordinates
@@ -201,11 +227,14 @@ class Gate:
     def get_orientation(self):
         return self.orientation
 
+    def get_orientation_rgb(self):
+        return self.orientation_rgb
+
     def get_center(self):
         return self.center
 
-    def get_num_slopes(self):
-        return self.num_slopes
+    def get_num_pillars(self):
+        return self.num_pillars
 
 
 class Robot:

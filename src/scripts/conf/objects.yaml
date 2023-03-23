@@ -16,9 +16,9 @@ garage:
 gate:
   tag: 'gate'
   color: 'magenta'
-  slopes_width: 0.05
-  slopes_height: 0.34
-  slopes_distance: 0.47
+  pillars_width: 0.05
+  pillars_height: 0.34
+  pillars_distance: 0.47
 
 obstacle:
   tag: 'obstacle'

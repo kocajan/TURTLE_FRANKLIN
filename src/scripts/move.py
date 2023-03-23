@@ -64,7 +64,7 @@ class move:
 
     # this is compensation for error drift after rotation
     def compensation(self, direction):
-        #TODO move compensation constant to yaml
+        # TODO move compensation constant to yaml
 
         self.odometry_hard_rst()
         if(direction == -1):

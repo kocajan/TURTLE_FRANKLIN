@@ -34,12 +34,15 @@ map:
   dimensions: [ 5, 5 ]
   resolution: 0.01
   heuristic: 'manhattan' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
+  safety_margin: 0.02
+  max_id: 7
   id:
     robot: 1
     garage: 2
     gate: 3
     obstacle: 4
-    unknown: 5
-    path: 6
+    path: 5
+    restricted: 6
+    unknown: 7
 
 min_detected_area: 300

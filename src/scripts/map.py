@@ -17,7 +17,7 @@ class Map:
         y = self.conv_real_to_map(dimensions[1])
         self.world_map = np.zeros((x, y), dtype=np.uint8)
 
-    # Functionalities
+    # BEGIN: Path finding
     def find_way(self, start, goal) -> np.ndarray:
         """
         Use A* algorithm to find the way from the robot to the garage on the map.
@@ -99,62 +99,117 @@ class Map:
         else:
             raise ValueError("Unknown heuristic")
 
+    # END: Path finding
+
+    # BEGIN: Map filling
     def fill_world_map(self) -> None:
         """
         Fill the world map with the objects which were found by detector.
         :return: None
         """
-        map_cfg = self.detection_cfg['map']
+        # Gate
+        pillars = []
+        if self.gate is not None:
+            pillars = self.fill_in_gate()
 
-        # Garage
-        if self.garage is not None:
-            garage_id = map_cfg['id']['garage']
-
-            # Convert real world parameters to map parameters
-            x = self.conv_real_to_map(self.garage.get_world_coordinates()[0], add=True)
-            y = self.conv_real_to_map(self.garage.get_world_coordinates()[1])
-            length = self.conv_real_to_map(self.garage.get_length())
-            width = self.conv_real_to_map(self.garage.get_width())
-
-            # Draw the garage
-            cv.rectangle(self.world_map, (x, y), (x+length, y+width), garage_id, -1)
+        # Garage (if the gate has been found we can predict position of the garage)
+        self.fill_in_garage(pillars)
 
         # Obstacles
         for obstacle in self.obstacles:
-            obst_id = map_cfg['id']['obstacle']
-
-            # Convert real world parameters to map parameters
-            x = self.conv_real_to_map(obstacle.get_world_coordinates()[0], add=True)
-            y = self.conv_real_to_map(obstacle.get_world_coordinates()[1])
-            radius = self.conv_real_to_map(obstacle.get_radius())
-
-            cv.circle(self.world_map, (x, y), radius, obst_id, -1)
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
+            self.fill_in_obstacle(obstacle)
 
         # Robot
         if self.robot is not None:
-            robot_id = map_cfg['id']['robot']
+            self.fill_in_robot()
 
+    def fill_in_garage(self, pillars) -> None:
+        """
+        Fill the garage in the world map.
+        :param pillars: The map coordinates of the gate's pillars.
+        """
+        garage_id = self.detection_cfg['map']['id']['garage']
+
+        # If the gate has been found, we can predict the position of the garage
+        if len(pillars) == 2:
+            garage_width = self.conv_real_to_map(self.gate.get_garage_dimensions_lwh()[1])
+            garage_length = self.conv_real_to_map(self.gate.get_garage_dimensions_lwh()[0])
+
+            # Get reference pillar (the one closest to the robot)
+            ref_pillar = pillars[0] if pillars[0][1] <= pillars[1][1] else pillars[1]
+            orientation = self.gate.get_orientation()
+
+            # Find the other two corner points of the garage
+            if orientation < np.pi/2:
+                p1 = self.calculate_next_point(ref_pillar, np.pi/2 + orientation, garage_width)
+                p2 = self.calculate_next_point(p1, orientation, garage_length)
+            else:
+                p1 = self.calculate_next_point(ref_pillar, orientation-np.pi/2, garage_width)
+                p2 = self.calculate_next_point(p1, orientation, garage_length)
+
+            # connect these points by lines
+            other_pillar = pillars[0] if pillars[0] != ref_pillar else pillars[1]
+            cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
+            cv.line(self.world_map, p1, p2, garage_id, 2)
+            cv.line(self.world_map, p2, other_pillar, garage_id, 2)
+        # TODO
+        elif len(pillars) == 1:
+            pass
+        elif len(pillars) == 0:
+            pass
+        else:
+            raise ValueError("The gate has more than 2 pillars.")
+
+    def fill_in_gate(self) -> list:
+        """
+        Fill the gate in the world map.
+        :return: The map coordinates of the gate's pillars.
+        """
+        gate_id = self.detection_cfg['map']['id']['gate']
+
+        # Convert real world radius to map radius
+        radius = self.conv_real_to_map(self.gate.get_width())
+        pillars = []
+        for pillar in self.gate.get_world_coordinates():
             # Convert real world parameters to map parameters
-            x = self.conv_real_to_map(self.robot.get_world_coordinates()[0], add=True)
-            y = self.conv_real_to_map(self.robot.get_world_coordinates()[1])
-            radius = self.conv_real_to_map(self.robot.get_radius())
+            x = self.conv_real_to_map(pillar[0], add=True)
+            y = self.conv_real_to_map(pillar[1])
+            pillars.append((x, y))
 
-            # Draw the robot
-            cv.circle(self.world_map, (x, y), radius, robot_id, -1)
+            # Draw the pillar
+            cv.circle(self.world_map, (x, y), radius, gate_id, -1)
+        return pillars
 
-        # Gate
-        if self.gate is not None:
-            gate_id = map_cfg['id']['gate']
+    def fill_in_obstacle(self, obstacle: object) -> None:
+        """
+        Fill the obstacle in the world map.
+        :param obstacle: The obstacle to be filled in.
+        :return: None
+        """
+        obst_id = self.detection_cfg['map']['id']['obstacle']
 
-            # Convert real world radius to map radius
-            radius = self.conv_real_to_map(self.gate.get_width()/2)
-            for slope in self.gate.get_world_coordinates():
-                # Convert real world parameters to map parameters
-                x = self.conv_real_to_map(slope[0], add=True)
-                y = self.conv_real_to_map(slope[1])
+        # Convert real world parameters to map parameters
+        x = self.conv_real_to_map(obstacle.get_world_coordinates()[0], add=True)
+        y = self.conv_real_to_map(obstacle.get_world_coordinates()[1])
+        radius = self.conv_real_to_map(obstacle.get_radius())
 
-                # Draw the slope
-                cv.circle(self.world_map, (x, y), radius, gate_id, -1)
+        cv.circle(self.world_map, (x, y), radius, obst_id, -1)
+
+    def fill_in_robot(self) -> None:
+        """
+        Fill the robot in the world map.
+        :return: None
+        """
+        robot_id = self.detection_cfg['map']['id']['robot']
+
+        # Convert real world parameters to map parameters
+        x = self.conv_real_to_map(self.robot.get_world_coordinates()[0], add=True)
+        y = self.conv_real_to_map(self.robot.get_world_coordinates()[1])
+        radius = self.conv_real_to_map(self.robot.get_radius())
+
+        # Draw the robot
+        cv.circle(self.world_map, (x, y), radius, robot_id, -1)
 
     def conv_real_to_map(self, realc, add=False) -> int:
         """
@@ -166,6 +221,42 @@ class Map:
         if add:
             mapc += self.world_map.shape[0] // 2
         return mapc
+
+    def draw_restricted_area(self, center, size) -> None:
+        """
+        Draw restricted area around objects on the map.
+        :param center: Center of the object.
+        :param size: Size of the object.
+        """
+        # Convert real world parameters to map parameters
+        x = self.conv_real_to_map(center[0], add=True)
+        y = self.conv_real_to_map(center[1])
+        size = self.conv_real_to_map(size)
+
+        # Add half of the robot radius to the radius plus safety margin
+        size += self.conv_real_to_map(self.robot.get_radius()) \
+                  + self.conv_real_to_map(self.detection_cfg['map']['safety_margin'])
+
+        # Get id of the restricted area
+        id = self.detection_cfg['map']['id']['restricted']
+
+        # Draw the restricted area as a square
+        cv.rectangle(self.world_map, (x - size, y - size), (x + size, y + size), id, -1)
+
+    @staticmethod
+    def calculate_next_point(point, angle, distance) -> tuple:
+        """
+        Calculate the next point based on the current point, the angle and the distance.
+        :param point: The current point.
+        :param angle: The angle.
+        :param distance: The distance.
+        :return: The next point.
+        """
+        x = point[0] + distance * np.cos(angle)
+        y = point[1] + distance * np.sin(angle)
+        return int(x), int(y)
+
+    # END: Map filling
 
     # SETTERS
     def set_dimensions(self, dimensions):
