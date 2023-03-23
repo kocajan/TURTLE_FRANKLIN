@@ -16,15 +16,38 @@ def button_cb(event):
     global counter
     global shoot
     if shoot:
-        turtle = Turtlebot(rgb=True)
+        # Create turtle object
+        turtle = Turtlebot(rgb=True, pc=True)
+
+        # Set path to save image and point cloud
+        image_path = os.path.join('camera/shoot2', f'RGB{counter}.png')
+        point_cloud_path = os.path.join('camera/shoot2', f'PC{counter}.npy')
+
+        # Capture RGB image
         turtle.wait_for_rgb_image()
         bgr = turtle.get_rgb_image()
-        image_path = os.path.join('camera/shoot2', f'{counter}.png')
+
+        # Convert BGR to RGB and save image
         rgb = bgr[...,::-1]
         imageio.imwrite(image_path, rgb)
         print(f"Saved image to {image_path}")
+
+        # Capture point cloud
+        turtle.wait_for_point_cloud()
+        pc = turtle.get_point_cloud()
+
+        # Save point cloud
+        np.save(point_cloud_path, pc)
+        print(f"Saved point cloud to {image_path}")
+
+        # Compare sizes of RGB image and point cloud
+        print(f"RGB image shape: {rgb.shape}")
+        print(f"Point cloud shape: {pc.shape}")
+
+        # Increment counter and set shoot to False
         counter += 1
         shoot = False
+
     else:
         shoot = True
 

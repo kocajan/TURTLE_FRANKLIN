@@ -50,7 +50,7 @@ def map_visualization_test() -> None:
     gate = Gate(wid, hei, col, None, [1, 2], pillars_dis, None, (garage.get_length(), garage.get_width(), garage.get_height()))
     length = garage.get_length()
     p1 = (0, 3)
-    angle = 60
+    angle = 120
     angle = np.deg2rad(angle)
     p2 = (p1[0] + np.cos(angle) * length, p1[1] + np.sin(angle) * length)
     gate.set_world_coordinates([p1, p2])
