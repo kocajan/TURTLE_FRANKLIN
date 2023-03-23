@@ -20,8 +20,8 @@ def button_cb(event):
         turtle = Turtlebot(rgb=True, pc=True)
 
         # Set path to save image and point cloud
-        image_path = os.path.join('camera/shoot2', f'RGB{counter}.png')
-        point_cloud_path = os.path.join('camera/shoot2', f'PC{counter}.npy')
+        image_path = os.path.join('camera/shoot3', f'RGB{counter}.png')
+        point_cloud_path = os.path.join('camera/shoot3', f'PC{counter}.npy')
 
         # Capture RGB image
         turtle.wait_for_rgb_image()
@@ -41,8 +41,8 @@ def button_cb(event):
         print(f"Saved point cloud to {image_path}")
 
         # Compare sizes of RGB image and point cloud
-        print(f"RGB image shape: {rgb.shape}")
-        print(f"Point cloud shape: {pc.shape}")
+        #print(f"RGB image shape: {rgb.shape}")
+        #print(f"Point cloud shape: {pc.shape}")
 
         # Increment counter and set shoot to False
         counter += 1
@@ -59,7 +59,7 @@ def capture_images():
     :param config: Configuration file
     """
     path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, 'camera/shoot2')
+    path = os.path.join(path, 'camera/shoot3')
     os.makedirs(path, exist_ok=True)
 
     turtle = Turtlebot()
