@@ -14,18 +14,113 @@ class move:
         self.turtle = Turtlebot()
         self.rate = Rate(10) # co dela tahle funkce?
 
-    def execute_move(self):
-        # d
+    def execute_move(self, moves_list):
+        for single_mv in moves_list:
+            print("dummy")
         pass
 
     #exports nonlinear path, to linear
+    #this is unneccessary because of A* logic
     def non_to_linear_path(self, non_linear_path):
         linear_path = list()
         return linear_path
 
-    def move_sequence(self):
-        for x in self.move_coords:
+    #format of neighbours is UP, DOWN, DIAGONAL_UP_RIGHT, DIAGONAL_UP_LEFT, DIAGONAL_DOWN_RIGHT, DIAGONAL_DOWN_LEFT, RIGHT_ANGLE_LEFT, RIGHT_ANGLE_RIGHT
+    #zaroven se nemuzu divat na predchozi pozici, asi to chce do fce jako argument
+    def generate_neighbours(self, current_pos, prev_pos):
+        neighbours = list()
+        neighbours.append( (current_pos[0],current_pos[1] + 1) )    # up
+        if (prev_pos != None):
+            neighbours.append( (current_pos[0], current_pos[1] - 1) )   # down
 
+        neighbours.append( (current_pos[0] + 1, current_pos[1] + 1) ) # diagonal up right
+        neighbours.append( (current_pos[0] -1, current_pos[1] + 1) )   #diagonal up left
+        if (prev_pos != None):
+            neighbours.append( (current_pos[0] + 1, current_pos[1] - 1) )   #diagonal down right
+            neighbours.append( (current_pos[0] -1, current_pos[1] - 1) )   #diagonal down left
+
+        neighbours.append( (current_pos[0] -1, current_pos[1]) )   #right angle left
+        neighbours.append( (current_pos[0] + 1, current_pos[1]) )   #right angle right
+
+        for index, neighbour in enumerate(neighbours):
+            if(neighbour == prev_pos):
+                neighbours[index].pop() # removing previous position, it is invalid neighbour
+        return neighbours
+
+    def check_trend(self, index, prev_index, rotation, translation):
+        if(index != prev_index and prev_index != None):
+            return single_mv(rotation, translation)
+        return None
+    #creates single_mv classes. single_mv classes are then executed
+    def move_sequence(self):
+        rotation = 0
+        translation = 0
+        sequence = list()
+        prev_coord = None
+        prev_index = None
+        #TODO vyresit posledni node, ta se jenom apenduje, bude stejna jako vsechny ostatni
+
+        for pos in range(len(self.move_coords)):
+            next_neighbours = self.generate_neighbours(self.move_coords[pos], prev_coord)
+            for index, neigh in enumerate(next_neighbours):
+                if(neigh == self.move_coords[pos+1]):
+                    if(index == 0):     #up
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        rotation = 0
+                        translation = translation + 1
+                    elif(index == 1):   #down
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        rotation = 0
+                        translation = translation - 1
+                    elif(index == 2):   #diagonal up right
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = 45
+                        translation = translation + 1
+                    elif(index == 3):   #diagonal up left
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = -45
+                        translation = translation + 1
+                    elif(index == 4):   #diagonal down right
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = -135
+                        translation = translation - 1
+                    elif(index == 5):   #diagonal down left
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = 135
+                        translation = translation - 1
+                    elif(index == 6):   #90 deg left
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = -90
+                        translation = 0
+                    elif(index == 7):   #90 deg left
+                        if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
+                            sequence.append(tmp)
+                            translation = 0
+                        trend = index
+                        rotation = 90
+                        translation = 0
+                    prev_index = index
+
+            prev_coord = self.move_coords[pos]
     # length in centimeters
     def go_straight(self, length, dir):
         slow_start_cnt = 0
