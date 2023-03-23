@@ -3,7 +3,7 @@ import numpy as np
 import math
 from enum import Enum
 import yaml
-
+import single_mv
 
 class move:
     move_coords = list(list())  #2D array of moving coords
@@ -22,7 +22,10 @@ class move:
     def non_to_linear_path(self, non_linear_path):
         linear_path = list()
         return linear_path
-    
+
+    def move_sequence(self):
+        for x in self.move_coords:
+
     # length in centimeters
     def go_straight(self, length, dir):
         slow_start_cnt = 0
