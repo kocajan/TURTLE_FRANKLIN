@@ -112,7 +112,7 @@ class Gate:
         self.height = height
         self.color = color
         self.contours = contours
-        self.bounding_rect = bounding_rects
+        self.bounding_rects = bounding_rects
         self.pillars_distance = pillars_distance
         self.lowest_points = lowest_points
         self.garage_dimensions_lwh = garage_dimensions_lwh
@@ -169,8 +169,8 @@ class Gate:
     def set_contours(self, contours):
         self.contours = contours
 
-    def set_bounding_rect(self, bounding_rects):
-        self.bounding_rect = bounding_rects
+    def set_bounding_rects(self, bounding_rects):
+        self.bounding_rects = bounding_rects
 
     def set_pillars_distance(self, pillars_distance):
         self.pillars_distance = pillars_distance
@@ -209,8 +209,8 @@ class Gate:
     def get_contours(self):
         return self.contours
 
-    def get_bounding_rect(self):
-        return self.bounding_rect
+    def get_bounding_rects(self):
+        return self.bounding_rects
 
     def get_pillars_distance(self):
         return self.pillars_distance

@@ -9,10 +9,12 @@ matplotlib.use('TkAgg')
 
 
 class Visualizer:
-    def __init__(self, rgb_img, point_cloud, map, processed_rgb_imgs, detection_cfg: dict):
+    def __init__(self, rgb_img: np.ndarray, point_cloud: np.ndarray, map: object, processed_rgb_imgs: np.ndarray,
+                 processed_pc: np.ndarray, detection_cfg: dict):
         self.rgb_img = rgb_img
         self.processed_rgb_imgs = processed_rgb_imgs
         self.point_cloud = point_cloud
+        self.processed_point_cloud = processed_pc
         self.map = map
         self.gate = self.map.get_gate()
         self.garage = self.map.get_garage()
@@ -42,7 +44,7 @@ class Visualizer:
 
         # draw bounding rect of the gate
         if self.gate is not None:
-            rects = self.gate.get_bounding_rect()
+            rects = self.gate.get_bounding_rects()
             for rect in rects:
                 box = cv.boxPoints(rect)
                 box = np.int0(box)
@@ -100,3 +102,59 @@ class Visualizer:
             psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=self.detection_cfg["map"]["max_id"])
             fig.colorbar(psm, ax=ax)
         plt.show()
+
+    def visualize_point_cloud(self):
+        """
+        Visualize the point cloud
+        """
+        # Get the x, y and z coordinates of the point cloud
+        xs = self.point_cloud[:, :, 0]
+        ys = self.point_cloud[:, :, 1]
+        zs = self.point_cloud[:, :, 2]
+
+        # Get the x, y and z coordinates of the processed point cloud
+        xs_p = self.processed_point_cloud[:, :, 0]
+        ys_p = self.processed_point_cloud[:, :, 1]
+        zs_p = self.processed_point_cloud[:, :, 2]
+
+        # Take only every nth point
+        n = 5
+        xs = xs[::n, ::n]
+        ys = ys[::n, ::n]
+        zs = zs[::n, ::n]
+
+        xs_p = xs_p[::n, ::n]
+        ys_p = ys_p[::n, ::n]
+        zs_p = zs_p[::n, ::n]
+
+        # Swap coords to get the correct orientation
+        xs, zs = zs, xs
+        zs, ys = -ys, zs
+
+        xs_p, zs_p = zs_p, xs_p
+        zs_p, ys_p = -ys_p, zs_p
+
+        # Draw a 3D graph of the point cloud
+        fig = plt.figure()
+
+        # Draw both point clouds
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(xs, ys, zs, c='r', s=0.1)
+        ax.scatter(xs_p, ys_p, zs_p, c='b', s = 0.1)
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
+        # find the min and max of the point clouds
+        min_x = min(np.nanmin(xs), np.nanmin(xs_p))
+        max_x = max(np.nanmax(xs), np.nanmax(xs_p))
+        min_y = min(np.nanmin(ys), np.nanmin(ys_p))
+        max_y = max(np.nanmax(ys), np.nanmax(ys_p))
+        min_z = min(np.nanmin(zs), np.nanmin(zs_p))
+        max_z = max(np.nanmax(zs), np.nanmax(zs_p))
+        # set the limits of the graph
+        ax.set_xlim(min_x, max_x)
+        ax.set_ylim(min_y, max_y)
+        ax.set_zlim(min_z, max_z)
+        plt.show()
+
+

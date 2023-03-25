@@ -2,7 +2,7 @@ colors:
   green:
     tag: 'green'
     rgb: [ 0, 255, 0 ]
-    lower: [ 36, 54, 78 ]
+    lower: [ 42, 71, 78 ]
     upper: [ 79, 166, 144 ]
 
   blue:
@@ -27,7 +27,7 @@ colors:
     tag: 'yellow'
     rgb: [ 255, 255, 0 ]
     lower: [ 19, 118, 106 ]
-    upper: [ 29, 255, 203 ]
+    upper: [ 34, 255, 203 ]
 
 map:
   tag: 'map'
@@ -46,3 +46,5 @@ map:
     unknown: 7
 
 min_detected_area: 300
+
+point_cloud_rotation: 13.5
