@@ -2,15 +2,16 @@ import numpy as np
 import math
 import yaml
 from single_mv import single_mv
+from robolab_turtlebot import Turtlebot, Rate, get_time
 
 class move:
     move_coords = list(list())  #2D array of moving coords
 
     def __init__(self, coords):
-        #self.detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+        self.detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
         self.move_coords = coords
-        #self.turtle = Turtlebot()
-        #self.rate = Rate(10) # co dela tahle funkce?
+        self.turtle = Turtlebot()
+        self.rate = Rate(10) # co dela tahle funkce?
 
     def execute_move(self):
         moves_to_execute = self.move_sequence()
