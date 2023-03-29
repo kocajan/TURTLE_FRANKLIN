@@ -111,6 +111,7 @@ class Map:
         pillars = []
         if self.gate is not None:
             pillars = self.fill_in_gate()
+            self.gate.calculate_orientation()
 
         # Garage (if the gate has been found we can predict position of the garage)
         self.fill_in_garage(pillars)
@@ -153,11 +154,20 @@ class Map:
             cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
-        # TODO
-        elif len(pillars) == 1:
-            pass
-        elif len(pillars) == 0:
-            pass
+
+        # If only one or none of the pillars has been found, we cannot predict the position of the garage
+        # We will fill in points of the garage itself (yellow area in RGB image)
+        elif len(pillars) == 1 or len(pillars) == 0:
+            # Get the coordinates of the garage
+            garage = self.garage
+            if garage is not None:
+                coords = garage.get_world_coordinates()
+                xs = coords[0]
+                ys = coords[1]
+                for i in range(len(xs)):
+                    x = self.conv_real_to_map(xs[i], add=True)
+                    y = self.conv_real_to_map(ys[i])
+                    cv.circle(self.world_map, (x, y), 1, garage_id, -1)
         else:
             raise ValueError("The gate has more than 2 pillars.")
 

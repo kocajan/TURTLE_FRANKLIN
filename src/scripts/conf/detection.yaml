@@ -1,33 +1,33 @@
 colors:
   green:
     tag: 'green'
-    rgb: [ 0, 255, 0 ]
-    lower: [ 36, 54, 78 ]
-    upper: [ 79, 166, 144 ]
+    rgb: [ 0, 255, 0]
+    lower: [ 49, 93, 92 ]
+    upper: [ 68, 255, 255]
 
   blue:
     tag: 'blue'
     rgb: [ 0, 0, 255 ]
-    lower: [ 94, 115, 61 ]
-    upper: [ 111, 255, 150 ]
+    lower: [ 92, 114, 81 ]
+    upper: [ 103, 255, 255 ]
 
   red:
     tag: 'red'
     rgb: [ 255, 0, 0 ]
-    lower: [ 0, 144, 124 ]
-    upper: [ 15, 255, 185 ]
+    lower: [ 3, 200, 137]
+    upper: [ 7, 255, 255 ]
 
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 106, 35, 66 ]
-    upper: [ 165, 145, 125 ]
+    lower: [ 113, 92, 255 ]
+    upper: [ 138, 255, 111 ]
 
   yellow:
     tag: 'yellow'
     rgb: [ 255, 255, 0 ]
-    lower: [ 19, 118, 106 ]
-    upper: [ 29, 255, 203 ]
+    lower: [ 25, 132, 123 ]
+    upper: [ 31, 255, 255 ]
 
 map:
   tag: 'map'

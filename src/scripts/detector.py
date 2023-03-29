@@ -1,8 +1,12 @@
 import numpy as np
 import cv2 as cv
 
+import time                 # debug - time
+
 from objects import Obstacle, Garage, Gate
 from map import Map
+
+from tqdm import tqdm       # debug - progress bar
 
 
 class Detector:
@@ -13,6 +17,7 @@ class Detector:
         self.detection_cfg = detection_cfg
         self.objects_cfg = objects_cfg
         self.processed_rgb = []
+        self.processed_point_cloud = []
 
     # BEGIN: RGB image processing
     # CORE FUNCTION
@@ -208,11 +213,154 @@ class Detector:
         Process the point cloud to detect how far things are.
         :return: None
         """
-        # TODO
-        pass
+        # Rotate point cloud
+        self.rotate_point_cloud()
+
+        # Get world coordinates of the objects in the RGB image
+        # Obstacles
+        start = time.time()  # delete
+        for obstacle in self.map.get_obstacles():
+            # TODO: Find out what takes so long and how to prevent it
+            w_coords = self.get_world_coordinates_using_bounding_rect(obstacle.get_bounding_rect())
+            obstacle.set_world_coordinates(w_coords)
+        end = time.time()  # delete
+        print("Obstacles: ", end - start)  # delete
+
+        # Gate
+        start = time.time()  # delete
+        gate = self.map.get_gate()
+        if gate is not None:
+            w_coords = []
+            for pillar in gate.get_bounding_rects():
+                w_coords.append(self.get_world_coordinates_using_bounding_rect(pillar))
+            gate.set_world_coordinates(w_coords)
+
+        end = time.time()  # delete
+        print("Gate: ", end - start)  # delete
+
+        # Garage
+        start = time.time()  # delete
+        garage = self.map.get_garage()
+        if garage is not None:
+            # Get rid of outliers
+            w_coords = self.get_world_coordinates_using_contours(garage.get_contours())
+            garage.set_world_coordinates(w_coords)
+
+        end = time.time()  # delete
+        print("Garage: ", end - start)  # delete
 
     # HELPER FUNCTIONS
-    # TODO
+    def get_world_coordinates_using_contours(self, contours: list) -> tuple:
+        """
+        Get the world coordinates of the object using the contours.
+        :param contours: The contours.
+        :return: The world coordinates of the object.
+        """
+        points_in_contours = self.get_pc_points_in_contours(contours)
+
+        # Get rid of nan values
+        points_in_contours = self.get_rid_of_nan(points_in_contours)
+
+        # Get rid of outliers ? TODO: Find out if this is necessary
+
+        return points_in_contours[:, 0], points_in_contours[:, 2]
+
+    def get_world_coordinates_using_bounding_rect(self, bounding_rect: tuple) -> tuple:
+        """
+        Get the world coordinates of the object using the bounding rectangle.
+        :param bounding_rect: The bounding rectangle.
+        :return: The world coordinates of the object.
+        """
+        points_in_bounding_rect = self.get_pc_points_in_bounding_rect(bounding_rect)
+
+        # Get rid of nan values
+        points_in_bounding_rect = self.get_rid_of_nan(points_in_bounding_rect)
+
+        # Calculate median of the x and y coordinates
+        x = np.median(points_in_bounding_rect[:, 0])
+        y = np.median(points_in_bounding_rect[:, 2])
+
+        return x, y
+
+    def get_pc_points_in_bounding_rect(self, bounding_rect: tuple) -> np.ndarray:
+        """
+        Get the points of the point cloud that are in the given bounding rectangle.
+        :param bounding_rect: The bounding rectangle.
+        :return: The points of the point cloud that are in the bounding rectangle.
+        """
+        # Get the corners of the bounding rectangle
+        corners = cv.boxPoints(bounding_rect)
+        corners = np.int0(corners)
+
+        return self.get_pc_points_in_contours([corners])
+
+    def get_pc_points_in_contours(self, contours: list) -> np.ndarray:
+        """
+        Get the points of the point cloud that are in the given contour.
+        :param contours: The contours.
+        :return: The points of the point cloud that are in the bounding rectangle.
+        """
+
+        # Get the points of the point cloud that are in the bounding rectangle
+        points_in_contours = []
+
+        # Create img of the same dimensions as the RGB image, filled with zeros
+        img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
+
+        # Draw filled bounding rectangle on the image
+        cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
+
+        # Decide whether point is in the rectangle
+        for i, line in enumerate(self.processed_point_cloud):
+            for j, point in enumerate(line):
+                if self.is_point_in_rect((i, j), img_with_contours):
+                    points_in_contours.append(point)
+
+        return np.array(points_in_contours)
+
+    def rotate_point_cloud(self) -> None:
+        """
+        Rotate the point cloud to make it easier to process.
+        :return: None
+        """
+        # Get the rotation matrix (3D rotation respect to the x-axis)
+        angle = np.deg2rad(self.detection_cfg['point_cloud_rotation'])
+        rotation_matrix = np.array([[1, 0, 0],
+                                    [0, np.cos(angle), -np.sin(angle)],
+                                    [0, np.sin(angle), np.cos(angle)]])
+        # Rotate the point cloud
+        self.processed_point_cloud = np.dot(self.point_cloud, rotation_matrix)
+
+    @staticmethod
+    def is_point_in_rect(point: tuple, img_with_rectangle: np.ndarray) -> bool:
+        """
+        Check if the point is in the rectangle.
+        :param point: The point.
+        :param img_with_rectangle: The image with the rectangle.
+        :return: True if the point is in the rectangle, False otherwise.
+        """
+        # Get the point's coordinates
+        x = int(point[0])
+        y = int(point[1])
+
+        # Check if the point is in the rectangle
+        if img_with_rectangle[x, y, 0] == 255:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def get_rid_of_nan(array: np.ndarray) -> np.ndarray:
+        """
+        Get rid of NaN values in the array.
+        :param array: The array.
+        :return: The array without NaN values.
+        """
+        array = np.array(array)
+        dims = len(array.shape)
+
+        return array[~np.isnan(array).any(axis=dims-1)]
+
     # END: Point cloud processing
 
     # SETTERS
@@ -234,6 +382,9 @@ class Detector:
     def set_processed_rgb(self, processed_rgb):
         self.processed_rgb = processed_rgb
 
+    def set_processed_point_cloud(self, processed_point_cloud):
+        self.processed_point_cloud = processed_point_cloud
+
     # GETTERS
     def get_rgb_img(self):
         return self.rgb_img
@@ -252,3 +403,6 @@ class Detector:
 
     def get_processed_rgb(self):
         return self.processed_rgb
+
+    def get_processed_point_cloud(self):
+        return self.processed_point_cloud

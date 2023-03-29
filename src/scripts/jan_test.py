@@ -8,18 +8,54 @@ from map import Map
 from visualizer import Visualizer
 
 
-def image_man(img: np.ndarray) -> None:
+def big_test(img: np.ndarray, pc: np.ndarray) -> None:
+    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
+
+    dims = detection_cfg['map']['dimensions']
+    res = detection_cfg['map']['resolution']
+
+    map = Map(dims, res, detection_cfg)
+
+    # Set up robot -------------------------------
+    rad = objects_cfg['robot']['radius']
+    hei = objects_cfg['robot']['height']
+    col = objects_cfg['robot']['color']
+
+    robot = Robot(rad, col, 'black')
+    robot.set_world_coordinates((0, 0))
+    map.set_robot(robot)
+    # --------------------------------------------
+
+    det = Detector(map, img, pc, detection_cfg, objects_cfg)
+    det.process_rgb()
+    det.process_point_cloud()
+
+    map.fill_world_map()
+
+    vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+    vis.visualize_rgb()
+    vis.visualize_point_cloud()
+    vis.visualize_map()
+
+
+def image_man(img: np.ndarray, pc: np.ndarray) -> None:
 
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
 
-    map = Map((5, 5), 0.01, detection_cfg)
+    dims = detection_cfg['map']['dimensions']
+    res = detection_cfg['map']['resolution']
 
-    det = Detector(map, img, None, detection_cfg, objects_cfg)
+    map = Map(dims, res, detection_cfg)
+
+    det = Detector(map, img, pc, detection_cfg, objects_cfg)
     det.process_rgb()
+    det.process_point_cloud()
 
-    vis = Visualizer(img, None, map, det.get_processed_rgb(), detection_cfg)
+    vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
+    vis.visualize_point_cloud()
 
 
 def map_visualization_test() -> None:
@@ -103,23 +139,36 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "map"
+    test = "image+pc+map"
     if test == "image":
         for i in range(16):
             if i == 3:
                 continue
             img = cv.imread(f'camera/shoot1/{i}.png')
-            image_man(img)
+            image_man(img, None)
             cv.waitKey(0)
             cv.destroyAllWindows()
 
         for i in range(9):
-            img = cv.imread(f'camera/shoot2/{i}.png')
-            image_man(img)
+            img = cv.imread(f'camera/shoot1/{i}.png')
+            image_man(img, None)
             cv.waitKey(0)
             cv.destroyAllWindows()
     elif test == "map":
         map_visualization_test()
+    elif test == "pc":
+        for i in range(14):
+            img = cv.imread(f'camera/shoot3/RGB{i}.png')
+            pc = np.load(f'camera/shoot3/PC{i}.npy')
+            image_man(img, pc)
+    elif test == "pc1":
+        img = cv.imread(f'camera/shoot3/RGB13.png')
+        pc = np.load(f'camera/shoot3/PC13.npy')
+        image_man(img, pc)
+    elif test == "image+pc+map":
+        img = cv.imread(f'camera/shoot3/RGB13.png')
+        pc = np.load(f'camera/shoot3/PC13.npy')
+        big_test(img, pc)
 
 
 if __name__ == '__main__':
