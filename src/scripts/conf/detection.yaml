@@ -20,14 +20,14 @@ colors:
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 113, 92, 255 ]
+    lower: [ 113, 92, 70 ] # [ 113, 92, 255 ] - 255 as lower bound does not make sense
     upper: [ 138, 255, 111 ]
 
   yellow:
     tag: 'yellow'
     rgb: [ 255, 255, 0 ]
-    lower: [ 25, 132, 123 ]
-    upper: [ 31, 255, 255 ]
+    lower: [ 22, 110, 85 ] # [ 25, 132, 123 ]
+    upper: [ 35, 255, 255 ] # [ 31, 255, 255 ]
 
 map:
   tag: 'map'
@@ -46,3 +46,5 @@ map:
     unknown: 7
 
 min_detected_area: 300
+point_cloud_rotation: 13.5
+outlier_threshold: 1

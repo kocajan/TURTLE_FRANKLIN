@@ -16,6 +16,7 @@ class Map:
         x = self.conv_real_to_map(dimensions[0])
         y = self.conv_real_to_map(dimensions[1])
         self.world_map = np.zeros((x, y), dtype=np.uint8)
+        self.goal = None
 
     # BEGIN: Path finding
     def find_way(self, start, goal) -> np.ndarray:
@@ -107,6 +108,11 @@ class Map:
         Fill the world map with the objects which were found by detector.
         :return: None
         """
+        # Obstacles
+        for obstacle in self.obstacles:
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
+            self.fill_in_obstacle(obstacle)
+
         # Gate
         pillars = []
         if self.gate is not None:
@@ -116,10 +122,9 @@ class Map:
         # Garage (if the gate has been found we can predict position of the garage)
         self.fill_in_garage(pillars)
 
-        # Obstacles
-        for obstacle in self.obstacles:
-            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
-            self.fill_in_obstacle(obstacle)
+        # TODO: DELETE --------------------------------
+        self.goal = pillars[0]
+        # TODO ----------------------------------------
 
         # Robot
         if self.robot is not None:
@@ -137,15 +142,18 @@ class Map:
             garage_width = self.conv_real_to_map(self.gate.get_garage_dimensions_lwh()[1])
             garage_length = self.conv_real_to_map(self.gate.get_garage_dimensions_lwh()[0])
 
-            # Get reference pillar (the one closest to the robot)
-            ref_pillar = pillars[0] if pillars[0][1] <= pillars[1][1] else pillars[1]
+            # Get the orientation of the gate
             orientation = self.gate.get_orientation()
 
             # Find the other two corner points of the garage
             if orientation < np.pi/2:
+                # Get the reference pillar (the one which is on the left side of the gate)
+                ref_pillar = pillars[0] if pillars[0][0] < pillars[1][0] else pillars[1]
                 p1 = self.calculate_next_point(ref_pillar, np.pi/2 + orientation, garage_width)
                 p2 = self.calculate_next_point(p1, orientation, garage_length)
             else:
+                # Get the reference pillar (the one which is on the right side of the gate)
+                ref_pillar = pillars[0] if pillars[0][0] > pillars[1][0] else pillars[1]
                 p1 = self.calculate_next_point(ref_pillar, orientation-np.pi/2, garage_width)
                 p2 = self.calculate_next_point(p1, orientation, garage_length)
 
@@ -290,6 +298,9 @@ class Map:
     def set_world_map(self, world_map):
         self.world_map = world_map
 
+    def set_goal(self, goal):
+        self.goal = goal
+
     # GETTERS
     def get_dimensions(self):
         return self.dimensions
@@ -311,3 +322,6 @@ class Map:
 
     def get_world_map(self):
         return self.world_map
+
+    def get_goal(self):
+        return self.goal

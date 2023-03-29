@@ -261,9 +261,29 @@ class Detector:
         # Get rid of nan values
         points_in_contours = self.get_rid_of_nan(points_in_contours)
 
-        # Get rid of outliers ? TODO: Find out if this is necessary
+        # Get rid of outliers
+        points_in_contours = self.get_rid_of_outliers(points_in_contours)
 
         return points_in_contours[:, 0], points_in_contours[:, 2]
+
+    def get_rid_of_outliers(self, points: np.ndarray) -> np.ndarray:
+        """
+        Get rid of outliers in the given points.
+        :param points: The points.
+        :return: The points without outliers.
+        """
+        # Calculate median of the x and y coordinates
+        x = np.median(points[:, 0])
+        y = np.median(points[:, 2])
+
+        # Calculate the distance of each point to the median
+        distances = np.sqrt((points[:, 0] - x) ** 2 + (points[:, 2] - y) ** 2)
+
+        # Get rid of points that are further away than the threshold
+        threshold = self.detection_cfg['outlier_threshold']
+        points = points[distances < threshold]
+
+        return points
 
     def get_world_coordinates_using_bounding_rect(self, bounding_rect: tuple) -> tuple:
         """
