@@ -6,7 +6,7 @@ import time                 # debug - time
 from objects import Obstacle, Garage, Gate
 from map import Map
 
-from tqdm import tqdm       # debug - progress bar
+#from tqdm import tqdm       # debug - progress bar
 
 
 class Detector:
