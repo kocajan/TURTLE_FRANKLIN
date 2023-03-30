@@ -34,13 +34,15 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     map.fill_world_map()
     path = map.find_way((250, 0), tuple(map.get_goal()))
-    tmp = move(path)
-    tmp.execute_move()
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
-    vis.visualize_rgb()
+    #vis.visualize_rgb()
     # vis.visualize_point_cloud()
-    vis.visualize_map(path=path)
+    #vis.visualize_map(path=path)
+
+    tmp = move(path)
+    #print(path)
+    tmp.execute_move()
 
 
 def image_man(img: np.ndarray, pc: np.ndarray) -> None:
@@ -170,15 +172,15 @@ def main():
         pc = np.load(f'camera/shoot3/PC13.npy')
         image_man(img, pc)
     elif test == "image+pc+map":
-        all = True
+        all = False
         if all:
             for i in range(13):
                 img = cv.imread(f'camera/shoot3/RGB{i}.png')
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot3/RGB12.png')
-            pc = np.load(f'camera/shoot3/PC12.npy')
+            img = cv.imread(f'camera/shoot5/RGB0.png')
+            pc = np.load(f'camera/shoot5/PC0.npy')
             big_test(img, pc)
 
 
