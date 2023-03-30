@@ -32,7 +32,8 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     det.process_point_cloud()
 
     map.fill_world_map()
-    path = map.find_way((0, 250), tuple(map.get_goal()))
+    print("goal: ", map.get_goal())
+    path = map.find_way((250, 0), tuple(map.get_goal()))
 
     # TODO: DELETE THIS --------------------------------
     print(path)
@@ -183,9 +184,9 @@ def main():
     elif test == "image+pc+map":
         all = True
         if all:
-            for i in range(4):
-                img = cv.imread(f'camera/shoot4/RGB{i}.png')
-                pc = np.load(f'camera/shoot4/PC{i}.npy')
+            for i in range(13):
+                img = cv.imread(f'camera/shoot3/RGB{i}.png')
+                pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
             img = cv.imread(f'camera/shoot3/RGB12.png')

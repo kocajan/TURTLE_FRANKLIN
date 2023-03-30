@@ -48,6 +48,7 @@ class Map:
                 while current_node:
                     path.append(current_node)
                     current_node = parent[current_node]
+
                 return path[::-1]
 
             # Add the current node to the closed set
@@ -122,10 +123,6 @@ class Map:
         # Garage (if the gate has been found we can predict position of the garage)
         self.fill_in_garage(pillars)
 
-        # TODO: DELETE --------------------------------
-        self.goal = pillars[0]
-        # TODO ----------------------------------------
-
         # Robot
         if self.robot is not None:
             self.fill_in_robot()
@@ -157,11 +154,15 @@ class Map:
                 p1 = self.calculate_next_point(ref_pillar, orientation-np.pi/2, garage_width)
                 p2 = self.calculate_next_point(p1, orientation, garage_length)
 
-            # connect these points by lines
+            # Connect these points by lines
             other_pillar = pillars[0] if pillars[0] != ref_pillar else pillars[1]
             cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
+
+            # Find center and set it as goal
+            center = (int((ref_pillar[0] + other_pillar[0]) / 2), int((ref_pillar[1] + other_pillar[1]) / 2))
+            self.goal = center
 
         # If only one or none of the pillars has been found, we cannot predict the position of the garage
         # We will fill in points of the garage itself (yellow area in RGB image)
@@ -176,6 +177,9 @@ class Map:
                     x = self.conv_real_to_map(xs[i], add=True)
                     y = self.conv_real_to_map(ys[i])
                     cv.circle(self.world_map, (x, y), 1, garage_id, -1)
+
+            # TODO: DELETE
+            self.goal = (100, 100)
         else:
             raise ValueError("The gate has more than 2 pillars.")
 
