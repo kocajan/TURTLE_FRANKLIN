@@ -259,7 +259,26 @@ class Map:
         id = self.detection_cfg['map']['id']['restricted']
 
         # Draw the restricted area as a square
-        cv.rectangle(self.world_map, (x - size, y - size), (x + size, y + size), id, -1)
+        # cv.rectangle(self.world_map, (x - size, y - size), (x + size, y + size), id, -1)
+        self.draw_octagon((x, y), size, id)
+
+    def draw_octagon(self, center, side_length, color) -> None:
+        """
+        Draw a octagon on the map.
+        :param center: The center of the pentagon.
+        :param side_length: The side length of the pentagon.
+        :param color: The color of the pentagon.
+        """
+
+        # Calculate the coordinates of the five vertices of the pentagon
+        vertices = []
+        for i in range(8):
+            x = int(center[0] + side_length * np.cos(2 * np.pi * i / 8 + np.pi / 8))
+            y = int(center[1] + side_length * np.sin(2 * np.pi * i / 8 + np.pi / 8))
+            vertices.append((x, y))
+
+        # Draw the octagon
+        cv.fillPoly(self.world_map, [np.array(vertices)], color)
 
     @staticmethod
     def calculate_next_point(point, angle, distance) -> tuple:

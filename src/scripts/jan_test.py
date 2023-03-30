@@ -34,9 +34,23 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     map.fill_world_map()
     path = map.find_way((0, 250), tuple(map.get_goal()))
 
+    # TODO: DELETE THIS --------------------------------
+    print(path)
+    in_path = []
+    dup = False
+    for pixel in path:
+        if pixel not in in_path:
+            in_path.append(pixel)
+        else:
+            dup = True
+            print('duplicate pixel in path')
+    if not dup:
+        print('no duplicates in path')
+    # TODO ----------------------------------------------
+
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
-    vis.visualize_point_cloud()
+    # vis.visualize_point_cloud()
     vis.visualize_map(path=path)
 
 
