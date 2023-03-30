@@ -6,6 +6,7 @@ from objects import Robot, Obstacle, Gate, Garage
 from detector import Detector
 from map import Map
 from visualizer import Visualizer
+from move import move
 
 
 def big_test(img: np.ndarray, pc: np.ndarray) -> None:
@@ -33,19 +34,8 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     map.fill_world_map()
     path = map.find_way((250, 0), tuple(map.get_goal()))
-
-    # TODO: DELETE THIS --------------------------------
-    in_path = []
-    dup = False
-    for pixel in path:
-        if pixel not in in_path:
-            in_path.append(pixel)
-        else:
-            dup = True
-            print('duplicate pixel in path')
-    if not dup:
-        print('no duplicates in path')
-    # TODO ----------------------------------------------
+    tmp = move(path)
+    tmp.execute_move()
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
