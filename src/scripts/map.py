@@ -48,7 +48,8 @@ class Map:
                 while current_node:
                     path.append(current_node)
                     current_node = parent[current_node]
-
+                print("goal: ", goal)
+                print("path: ", path)
                 return path[::-1]
 
             # Add the current node to the closed set
