@@ -32,12 +32,9 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     det.process_point_cloud()
 
     map.fill_world_map()
-    print("goal: ", map.get_goal())
     path = map.find_way((250, 0), tuple(map.get_goal()))
-    print("path2: ", path)
 
     # TODO: DELETE THIS --------------------------------
-    print(path)
     in_path = []
     dup = False
     for pixel in path:

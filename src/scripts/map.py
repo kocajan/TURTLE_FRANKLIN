@@ -48,8 +48,6 @@ class Map:
                 while current_node:
                     path.append(current_node)
                     current_node = parent[current_node]
-                print("goal: ", goal)
-                print("path: ", path)
                 return path[::-1]
 
             # Add the current node to the closed set
@@ -161,9 +159,12 @@ class Map:
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
 
-            # Find center and set it as goal
-            center = (int((ref_pillar[0] + other_pillar[0]) / 2), int((ref_pillar[1] + other_pillar[1]) / 2))
-            self.goal = center
+            # Find a mirror point of the p1 point with respect to the reference pillar
+            p3 = self.calculate_next_point(ref_pillar, orientation, garage_length)
+            p4 = self.calculate_next_point(p3, orientation-np.pi/2, garage_width)
+
+            # Set center of p4 and ref_pillar as the goal
+            self.goal = ((p4[0] + ref_pillar[0]) // 2, (p4[1] + ref_pillar[1]) // 2)
 
         # If only one or none of the pillars has been found, we cannot predict the position of the garage
         # We will fill in points of the garage itself (yellow area in RGB image)
