@@ -2,7 +2,7 @@ import numpy as np
 import math
 import yaml
 from single_mv import single_mv
-from robolab_turtlebot import Turtlebot, Rate, get_time
+#from robolab_turtlebot import Turtlebot, Rate, get_time
 
 class move:
     move_coords = list(list())  #2D array of moving coords
@@ -10,13 +10,13 @@ class move:
     def __init__(self, coords):
         self.detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
         self.move_coords = coords
-        self.turtle = Turtlebot()
-        self.rate = Rate(10) # co dela tahle funkce?
+        #self.turtle = Turtlebot()
+        #self.rate = Rate(10) # co dela tahle funkce?
 
     def execute_move(self):
         moves_to_execute = self.move_sequence()
         for index, move in enumerate(moves_to_execute):
-            print(move.get_go_distance(), move.get_rotation())
+            print('here', move.get_go_distance(), move.get_rotation())
             self.rotate_degrees(move.get_rotation())
             self.go_straight(move.get_go_distance(), np.sign(move.get_go_distance()))
 
@@ -66,13 +66,17 @@ class move:
         for pos in range(len(self.move_coords)):
             next_neighbours = self.generate_neighbours(self.move_coords[pos], prev_coord)
             for index, neigh in enumerate(next_neighbours):
+                
                 if( (pos+1) < (len(self.move_coords)) and neigh == self.move_coords[pos+1] and neigh != None):
+                    #print('pos, idx ', pos, index)
                     if(index == 0):     #up
                         if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
                             sequence.append(tmp)
+                            print('here1', tmp.get_go_distance())
                             translation = 0
                         rotation = - prev_rotation
                         translation = translation + 1
+                        print('rot, tran', rotation, translation)
                         #break
                     elif(index == 1):   #down
                         if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):

@@ -1,12 +1,12 @@
 import numpy as np
 import cv2 as cv
 import yaml
+import move
 
 from objects import Robot, Obstacle, Gate, Garage
 from detector import Detector
 from map import Map
 from visualizer import Visualizer
-from move import move
 
 
 def big_test(img: np.ndarray, pc: np.ndarray) -> None:
@@ -40,7 +40,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     # vis.visualize_point_cloud()
     #vis.visualize_map(path=path)
 
-    tmp = move(path)
+    tmp = move.move(path)
     #print(path)
     tmp.execute_move()
 
