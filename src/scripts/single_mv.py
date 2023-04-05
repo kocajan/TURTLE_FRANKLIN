@@ -8,4 +8,4 @@ class single_mv:
     def get_rotation(self):
         return self.rotation_val
     def get_go_distance(self):
-        return self.rotation_val
+        return self.distance_val
