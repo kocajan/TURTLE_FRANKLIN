@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import yaml
+import move
 
 from objects import Robot, Obstacle, Gate, Garage
 from detector import Detector
@@ -34,23 +35,20 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     map.fill_world_map()
     path = map.find_way((250, 0), tuple(map.get_goal()))
 
-    # TODO: DELETE THIS --------------------------------
-    in_path = []
-    dup = False
-    for pixel in path:
-        if pixel not in in_path:
-            in_path.append(pixel)
-        else:
-            dup = True
-            print('duplicate pixel in path')
-    if not dup:
-        print('no duplicates in path')
-    # TODO ----------------------------------------------
-
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+<<<<<<< HEAD
     vis.visualize_rgb()
     vis.visualize_point_cloud()
     vis.visualize_map(path=path)
+=======
+    #vis.visualize_rgb()
+    # vis.visualize_point_cloud()
+    #vis.visualize_map(path=path)
+
+    tmp = move.move(path)
+    #print(path)
+    tmp.execute_move()
+>>>>>>> 29f03634f83971e0f9719d585974adeffc9f6e40
 
 
 def image_man(img: np.ndarray, pc: np.ndarray) -> None:
@@ -187,8 +185,13 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
+<<<<<<< HEAD
             img = cv.imread(f'camera/shoot4/RGB0.png')
             pc = np.load(f'camera/shoot4/PC0.npy')
+=======
+            img = cv.imread(f'camera/shoot5/RGB0.png')
+            pc = np.load(f'camera/shoot5/PC0.npy')
+>>>>>>> 29f03634f83971e0f9719d585974adeffc9f6e40
             big_test(img, pc)
 
 

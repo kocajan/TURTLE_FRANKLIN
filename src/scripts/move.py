@@ -16,8 +16,9 @@ class move:
     def execute_move(self):
         moves_to_execute = self.move_sequence()
         for index, move in enumerate(moves_to_execute):
+            print('here', move.get_go_distance(), move.get_rotation())
             self.rotate_degrees(move.get_rotation())
-            self.go_straight(move.get_go_distance())
+            self.go_straight(move.get_go_distance(), np.sign(move.get_go_distance()))
 
 
     #format of neighbours is UP, DOWN, DIAGONAL_UP_RIGHT, DIAGONAL_UP_LEFT, DIAGONAL_DOWN_RIGHT, DIAGONAL_DOWN_LEFT, RIGHT_ANGLE_LEFT, RIGHT_ANGLE_RIGHT
@@ -65,13 +66,17 @@ class move:
         for pos in range(len(self.move_coords)):
             next_neighbours = self.generate_neighbours(self.move_coords[pos], prev_coord)
             for index, neigh in enumerate(next_neighbours):
+                
                 if( (pos+1) < (len(self.move_coords)) and neigh == self.move_coords[pos+1] and neigh != None):
+                    #print('pos, idx ', pos, index)
                     if(index == 0):     #up
                         if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
                             sequence.append(tmp)
+                            print('here1', tmp.get_go_distance())
                             translation = 0
                         rotation = - prev_rotation
                         translation = translation + 1
+                        print('rot, tran', rotation, translation)
                         #break
                     elif(index == 1):   #down
                         if((tmp := self.check_trend(index, prev_index, rotation, translation)) != None):
@@ -133,6 +138,7 @@ class move:
                     break
             prev_coord = self.move_coords[pos]
         sequence.append(self.check_trend(index, 10, rotation, translation))
+        print('here ', sequence[1].get_go_distance())
         return sequence
     # length in centimeters
 
@@ -159,7 +165,7 @@ class move:
                 slowdown = True
         #path_integrated.append(odometry_x_y[0])
         #path_integrated.append(odometry_x_y[1])
-        return list(odometry_x_y[0], odometry_x_y[1])
+        return None #list(odometry_x_y[0], odometry_x_y[1])
 
     def compensate_straight_integration_drift(self):
         additional_rotation = 0
@@ -223,7 +229,9 @@ class move:
             self.compensation(-1)
 
 
-path =  [(250, 0), (251, 1), (252, 2), (253, 3), (253, 4), (253, 5), (253, 6), (253, 7), (253, 8), (253, 9), (253, 10), (253, 11), (253, 12), (253, 13), (253, 14), (253, 15), (253, 16), (253, 17), (253, 18), (253, 19), (253, 20), (253, 21), (253, 22), (253, 23), (253, 24), (253, 25), (253, 26), (253, 27), (253, 28), (253, 29), (253, 30), (253, 31), (253, 32), (253, 33), (253, 34), (253, 35), (253, 36), (253, 37), (253, 38), (253, 39), (253, 40), (253, 41), (253, 42), (253, 43), (253, 44), (253, 45), (253, 46), (253, 47), (253, 48), (253, 49), (253, 50), (253, 51), (253, 52), (253, 53), (253, 54), (253, 55), (253, 56), (253, 57), (253, 58), (253, 59), (253, 60), (253, 61), (253, 62), (253, 63), (253, 64), (253, 65), (253, 66), (253, 67)]
+if __name__ == '__main__':
+    path =  [(250, 0), (251, 1), (252, 2), (253, 3), (253, 4), (253, 5), (253, 6), (253, 7), (253, 8), (253, 9), (253, 10), (253, 11), (253, 12), (253, 13), (253, 14), (253, 15), (253, 16), (253, 17), (253, 18), (253, 19), (253, 20), (253, 21), (253, 22), (253, 23), (253, 24), (253, 25), (253, 26), (253, 27), (253, 28), (253, 29), (253, 30), (253, 31), (253, 32), (253, 33), (253, 34), (253, 35), (253, 36), (253, 37), (253, 38), (253, 39), (253, 40), (253, 41), (253, 42), (253, 43), (253, 44), (253, 45), (253, 46), (253, 47), (253, 48), (253, 49), (253, 50), (253, 51), (253, 52), (253, 53), (253, 54), (253, 55), (253, 56), (253, 57), (253, 58), (253, 59), (253, 60), (253, 61), (253, 62), (253, 63), (253, 64), (253, 65), (253, 66), (253, 67)]
 
-tmp = move(path)
-tmp.move_sequence()
+    tmp = move(path)
+    #tmp.move_sequence()
+    tmp.execute_move()
