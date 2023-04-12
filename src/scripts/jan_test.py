@@ -4,6 +4,7 @@ import yaml
 import move
 
 from objects import Robot, Obstacle, Gate, Garage
+from robot import robot
 from detector import Detector
 from map import Map
 from visualizer import Visualizer
@@ -23,9 +24,10 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     hei = objects_cfg['robot']['height']
     col = objects_cfg['robot']['color']
 
-    robot = Robot(rad, col, 'black')
-    robot.set_world_coordinates((0, 0))
-    map.set_robot(robot)
+    rob = robot(rad, col, 'black')
+    rob.main()
+    rob.set_world_coordinates((0, 0))
+    map.set_robot(rob)
     # --------------------------------------------
 
     det = Detector(map, img, pc, detection_cfg, objects_cfg)
@@ -36,19 +38,14 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     path = map.find_way((250, 0), tuple(map.get_goal()))
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
-<<<<<<< HEAD
-    vis.visualize_rgb()
-    vis.visualize_point_cloud()
-    vis.visualize_map(path=path)
-=======
+
     #vis.visualize_rgb()
     # vis.visualize_point_cloud()
     #vis.visualize_map(path=path)
 
-    tmp = move.move(path)
+    tmp = move.move(rob, path)
     #print(path)
     tmp.execute_move()
->>>>>>> 29f03634f83971e0f9719d585974adeffc9f6e40
 
 
 def image_man(img: np.ndarray, pc: np.ndarray) -> None:
@@ -185,13 +182,8 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-<<<<<<< HEAD
             img = cv.imread(f'camera/shoot4/RGB0.png')
             pc = np.load(f'camera/shoot4/PC0.npy')
-=======
-            img = cv.imread(f'camera/shoot5/RGB0.png')
-            pc = np.load(f'camera/shoot5/PC0.npy')
->>>>>>> 29f03634f83971e0f9719d585974adeffc9f6e40
             big_test(img, pc)
 
 

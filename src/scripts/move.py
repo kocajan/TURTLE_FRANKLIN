@@ -3,10 +3,21 @@ import sys
 import numpy as np
 import math
 import yaml
-from single_mv import single_mv
-from robot import GLOBAL_STOP
+#from single_mv import single_mv
+#from robot import GLOBAL_STOP
 
-#from robolab_turtlebot import Turtlebot, Rate, get_time
+from rospy import Rate
+
+class single_mv:
+    move_coords = list(list())  #2D array of moving coords
+    def __init__(self, degrees, distance):
+        self.rotation_val = degrees
+        self.distance_val = distance
+
+    def get_rotation(self):
+        return self.rotation_val
+    def get_go_distance(self):
+        return self.distance_val
 
 class move:
     move_coords = list(list())  #2D array of moving coords
@@ -16,12 +27,12 @@ class move:
         self.move_coords = coords
         #self.turtle = Turtlebot()
         self.turtle = turtle_object
-        #self.rate = Rate(10) # co dela tahle funkce?
+        self.rate = Rate(10) # co dela tahle funkce?
 
     def execute_move(self):
         moves_to_execute = self.move_sequence()
         for index, move in enumerate(moves_to_execute):
-            if(not GLOBAL_STOP):
+            if(not self.turtle.get_GLOBAL_STOP()):
                 print('here', move.get_go_distance(), move.get_rotation())
                 self.rotate_degrees(move.get_rotation())
                 self.go_straight(move.get_go_distance(), np.sign(move.get_go_distance()))
@@ -156,7 +167,7 @@ class move:
         odometry_x_y = []
         #path_integrated = list()
         self.odometry_hard_rst()
-        while not self.turtle.is_shutting_down() and not GLOBAL_STOP:
+        while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
             #print(slow_start_cnt)
             if(slow_start_cnt < 1.0 and not slowdown):
                 slow_start_cnt = slow_start_cnt + 0.05
@@ -191,7 +202,7 @@ class move:
 
         self.odometry_hard_rst()
         if(direction == -1):
-            while not self.turtle.is_shutting_down() and not GLOBAL_STOP:
+            while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
                 self.turtle.cmd_velocity(angular = 0.4)
                 act_rot = self.turtle.get_odometry()[2]
                 print(act_rot)
@@ -199,7 +210,7 @@ class move:
                     break
 
         elif(direction == 1):
-            while not self.turtle.is_shutting_down() and not GLOBAL_STOP:
+            while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
                 self.turtle.cmd_velocity(angular = -0.4)
                 act_rot = self.turtle.get_odometry()[2]
                 print(act_rot)
@@ -214,7 +225,7 @@ class move:
             prev_rot = 0
             goal = np.radians(degrees)
 
-            while not self.turtle.is_shutting_down() and not GLOBAL_STOP:
+            while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
                 act_rot = self.turtle.get_odometry()[2]
                 print(act_rot, prev_rot)
                 if(act_rot >= goal or abs(act_rot-prev_rot) > 1):
@@ -227,7 +238,7 @@ class move:
             prev_rot = 0
             goal = np.radians(degrees)
 
-            while not self.turtle.is_shutting_down() and not GLOBAL_STOP:
+            while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
                 act_rot = self.turtle.get_odometry()[2]
                 print(act_rot, prev_rot)
                 if(act_rot <= goal or abs(act_rot - prev_rot) > 1):

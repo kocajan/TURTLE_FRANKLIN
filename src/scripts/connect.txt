@@ -15,3 +15,5 @@ singularity shell /local/robolab_noetic_2022-03-31.simg
 source /opt/ros/lar/setup.bash
 python3 /opt/ros/lar/share/robolab_turtlebot/scripts/example_move_1m.py
 
+ps -ef | grep kocajan
+kill -9 number
