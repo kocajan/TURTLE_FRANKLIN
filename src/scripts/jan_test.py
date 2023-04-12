@@ -185,13 +185,8 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-<<<<<<< HEAD
-            img = cv.imread(f'camera/shoot4/RGB0.png')
-            pc = np.load(f'camera/shoot4/PC0.npy')
-=======
             img = cv.imread(f'camera/shoot5/RGB0.png')
             pc = np.load(f'camera/shoot5/PC0.npy')
->>>>>>> 29f03634f83971e0f9719d585974adeffc9f6e40
             big_test(img, pc)
 
 
