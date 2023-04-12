@@ -12,6 +12,25 @@ counter = 0
 shoot = True
 
 
+def capture_images():
+    """Captures images from the camera and saves them to the given directory
+    :param camera: Camera object
+    :param directory: Directory to save the images to
+    :param config: Configuration file
+    """
+    path = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(path, 'camera/shoot5')
+    os.makedirs(path, exist_ok=True)
+
+    turtle = Turtlebot()
+
+    turtle.register_button_event_cb(button_cb)
+
+    rate = Rate(1)
+    while not turtle.is_shutting_down():
+        rate.sleep()
+
+
 def button_cb(event):
     global counter
     global shoot
@@ -50,25 +69,6 @@ def button_cb(event):
 
     else:
         shoot = True
-
-
-def capture_images():
-    """Captures images from the camera and saves them to the given directory
-    :param camera: Camera object
-    :param directory: Directory to save the images to
-    :param config: Configuration file
-    """
-    path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, 'camera/shoot5')
-    os.makedirs(path, exist_ok=True)
-
-    turtle = Turtlebot()
-
-    turtle.register_button_event_cb(button_cb)
-
-    rate = Rate(1)
-    while not turtle.is_shutting_down():
-        rate.sleep()
 
 
 if __name__ == '__main__':
