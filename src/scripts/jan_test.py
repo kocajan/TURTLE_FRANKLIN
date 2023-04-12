@@ -49,7 +49,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
-    # vis.visualize_point_cloud()
+    vis.visualize_point_cloud()
     vis.visualize_map(path=path)
 
 
@@ -65,11 +65,11 @@ def image_man(img: np.ndarray, pc: np.ndarray) -> None:
 
     det = Detector(map, img, pc, detection_cfg, objects_cfg)
     det.process_rgb()
-    det.process_point_cloud()
+    # det.process_point_cloud()
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
-    vis.visualize_point_cloud()
+    # vis.visualize_point_cloud()
 
 
 def map_visualization_test() -> None:
@@ -180,15 +180,15 @@ def main():
         pc = np.load(f'camera/shoot3/PC13.npy')
         image_man(img, pc)
     elif test == "image+pc+map":
-        all = True
+        all = False
         if all:
             for i in range(13):
                 img = cv.imread(f'camera/shoot3/RGB{i}.png')
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot3/RGB12.png')
-            pc = np.load(f'camera/shoot3/PC12.npy')
+            img = cv.imread(f'camera/shoot4/RGB0.png')
+            pc = np.load(f'camera/shoot4/PC0.npy')
             big_test(img, pc)
 
 

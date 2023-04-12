@@ -2,7 +2,7 @@ colors:
   green:
     tag: 'green'
     rgb: [ 0, 255, 0]
-    lower: [ 49, 93, 92 ]
+    lower: [ 40, 65, 70 ] # [ 49, 93, 92 ]
     upper: [ 68, 255, 255]
 
   blue:
@@ -14,14 +14,14 @@ colors:
   red:
     tag: 'red'
     rgb: [ 255, 0, 0 ]
-    lower: [ 3, 200, 137]
+    lower: [ 3, 175, 126] # [ 3, 200, 137]
     upper: [ 7, 255, 255 ]
 
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 113, 92, 0 ] # [ 113, 92, 255 ] - 255 as lower bound does not make sense
-    upper: [ 138, 255, 111 ]
+    lower: [ 113, 70, 0 ] # [ 113, 92, 255 ] - 255 as lower bound does not make sense
+    upper: [ 138, 255, 120 ] # [ 138, 255, 111 ]
 
   yellow:
     tag: 'yellow'
