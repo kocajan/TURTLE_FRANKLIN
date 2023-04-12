@@ -4,12 +4,7 @@ from move import move
 
 #GLOBAL_STOP = False
 
-<<<<<<< HEAD:src/scripts/robot.py
 class robot(Turtlebot):
-=======
-
-class robot:
->>>>>>> d6dc65d66e2c19e564b2753d0d23db89bc565217:robot.py
     # Names bumpers and events
     #bumper_names = ['LEFT', 'CENTER', 'RIGHT']
     #state_names = ['RELEASED', 'PRESSED']
@@ -54,13 +49,9 @@ class robot:
         return pc
 
     def stop_motors(self):
-<<<<<<< HEAD:src/scripts/robot.py
         self.cmd_velocity(linear = 0)
         self.cmd_velocity(angular = 0)
-=======
-        self.turtle.cmd_velocity(linear = 0)
-        self.turtle.cmd_velocity(angular = 0)
->>>>>>> d6dc65d66e2c19e564b2753d0d23db89bc565217:robot.py
+
 
     def bumper_cb(self, msg):
         """Bumber callback."""
