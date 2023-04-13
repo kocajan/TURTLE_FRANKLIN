@@ -25,7 +25,9 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     col = objects_cfg['robot']['color']
 
     rob = robot(rad, col, 'black')
-    rob.main()
+    print('robot object created')
+    print('bumper initialized')
+
     rob.set_world_coordinates((0, 0))
     map.set_robot(rob)
     # --------------------------------------------

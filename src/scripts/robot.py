@@ -20,6 +20,7 @@ class robot(Turtlebot):
         self.color = color
         self.world_coordinates = None
         self.GLOBAL_STOP = False
+        self.register_bumper_event_cb(self.bumper_cb)
 
     def get_RGB_img(self):
         """

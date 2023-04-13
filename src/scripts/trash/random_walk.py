@@ -6,7 +6,7 @@ import cv2
 
 import numpy as np
 
-from ...robolab_turtlebot import Turtlebot
+from robolab_turtlebot import Turtlebot
 
 MOVE = 1
 ROTATE = 2
