@@ -46,6 +46,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     #vis.visualize_map(path=path)
 
     tmp = move.move(rob, path)
+    print(path)
     #print(path)
     tmp.execute_move()
 
