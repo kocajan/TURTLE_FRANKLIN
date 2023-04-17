@@ -6,7 +6,7 @@ import yaml
 #from single_mv import single_mv
 #from robot import GLOBAL_STOP
 
-#from rospy import Rate
+from rospy import Rate
 
 class single_mv:
     move_coords = list(list())  #2D array of moving coords
@@ -23,11 +23,11 @@ class move:
     move_coords = list(list())  #2D array of moving coords
 
     def __init__(self, turtle_object, coords):
-        #self.detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+        self.detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
         self.move_coords = coords
         #self.turtle = Turtlebot()
         self.turtle = turtle_object
-        #self.rate = Rate(10) # co dela tahle funkce?
+        self.rate = Rate(10) # co dela tahle funkce?
 
     def execute_move(self):
         moves_to_execute = self.move_sequence()
@@ -182,9 +182,10 @@ class move:
         while not self.turtle.is_shutting_down() and not self.turtle.get_GLOBAL_STOP():
             #print(slow_start_cnt)
             if(slow_start_cnt < 1.0 and not slowdown):
-                slow_start_cnt = slow_start_cnt + 0.05
-            elif(slowdown and slow_start_cnt >= 0.17):
-                slow_start_cnt = slow_start_cnt - 0.05
+                slow_start_cnt = slow_start_cnt + 0.15
+            elif(slowdown and slow_start_cnt >= 0.25): # 0.17
+                slow_start_cnt = slow_start_cnt - 0.1 # -0.1
+                print('FVSDVSVS')
 
             odometry_x_y = self.turtle.get_odometry()[:1]
             if(abs(odometry_x_y[0]) >= (length/100)):
@@ -192,7 +193,7 @@ class move:
             self.turtle.cmd_velocity(linear=(0.2*dir)*slow_start_cnt) # TODO add as yaml const
             self.rate.sleep()
             #print((abs(odometry_x_y[0])/2), ((length/100)/2))
-            if((abs(odometry_x_y[0])) > ((length/100)/1.3)):
+            if((abs(odometry_x_y[0])) > ((length/100)/1.8)): # /1.3
                 slowdown = True
         #path_integrated.append(odometry_x_y[0])
         #path_integrated.append(odometry_x_y[1])
