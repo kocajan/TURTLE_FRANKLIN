@@ -107,9 +107,9 @@ class Move:
         """
         if index != prev_index and prev_index is not None:
             if rotation != 0:
-                tmp = SingleMove(rotation, translation)
+                tmp = SingleMove(-rotation, translation) # mozna se to posere
             elif rotation == 0:
-                tmp = SingleMove(-sequence[-1].get_rotation(), translation)
+                tmp = SingleMove(sequence[-1].get_rotation(), translation)
             return tmp
         return None
 
@@ -212,7 +212,7 @@ class Move:
                     prev_rotation = abs(rotation)
                     break
             prev_coord = self.move_coords[pos]
-        sequence.append(self.check_trend(index, 10, rotation, translation, sequence))
+        sequence.append(self.check_trend(index, 10, -rotation, translation, sequence)) # pridane minus pico
         #print('here ', sequence[1].get_distance())
         return sequence
     # length in centimeters

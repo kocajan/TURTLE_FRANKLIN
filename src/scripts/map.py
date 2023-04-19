@@ -58,8 +58,7 @@ class Map:
                 neighbor = current_node[0] + i, current_node[1] + j
 
                 # Check if the neighbor is within the maze bounds and is not an obstacle
-                if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] \
-                        and self.world_map[neighbor] < 2:
+                if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] and self.world_map[neighbor] < 2:
 
                     # Compute the tentative cost for the neighbor
                     tentative_cost = cost[current_node] + 1

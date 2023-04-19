@@ -1,6 +1,5 @@
-gitfrom __future__ import print_function
 from robolab_turtlebot import Turtlebot, Rate
-from move import move
+from move import Move
 
 
 class Robot(Turtlebot):
@@ -13,22 +12,20 @@ class Robot(Turtlebot):
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
 
-    def get_rgb_img(self):
+    def take_rgb_img(self):
         """
         Take RGB photo and return it as numpy array.
         :return: RGB photo as numpy array.
         """
         # Wait for the camera to setup
         self.wait_for_rgb_image()
+        
+        # Capture RGB image
+        rgb = self.get_rgb_image()
 
-        # Capture BGR image
-        bgr = self.get_rgb_image()
-
-        # Convert BGR to RGB and save image
-        rgb = bgr[..., ::-1]
         return rgb
 
-    def get_point_cloud(self):
+    def take_point_cloud(self):
         """
         Get point cloud from the robot.
         :return: Point cloud as numpy array.
