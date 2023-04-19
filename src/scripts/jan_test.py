@@ -242,6 +242,8 @@ def main():
             img = cv.imread(f'camera/shoot4/RGB0.png')
             pc = np.load(f'camera/shoot4/PC0.npy')
             big_test(img, pc)
+    elif test == "huge_test":
+        huge_test()
 
 
 if __name__ == '__main__':
