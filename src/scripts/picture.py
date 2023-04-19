@@ -60,8 +60,8 @@ def button_cb(event):
         print(f"Saved point cloud to {image_path}")
 
         # Compare sizes of RGB image and point cloud
-        #print(f"RGB image shape: {rgb.shape}")
-        #print(f"Point cloud shape: {pc.shape}")
+        # print(f"RGB image shape: {rgb.shape}")
+        # print(f"Point cloud shape: {pc.shape}")
 
         # Increment counter and set shoot to False
         counter += 1

@@ -6,8 +6,6 @@ import time                 # debug - time
 from objects import Obstacle, Garage, Gate
 from map import Map
 
-#from tqdm import tqdm       # debug - progress bar
-
 
 class Detector:
     def __init__(self, map: Map, rgb_img: np.ndarray, point_cloud: np.ndarray, detection_cfg: dict, objects_cfg: dict):

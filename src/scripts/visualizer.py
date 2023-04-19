@@ -58,13 +58,13 @@ class Visualizer:
             cv.drawContours(copy_img, [box], 0, (0, 255, 0), 1)
 
         # draw orientation of the gate
-        #if self.gate is not None and self.gate.get_num_pillars() == 2:
-         #   p1, p2 = self.gate.get_lowest_points()
-          #  center = self.gate.get_center()
-           # angle = self.gate.get_orientation_rgb()
-            #cv.circle(copy_img, p1, 5, (0, 0, 255), -1)
-            #cv.circle(copy_img, p2, 5, (0, 0, 255), -1)
-            #cv.circle(copy_img, center, 5, (255, 0, 0), -1)
+        if self.gate is not None and self.gate.get_num_pillars() == 2:
+            p1, p2 = self.gate.get_lowest_points()
+            center = self.gate.get_center()
+            angle = self.gate.get_orientation_rgb()
+            cv.circle(copy_img, p1, 5, (0, 0, 255), -1)
+            cv.circle(copy_img, p2, 5, (0, 0, 255), -1)
+            cv.circle(copy_img, center, 5, (255, 0, 0), -1)
 
             # Draw a connecting line between the lowest points
             cv.line(copy_img, p1, p2, (0, 255, 0), 2)
@@ -156,5 +156,3 @@ class Visualizer:
         ax.set_ylim(min_y, max_y)
         ax.set_zlim(min_z, max_z)
         plt.show()
-
-
