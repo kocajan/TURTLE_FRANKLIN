@@ -174,13 +174,6 @@ class Map:
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
 
-            # Find a mirror point of the p1 point with respect to the reference pillar
-            p3 = self.calculate_next_point(ref_pillar, orientation, garage_length)              # TODO: delete
-            p4 = self.calculate_next_point(p3, orientation-np.pi/2, garage_width)               # TODO: delete
-
-            # Set center of p4 and ref_pillar as the goal
-            # self.goal = ((p4[0] + ref_pillar[0]) // 2, (p4[1] + ref_pillar[1]) // 2)          # TODO: delete
-
             # Calculate the center point between the two pillars
             center = ((ref_pillar[0] + other_pillar[0]) // 2, (ref_pillar[1] + other_pillar[1]) // 2)
 
@@ -189,11 +182,11 @@ class Map:
             v_perp = (-v[1], v[0])
 
             # Calculate the two points on the perpendicular vector which are on the line between the two pillars
-            p5 = (center[0] + v_perp[0], center[1] + v_perp[1])
-            p6 = (center[0] - v_perp[0], center[1] - v_perp[1])
+            p3 = (center[0] + v_perp[0], center[1] + v_perp[1])
+            p4 = (center[0] - v_perp[0], center[1] - v_perp[1])
 
             # Set the one with smaller y coordinate as the goal
-            self.goal = p5 if p5[1] < p6[1] else p6
+            self.goal = p3 if p3[1] < p4[1] else p4
 
         # If only one or none of the pillars has been found, we cannot predict the position of the garage
         # We will fill in points of the garage itself (yellow area in RGB image)
