@@ -306,11 +306,8 @@ class Detector:
         :param bounding_rect: The bounding rectangle.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-<<<<<<< HEAD
-=======
-        # Make the bounding rectangle smaller
->>>>>>> ccd203dca14ecb1b050c84d24a2934031f26316a
-        print(bounding_rect)
+        # Make the bounding rectangle smaller TODO do at home
+        bounding_rect = (bounding_rect[0], (bounding_rect[1][0], bounding_rect[1][1]), bounding_rect[2])
 
         # Get the corners of the bounding rectangle
         corners = cv.boxPoints(bounding_rect)
@@ -319,12 +316,11 @@ class Detector:
         return self.get_pc_points_in_contours([corners])
 
     def get_pc_points_in_contours(self, contours: list) -> np.ndarray:
-        """
+        """s
         Get the points of the point cloud that are in the given contour.
         :param contours: The contours.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-
         # Get the points of the point cloud that are in the bounding rectangle
         points_in_contours = []
 
@@ -332,7 +328,18 @@ class Detector:
         img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
 
         # Draw filled bounding rectangle on the image
-        cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
+        contours = np.array(contours)
+        if len(contours.shape) == 1:
+            print('ahojda')
+            for contour in contours:
+                print(np.array(contour).shape)
+                cv.drawContours(img_with_contours, contour, 0, (255, 255, 255), -1)
+        else:
+            print('zdary')
+            cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
+
+        cv.imshow('wtf', img_with_contours)
+        cv.waitKey(0)
 
         # Decide whether point is in the rectangle
         for i, line in enumerate(self.processed_point_cloud):

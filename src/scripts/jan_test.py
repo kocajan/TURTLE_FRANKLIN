@@ -41,7 +41,7 @@ def huge_test() -> None:
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
-    path = map.find_way((250, 0), tuple(map.get_goal()))
+    path = map.find_way((250, 0), tuple(map.get_goal()), "A_star")
 
 
     vis.visualize_rgb()

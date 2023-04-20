@@ -123,11 +123,6 @@ class Map:
         Fill the world map with the objects which were found by detector.
         :return: None
         """
-        # Obstacles
-        for obstacle in self.obstacles:
-            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
-            self.fill_in_obstacle(obstacle)
-
         # Gate
         pillars = []
         if self.gate is not None:
@@ -136,6 +131,11 @@ class Map:
 
         # Garage (if the gate has been found we can predict position of the garage)
         self.fill_in_garage(pillars)
+
+        # Obstacles
+        for obstacle in self.obstacles:
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
+            self.fill_in_obstacle(obstacle)
 
         # Robot
         if self.robot is not None:
