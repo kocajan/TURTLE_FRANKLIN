@@ -44,7 +44,22 @@ class Map:
             q.put(self.expand(to_expand))
 
 
-    def find_way(self, start, goal) -> np.ndarray:
+    def find_way(self, start, goal, search_algorithm) -> np.ndarray:
+        """
+        Find the way from the robot to the garage on the map.
+        :param start: The starting point.
+        :param goal: The ending point.
+        :param search_algorithm: The search algorithm to use.
+        :return: The path from the robot to the garage. The path is a list of points.
+        """
+        if search_algorithm == "A_star":
+            return self.a_star(start, goal)
+        elif search_algorithm == "BFS":
+            return self.bfs(start, goal)
+        else:
+            raise ValueError("Unknown search algorithm")
+
+    def a_star(self, start, goal):
         """
         Use A* algorithm to find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -83,7 +98,8 @@ class Map:
                 neighbor = current_node[0] + i, current_node[1] + j
 
                 # Check if the neighbor is within the maze bounds and is not an obstacle
-                if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] and self.world_map[neighbor] < 2:
+                if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] and \
+                        self.world_map[neighbor] < 2:
 
                     # Compute the tentative cost for the neighbor
                     tentative_cost = cost[current_node] + 1
@@ -208,9 +224,8 @@ class Map:
         # We will fill in points of the garage itself (yellow area in RGB image)
         elif len(pillars) == 1 or len(pillars) == 0:
             # Get the coordinates of the garage
-            garage = self.garage
-            if garage is not None:
-                coords = garage.get_world_coordinates()
+            if self.garage is not None:
+                coords = self.garage.get_world_coordinates()
                 xs = coords[0]
                 ys = coords[1]
                 for i in range(len(xs)):

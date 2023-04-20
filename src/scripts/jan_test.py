@@ -9,6 +9,7 @@ from detector import Detector
 from map import Map
 from visualizer import Visualizer
 
+
 def huge_test() -> None:
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
@@ -50,6 +51,7 @@ def huge_test() -> None:
     tmp = move.Move(rob, path, detection_cfg)
     print(path)
     tmp.execute_move()
+
 
 def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
