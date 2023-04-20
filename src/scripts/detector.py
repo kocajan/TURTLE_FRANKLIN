@@ -94,7 +94,7 @@ class Detector:
         big_contours = []
         for cnt in contours:
             area = cv.contourArea(cnt)
-            if area > 2000:
+            if area > 500:
                 big_contours.append(cnt)
 
         # Garage not found
@@ -306,6 +306,10 @@ class Detector:
         :param bounding_rect: The bounding rectangle.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
+<<<<<<< HEAD
+=======
+        # Make the bounding rectangle smaller
+>>>>>>> ccd203dca14ecb1b050c84d24a2934031f26316a
         print(bounding_rect)
 
         # Get the corners of the bounding rectangle
