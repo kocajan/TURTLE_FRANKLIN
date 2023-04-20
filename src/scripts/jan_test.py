@@ -41,16 +41,16 @@ def huge_test() -> None:
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
-    path = map.find_way((250, 0), tuple(map.get_goal()))
+    path = map.find_way((250, 0), tuple(map.get_goal()), "A_star")
 
 
-    # vis.visualize_rgb()
+    vis.visualize_rgb()
     # vis.visualize_point_cloud()
     vis.visualize_map(path=path)
 
     tmp = move.Move(rob, path, detection_cfg)
     print(path)
-    tmp.execute_move()
+    # tmp.execute_move()
 
 
 def big_test(img: np.ndarray, pc: np.ndarray) -> None:
