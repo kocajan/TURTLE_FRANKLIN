@@ -34,6 +34,7 @@ map:
   dimensions: [ 5, 5 ]
   resolution: 0.01
   heuristic: 'manhattan' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
+  search_algorithm: 'A_star' # 'A_start' or 'BFS'
   safety_margin: 0.02
   max_id: 7
   id:
