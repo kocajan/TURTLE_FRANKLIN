@@ -43,13 +43,13 @@ def huge_test() -> None:
     path = map.find_way((250, 0), tuple(map.get_goal()))
 
 
-    # vis.visualize_rgb()
+    vis.visualize_rgb()
     # vis.visualize_point_cloud()
     vis.visualize_map(path=path)
 
     tmp = move.Move(rob, path, detection_cfg)
     print(path)
-    tmp.execute_move()
+    # tmp.execute_move()
 
 def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))

@@ -306,6 +306,8 @@ class Detector:
         :param bounding_rect: The bounding rectangle.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
+        print(bounding_rect)
+
         # Get the corners of the bounding rectangle
         corners = cv.boxPoints(bounding_rect)
         corners = np.int0(corners)
