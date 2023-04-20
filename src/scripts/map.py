@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import heapq
+import queue
 
 
 class Map:
@@ -19,6 +20,30 @@ class Map:
         self.goal = None
 
     # BEGIN: Path finding
+    def expand(self, node_to_expand):
+        result = []
+        neighbours = [(0, 1), (1, 1), (-1, 1), (1, 0), (-1, 0)]
+        memory = {}
+
+        memory[str(node_to_expand)] = None
+        for tuple in neighbours:
+            tmp = (node_to_expand[0] + tuple[0] , node_to_expand[1] + tuple[1])
+            if(0 <= tmp[0] < self.world_map.shape[0] and 0 <= tmp[1] < self.world_map.shape[1] and self.world_map[tmp] < 2 and tmp not in memory.keys()):
+                result.append(tmp)
+        return result
+    def bfs(self, start, goal) -> np.ndarray:
+        q = queue.Queue()
+        q.put(start)
+        path = []
+
+        while(not q.empty()):
+            to_expand = q.pop()
+            if(to_expand == goal):
+                return path
+            path.append(to_expand)
+            q.put(self.expand(to_expand))
+
+
     def find_way(self, start, goal, search_algorithm) -> np.ndarray:
         """
         Find the way from the robot to the garage on the map.
