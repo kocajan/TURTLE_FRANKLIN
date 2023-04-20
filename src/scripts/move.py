@@ -267,7 +267,7 @@ class Move:
         self.odometry_hard_reset()
         if direction == -1:
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
-                self.robot.cmd_velocity(angular=0.4)
+                self.robot.cmd_velocity(angular=0.6)
                 act_rot = self.robot.get_odometry()[2]
                 print(act_rot)
                 if act_rot >= 0.08:
@@ -275,7 +275,7 @@ class Move:
 
         elif direction == 1:
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
-                self.robot.cmd_velocity(angular=-0.4)
+                self.robot.cmd_velocity(angular=-0.6)
                 act_rot = self.robot.get_odometry()[2]
                 print(act_rot)
                 if act_rot <= -0.08:
@@ -294,7 +294,7 @@ class Move:
                 #print(act_rot, prev_rot)
                 if act_rot >= goal or abs(act_rot-prev_rot) > 1:
                     break
-                self.robot.cmd_velocity(angular = 0.4)
+                self.robot.cmd_velocity(angular = 0.6)
                 prev_rot = act_rot
             self.compensation(1)
   
@@ -307,7 +307,7 @@ class Move:
                 #print(act_rot, prev_rot)
                 if act_rot <= goal or abs(act_rot - prev_rot) > 1:
                     break
-                self.robot.cmd_velocity(angular = -0.4)
+                self.robot.cmd_velocity(angular = -0.6)
                 prev_rot = act_rot
             self.compensation(-1)
 
