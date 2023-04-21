@@ -224,9 +224,9 @@ def main():
     elif test == "big":
         all = True
         if all:
-            for i in range(5):
-                img = cv.imread(f'camera/shoot4/RGB{i}.png')
-                pc = np.load(f'camera/shoot4/PC{i}.npy')
+            for i in range(15):
+                img = cv.imread(f'camera/shoot3/RGB{i}.png')
+                pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
             img = cv.imread(f'camera/shoot5/RGB4.png')

@@ -1,9 +1,20 @@
 import cv2
 import numpy as np
 
+import yaml
+
+detection_cfg = yaml.safe_load(open('src/scripts/conf/detection.yaml', 'r'))
+
+
 def nothing(x):
     pass
 
+
+# Set things up
+img = cv2.imread('src/scripts/camera/shoot3/RGB14.png')
+img = cv2.resize(img, (670, 500))
+
+test_color = "magenta"
 
 # Create a window
 cv2.namedWindow('image')
@@ -23,12 +34,25 @@ cv2.setTrackbarPos('VMax', 'image', 255)
 
 # Initialize to check if HSV min/max value changes
 hMin = sMin = vMin = hMax = sMax = vMax = 0
-phMin = psMin = pvMin = phMax = psMax = pvMax = 0
+phMin = psMin = pvMin = phMax = psMax = pvMax = 100
 
-img = cv2.imread('src/scripts/camera/shoot5/RGB4.png')
-img = cv2.resize(img, (670, 500))
 output = img
 waitTime = 33
+
+lower = detection_cfg['colors'][test_color]['lower']
+upper = detection_cfg['colors'][test_color]['upper']
+
+# preset values on trackbars
+cv2.setTrackbarPos('HMin', 'image', lower[0])
+cv2.setTrackbarPos('SMin', 'image', lower[1])
+cv2.setTrackbarPos('VMin', 'image', lower[2])
+cv2.setTrackbarPos('HMax', 'image', upper[0])
+cv2.setTrackbarPos('SMax', 'image', upper[1])
+cv2.setTrackbarPos('VMax', 'image', upper[2])
+
+# Show the image
+cv2.imshow('image', output)
+cv2.waitKey(0)
 
 while (1):
 
