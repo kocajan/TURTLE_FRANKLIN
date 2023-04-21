@@ -17,6 +17,7 @@ class Map:
         x = self.conv_real_to_map(dimensions[0])
         y = self.conv_real_to_map(dimensions[1])
         self.world_map = np.zeros((x, y), dtype=np.uint8)
+        self.goal_calculated = None
         self.goal = None
 
     # BEGIN: Path finding
@@ -43,7 +44,6 @@ class Map:
             path.append(to_expand)
             q.put(self.expand(to_expand))
 
-
     def find_way(self, start, goal, search_algorithm) -> np.ndarray:
         """
         Find the way from the robot to the garage on the map.
@@ -52,6 +52,11 @@ class Map:
         :param search_algorithm: The search algorithm to use.
         :return: The path from the robot to the garage. The path is a list of points.
         """
+        # Convert (x, y) coordinates to (y, x) coordinates
+        start = (start[1], start[0])
+        goal = (goal[1], goal[0])
+
+        # Choose the search algorithm
         if search_algorithm == "A_star":
             return self.a_star(start, goal)
         elif search_algorithm == "BFS":
@@ -95,11 +100,11 @@ class Map:
 
             # Check the neighbors of the current node
             for i, j in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-                neighbor = current_node[0] + i, current_node[1] + j
+                neighbor = current_node[0] + j, current_node[1] + i
 
                 # Check if the neighbor is within the maze bounds and is not an obstacle
                 if 0 <= neighbor[0] < self.world_map.shape[0] and 0 <= neighbor[1] < self.world_map.shape[1] and \
-                        self.world_map[neighbor] < 2:
+                        self.world_map[neighbor] < 4:
 
                     # Compute the tentative cost for the neighbor
                     tentative_cost = cost[current_node] + 1
@@ -166,6 +171,11 @@ class Map:
         if self.robot is not None:
             self.fill_in_robot()
 
+        # Handle the goal
+        self.calculate_goal(pillars=pillars)
+        self.correct_goal()
+        self.fill_in_goal()
+
     def fill_in_garage(self, pillars) -> None:
         """
         Fill the garage in the world map.
@@ -199,20 +209,6 @@ class Map:
             cv.line(self.world_map, p1, p2, garage_id, 2)
             cv.line(self.world_map, p2, other_pillar, garage_id, 2)
 
-            # Calculate the center point between the two pillars
-            center = ((ref_pillar[0] + other_pillar[0]) // 2, (ref_pillar[1] + other_pillar[1]) // 2)
-
-            # Calculate perpendicular vector to the vector between the two pillars
-            v = (other_pillar[0] - ref_pillar[0], other_pillar[1] - ref_pillar[1])
-            v_perp = (-v[1], v[0])
-
-            # Calculate the two points on the perpendicular vector which are on the line between the two pillars
-            p3 = (center[0] + v_perp[0], center[1] + v_perp[1])
-            p4 = (center[0] - v_perp[0], center[1] - v_perp[1])
-
-            # Set the one with smaller y coordinate as the goal
-            self.goal = p3 if p3[1] < p4[1] else p4
-
         # If only one or none of the pillars has been found, we cannot predict the position of the garage
         # We will fill in points of the garage itself (yellow area in RGB image)
         elif len(pillars) == 1 or len(pillars) == 0:
@@ -225,9 +221,6 @@ class Map:
                     x = self.conv_real_to_map(xs[i], add=True)
                     y = self.conv_real_to_map(ys[i])
                     cv.circle(self.world_map, (x, y), 1, garage_id, -1)
-
-            # TODO: DELETE
-            self.goal = (100, 100)
         else:
             raise ValueError("The gate has more than 2 pillars.")
 
@@ -280,6 +273,123 @@ class Map:
 
         # Draw the robot
         cv.circle(self.world_map, (x, y), radius, robot_id, -1)
+
+    def fill_in_goal(self) -> None:
+        """
+        Fill the goal and the calculated goal in the world map.
+        """
+        goal_id = self.detection_cfg['map']['id']['goal']
+        calculated_goal_id = self.detection_cfg['map']['id']['goal_calculated']
+
+        # Draw the goals
+        if self.goal is not None:
+            cv.circle(self.world_map, self.goal, 5, goal_id, -1)
+        if self.goal_calculated is not None:
+            cv.circle(self.world_map, self.goal_calculated, 5, calculated_goal_id, -1)
+
+    def calculate_goal(self, pillars) -> None:
+        """
+        Set the goal of OUR JOURNEY:). (policy differs based on the number of pillars)
+        :param pillars: The map coordinates of the gate's pillars.
+        :return: None
+        """
+        # 2 pillars: we will try to get in front of the gate
+        if len(pillars) == 2:
+            pillar1 = pillars[0]
+            pillar2 = pillars[1]
+
+            # Calculate the center point between the two pillars
+            center = ((pillar1[0] + pillar2[0]) // 2, (pillar1[1] + pillar2[1]) // 2)
+
+            # Calculate perpendicular vector to the vector between the two pillars
+            v = (pillar2[0] - pillar1[0], pillar2[1] - pillar1[1])
+            v_perp = (-v[1], v[0])
+
+            # Calculate the two points on the perpendicular vector which are on the line between the two pillars
+            p1 = (int(center[0] + v_perp[0]), int(center[1] + v_perp[1]))
+            p2 = (int(center[0] - v_perp[0]), int(center[1] - v_perp[1]))
+
+            # Set the one with smaller y coordinate as the goal
+            self.goal_calculated = p1 if p1[1] < p2[1] else p2
+
+        # 1 pillar: we will try to get close to the pillar
+        # 0 pillars: we will try to get closer to the closet point of the garage (yellow area on the map) if it exists
+        elif len(pillars) == 1 or len(pillars) == 0:
+            # Check if the robot object is assigned
+            if self.robot is not None:
+                # Get the coordinates of the robot and convert them to map coordinates
+                x_robot = self.conv_real_to_map(self.robot.get_world_coordinates()[0], add=True)
+                y_robot = self.conv_real_to_map(self.robot.get_world_coordinates()[1])
+            else:
+                raise ValueError("Robot not found.")
+
+            # The reference object is the pillar
+            if len(pillars) == 1:
+                # Get map coordinates of the pillar
+                ref_object_x = pillars[0][0]
+                ref_object_y = pillars[0][1]
+            # The reference object is the closest point of the garage
+            else:
+                # Get the closest point of the garage (None if garage did not occur in the image)
+                garage_id = self.detection_cfg['map']['id']['garage']
+                closest_point = self.get_closest_point_on_map((x_robot, y_robot), garage_id)
+                if closest_point is not None:
+                    ref_object_x = closest_point[0]
+                    ref_object_y = closest_point[1]
+                else:
+                    self.goal_calculated = None                                                    # TODO: what to do here?
+                    return
+
+            # Calculate the distance between the robot and the pillar
+            distance = np.sqrt((ref_object_x - x_robot)**2 + (ref_object_y - y_robot)**2)
+
+            # If the distance is smaller than the threshold, we are close enough to the pillar
+            dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
+            if distance < dist_threshold:
+                self.goal_calculated = None                                                         # TODO: what to do here?
+            # Otherwise, we will try to get closer to the pillar (point on the line between the robot and the pillar)
+            else:
+                # Get the vector between the robot and the reference object
+                v = (ref_object_x - x_robot, ref_object_y - y_robot)
+
+                # Make it a unit vector
+                v = (v[0] / distance, v[1] / distance)
+
+                # Calculate the point that is in the distance of the threshold from the pillar
+                x_goal = ref_object_x - v[0] * dist_threshold
+                y_goal = ref_object_y - v[1] * dist_threshold
+                self.goal_calculated = (int(x_goal), int(y_goal))
+        else:
+            raise ValueError("The gate has more than 2 pillars.")
+
+    def correct_goal(self) -> None:
+        """
+        Correct the goal if it is not on the map or if it is in another object.
+        Correcting the goal means setting it to the closest point available on the map. (ID = 0)
+        :return: None
+        """
+        # Check if the goal is on the map
+        if self.goal_calculated is not None:
+            self.goal = self.get_closest_point_on_map(self.goal_calculated, 0)
+        else:
+            self.goal = None
+
+    def get_closest_point_on_map(self, ref_point: tuple, id: int) -> tuple:
+        """
+        Get the closest point of the given ID on the map to the reference point.
+        :param ref_point: The reference point.
+        :param id: The ID of the wanted point.
+        :return: The map coordinates of the closest point.
+        """
+        # Calculate the distance between the reference point and all points of the given ID on the map
+        indices = np.where(self.world_map == id)
+        distances = np.sqrt((indices[1] - ref_point[0])**2 + (indices[0] - ref_point[1])**2)
+
+        # Get the index of the closest point
+        closest_index = np.argmin(distances)
+
+        # Return the map coordinates of the closest point
+        return indices[1][closest_index], indices[0][closest_index]
 
     def conv_real_to_map(self, realc, add=False) -> int:
         """
@@ -369,6 +479,9 @@ class Map:
     def set_world_map(self, world_map):
         self.world_map = world_map
 
+    def set_goal_calculated(self, goal_calculated):
+        self.goal_calculated = goal_calculated
+
     def set_goal(self, goal):
         self.goal = goal
 
@@ -393,6 +506,9 @@ class Map:
 
     def get_world_map(self):
         return self.world_map
+
+    def get_goal_calculated(self):
+        return self.goal_calculated
 
     def get_goal(self):
         return self.goal

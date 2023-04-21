@@ -2,8 +2,8 @@ colors:
   green:
     tag: 'green'
     rgb: [ 0, 255, 0]
-    lower: [ 40, 65, 70 ] # [ 49, 93, 92 ]
-    upper: [ 68, 255, 255]
+    lower: [ 45, 65, 70 ]
+    upper: [ 80, 255, 255]
 
   blue:
     tag: 'blue'
@@ -14,20 +14,20 @@ colors:
   red:
     tag: 'red'
     rgb: [ 255, 0, 0 ]
-    lower: [ 3, 175, 126] # [ 3, 200, 137]
+    lower: [ 3, 175, 126]
     upper: [ 7, 255, 255 ]
 
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 113, 70, 0 ] # [ 113, 92, 255 ] - 255 as lower bound does not make sense
-    upper: [ 138, 255, 120 ] # [ 138, 255, 111 ]
+    lower: [ 110, 70, 0 ]
+    upper: [ 140, 255, 120 ]
 
   yellow:
     tag: 'yellow'
     rgb: [ 255, 255, 0 ]
-    lower: [ 22, 110, 85 ] # [ 25, 132, 123 ]
-    upper: [ 35, 255, 255 ] # [ 31, 255, 255 ]
+    lower: [ 22, 110, 85 ]
+    upper: [ 35, 255, 255 ]
 
 map:
   tag: 'map'
@@ -35,17 +35,21 @@ map:
   resolution: 0.01
   heuristic: 'manhattan' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
   search_algorithm: 'A_star' # 'A_start' or 'BFS'
+  goal:
+    min_distance_threshold: 40  # in pixels ~ cm
   safety_margin: 0.02
-  max_id: 7
+  max_id: 9
   id:
     robot: 1
-    garage: 2
-    gate: 3
-    obstacle: 4
-    path: 5
-    restricted: 6
-    unknown: 7
+    goal_calculated: 2
+    goal: 3
+    garage: 4
+    gate: 5
+    obstacle: 6
+    path: 7
+    restricted: 8
+    unknown: 9
 
 min_detected_area: 300
 point_cloud_rotation: 13.5
-outlier_threshold: 100
+outlier_threshold: 0.5
