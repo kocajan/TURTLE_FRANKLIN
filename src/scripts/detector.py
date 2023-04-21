@@ -254,7 +254,13 @@ class Detector:
         :param contours: The contours.
         :return: The world coordinates of the object.
         """
-        points_in_contours = self.get_pc_points_in_contours(contours)
+        # Get the points in the contours
+        points_in_contours = np.empty((0, 3))
+
+        for contour in contours:
+            # Connect the points from every iteration to one list
+            points = self.get_pc_points_in_contours([contour])
+            points_in_contours = np.vstack((points_in_contours, points))
 
         # Get rid of nan values
         points_in_contours = self.get_rid_of_nan(points_in_contours)
