@@ -312,8 +312,6 @@ class Detector:
         :param bounding_rect: The bounding rectangle.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-        # Make the bounding rectangle smaller TODO do at home or delete
-        bounding_rect = (bounding_rect[0], (bounding_rect[1][0], bounding_rect[1][1]), bounding_rect[2])
 
         # Get the corners of the bounding rectangle
         corners = cv.boxPoints(bounding_rect)
@@ -327,22 +325,16 @@ class Detector:
         :param contours: The contours.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-        # Get the points of the point cloud that are in the bounding rectangle
-        points_in_contours = []
-
         # Create img of the same dimensions as the RGB image, filled with zeros
-        img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
+        img_with_contours = np.zeros((self.rgb_img.shape[0], self.rgb_img.shape[1]), np.uint8)
 
-        # Draw filled bounding rectangle on the image
-        cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
+        # Draw the contours on the img
+        cv.drawContours(img_with_contours, contours, 0, 255, -1)
 
-        # Decide whether point is in the rectangle
-        for i, line in enumerate(self.processed_point_cloud):
-            for j, point in enumerate(line):
-                if self.is_point_in_rect((i, j), img_with_contours):
-                    points_in_contours.append(point)
+        # Get the points of the point cloud that are in the bounding rectangle
+        points_in_contours = self.processed_point_cloud[np.where(img_with_contours == 255)]
 
-        return np.array(points_in_contours)
+        return points_in_contours
 
     def rotate_point_cloud(self) -> None:
         """
@@ -356,24 +348,6 @@ class Detector:
                                     [0, np.sin(angle), np.cos(angle)]])
         # Rotate the point cloud
         self.processed_point_cloud = np.dot(self.point_cloud, rotation_matrix)
-
-    @staticmethod
-    def is_point_in_rect(point: tuple, img_with_rectangle: np.ndarray) -> bool:
-        """
-        Check if the point is in the rectangle.
-        :param point: The point.
-        :param img_with_rectangle: The image with the rectangle.
-        :return: True if the point is in the rectangle, False otherwise.
-        """
-        # Get the point's coordinates
-        x = int(point[0])
-        y = int(point[1])
-
-        # Check if the point is in the rectangle
-        if img_with_rectangle[x, y, 0] == 255:
-            return True
-        else:
-            return False
 
     @staticmethod
     def get_rid_of_nan(array: np.ndarray) -> np.ndarray:
