@@ -171,6 +171,9 @@ class Map:
         if self.robot is not None:
             self.fill_in_robot()
 
+        # Draw vision cone
+        self.draw_vision_cone()
+
         # Handle the goal
         self.calculate_goal(pillars=pillars)
         self.correct_goal()
@@ -450,6 +453,34 @@ class Map:
 
         # Draw the octagon
         cv.fillPoly(self.world_map, [np.array(vertices)], color)
+
+    def draw_vision_cone(self):
+        """
+        Tha camera does not see the whole square in front of it, but only a triangle.
+        This function draws restricted area around the vision cone of the camera.
+        :return: None
+        """
+        # Get 8 map points of the vision cone from configuration file
+        points = self.detection_cfg['map']['vision_cone']
+
+        # Get id of the restricted area
+        id = self.detection_cfg['map']['id']['restricted']
+
+        # Get safety margin
+        safety_margin = self.conv_real_to_map(self.detection_cfg['map']['safety_margin'])
+
+        # Draw the restricted area as two triangles defined by the edges of the map and two lines (+ safety margin)
+        p0 = points[0]
+        p1 = points[1]
+        p2 = [points[2][0] + safety_margin, points[2][1]]
+        p3 = [points[3][0] + safety_margin, points[3][1]]
+        cv.fillPoly(self.world_map, [np.array([p0, p1, p2, p3])], id)
+
+        p0 = points[4]
+        p1 = points[5]
+        p2 = [points[6][0] - safety_margin, points[6][1]]
+        p3 = [points[7][0] - safety_margin, points[7][1]]
+        cv.fillPoly(self.world_map, [np.array([p0, p1, p2, p3])], id)
 
     @staticmethod
     def calculate_next_point(point, angle, distance) -> tuple:
