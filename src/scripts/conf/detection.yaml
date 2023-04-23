@@ -50,9 +50,18 @@ map:
     restricted: 8
     unknown: 9
 
+# Minimal area of a contour to be considered as valid
 min_detected_area: 300
+
+# Point cloud rotation in degrees to compensate for the camera's angle
 point_cloud_rotation: 13.5
+
+# Threshold distance (in meters) of a garage point from the center of mass of garage points
 outlier_threshold: 0.5
 
+# Scaling factors for bounding rectangles
 width_scale: 0.7
 height_scale: 0.9
+
+# Minimum number of valid points in a bounding rectangle
+min_valid_points_in_bounding_rect: 150

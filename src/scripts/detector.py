@@ -99,11 +99,13 @@ class Detector:
         :param contours: The contours of the garage.
         :return: None
         """
+        min_area = self.detection_cfg['min_detected_area']
+
         # Find a contour with the biggest area
         big_contours = []
         for cnt in contours:
             area = cv.contourArea(cnt)
-            if area > 500:
+            if area > min_area:
                 big_contours.append(cnt)
 
         # Garage not found
@@ -316,6 +318,9 @@ class Detector:
         # If there are no points in the bounding rectangle, return None
         if len(points_in_bounding_rect) == 0:
             print("WARNING: No valid points in the point cloud in the bounding rectangle!")
+            return None
+        elif len(points_in_bounding_rect) < self.detection_cfg['min_valid_points_in_bounding_rect']:
+            print("WARNING: Not enough valid points in the point cloud in the bounding rectangle!")
             return None
 
         # Calculate median of the x and y coordinates

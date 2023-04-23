@@ -222,7 +222,7 @@ def main():
         pc = np.load(f'camera/shoot3/PC13.npy')
         image_man(img, pc)
     elif test == "big":
-        all = False
+        all = True
         if all:
             for i in range(15):
                 img = cv.imread(f'camera/shoot3/RGB{i}.png')
