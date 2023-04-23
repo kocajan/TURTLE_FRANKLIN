@@ -11,7 +11,7 @@ def nothing(x):
 
 
 # Set things up
-img = cv2.imread('src/scripts/camera/shoot3/RGB14.png')
+img = cv2.imread('src/scripts/camera/shoot3/RGB13.png')
 img = cv2.resize(img, (670, 500))
 
 test_color = "magenta"

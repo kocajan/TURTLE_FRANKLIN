@@ -53,3 +53,6 @@ map:
 min_detected_area: 300
 point_cloud_rotation: 13.5
 outlier_threshold: 0.5
+
+width_scale: 0.7
+height_scale: 0.9

@@ -241,7 +241,8 @@ class Map:
             pillars.append((x, y))
 
             # Draw the pillar
-            cv.circle(self.world_map, (x, y), radius, gate_id, -1)
+            if x is not None and y is not None and radius is not None:
+                cv.circle(self.world_map, (x, y), radius, gate_id, -1)
         return pillars
 
     def fill_in_obstacle(self, obstacle: object) -> None:
@@ -257,7 +258,9 @@ class Map:
         y = self.conv_real_to_map(obstacle.get_world_coordinates()[1])
         radius = self.conv_real_to_map(obstacle.get_radius())
 
-        cv.circle(self.world_map, (x, y), radius, obst_id, -1)
+        # Draw the obstacle
+        if x is not None and y is not None and radius is not None:
+            cv.circle(self.world_map, (x, y), radius, obst_id, -1)
 
     def fill_in_robot(self) -> None:
         """
@@ -272,7 +275,8 @@ class Map:
         radius = self.conv_real_to_map(self.robot.get_radius())
 
         # Draw the robot
-        cv.circle(self.world_map, (x, y), radius, robot_id, -1)
+        if x is not None and y is not None and radius is not None:
+            cv.circle(self.world_map, (x, y), radius, robot_id, -1)
 
     def fill_in_goal(self) -> None:
         """
@@ -397,6 +401,11 @@ class Map:
         :param realc: The real dims.
         :param add: If true, add the map center to the realc.
         """
+        # Check if the realc is a number
+        if realc is None:
+            return None
+
+        # Convert
         mapc = int(realc / self.resolution)
         if add:
             mapc += self.world_map.shape[0] // 2

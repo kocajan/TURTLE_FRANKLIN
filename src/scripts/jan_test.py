@@ -222,15 +222,15 @@ def main():
         pc = np.load(f'camera/shoot3/PC13.npy')
         image_man(img, pc)
     elif test == "big":
-        all = True
+        all = False
         if all:
             for i in range(15):
                 img = cv.imread(f'camera/shoot3/RGB{i}.png')
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot5/RGB4.png')
-            pc = np.load(f'camera/shoot5/PC4.npy')
+            img = cv.imread(f'camera/shoot3/RGB13.png')
+            pc = np.load(f'camera/shoot3/PC13.npy')
             big_test(img, pc)
     elif test == "huge":
         huge_test()

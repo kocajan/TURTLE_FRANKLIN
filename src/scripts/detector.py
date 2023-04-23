@@ -81,6 +81,15 @@ class Detector:
             if cv.contourArea(cnt) < min_area:
                 continue
             rect = cv.minAreaRect(cnt)
+
+            # Find out which dimension is the width and which is the height and make them smaller
+            width_scale = self.detection_cfg['width_scale']
+            height_scale = self.detection_cfg['height_scale']
+            if rect[1][0] > rect[1][1]:
+                rect = ((rect[0][0], rect[0][1]), (rect[1][0] * height_scale, rect[1][1] * width_scale), rect[2])
+            else:
+                rect = ((rect[0][0], rect[0][1]), (rect[1][0] * width_scale, rect[1][1] * height_scale), rect[2])
+
             bounding_rects.append(rect)
         return bounding_rects
 
@@ -230,7 +239,11 @@ class Detector:
         if gate is not None:
             w_coords = []
             for pillar in gate.get_bounding_rects():
-                w_coords.append(self.get_world_coordinates_using_bounding_rect(pillar))
+                w_coord = self.get_world_coordinates_using_bounding_rect(pillar)
+                if w_coord is not None:
+                    w_coords.append(w_coord)
+                else:
+                    gate.remove_pillar(pillar)
             gate.set_world_coordinates(w_coords)
 
         end = time.time()  # delete
@@ -300,6 +313,11 @@ class Detector:
         # Get rid of nan values
         points_in_bounding_rect = self.get_rid_of_nan(points_in_bounding_rect)
 
+        # If there are no points in the bounding rectangle, return None
+        if len(points_in_bounding_rect) == 0:
+            print("WARNING: No valid points in the point cloud in the bounding rectangle!")
+            return None
+
         # Calculate median of the x and y coordinates
         x = np.median(points_in_bounding_rect[:, 0])
         y = np.median(points_in_bounding_rect[:, 2])
@@ -331,7 +349,7 @@ class Detector:
         # Draw the contours on the img
         cv.drawContours(img_with_contours, contours, 0, 255, -1)
 
-        # Get the points of the point cloud that are in the bounding rectangle
+        # Get the points of the point cloud that are  in the bounding rectangle
         points_in_contours = self.processed_point_cloud[np.where(img_with_contours == 255)]
 
         return points_in_contours
