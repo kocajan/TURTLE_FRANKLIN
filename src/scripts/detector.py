@@ -81,6 +81,15 @@ class Detector:
             if cv.contourArea(cnt) < min_area:
                 continue
             rect = cv.minAreaRect(cnt)
+
+            # Find out which dimension is the width and which is the height and make them smaller
+            width_scale = self.detection_cfg['width_scale']
+            height_scale = self.detection_cfg['height_scale']
+            if rect[1][0] > rect[1][1]:
+                rect = ((rect[0][0], rect[0][1]), (rect[1][0] * height_scale, rect[1][1] * width_scale), rect[2])
+            else:
+                rect = ((rect[0][0], rect[0][1]), (rect[1][0] * width_scale, rect[1][1] * height_scale), rect[2])
+
             bounding_rects.append(rect)
         return bounding_rects
 
@@ -90,11 +99,13 @@ class Detector:
         :param contours: The contours of the garage.
         :return: None
         """
+        min_area = self.detection_cfg['min_detected_area']
+
         # Find a contour with the biggest area
         big_contours = []
         for cnt in contours:
             area = cv.contourArea(cnt)
-            if area > 500:
+            if area > min_area:
                 big_contours.append(cnt)
 
         # Garage not found
@@ -230,7 +241,11 @@ class Detector:
         if gate is not None:
             w_coords = []
             for pillar in gate.get_bounding_rects():
-                w_coords.append(self.get_world_coordinates_using_bounding_rect(pillar))
+                w_coord = self.get_world_coordinates_using_bounding_rect(pillar)
+                if w_coord is not None:
+                    w_coords.append(w_coord)
+                else:
+                    gate.remove_pillar(pillar)
             gate.set_world_coordinates(w_coords)
 
         end = time.time()  # delete
@@ -254,7 +269,13 @@ class Detector:
         :param contours: The contours.
         :return: The world coordinates of the object.
         """
-        points_in_contours = self.get_pc_points_in_contours(contours)
+        # Get the points in the contours
+        points_in_contours = np.empty((0, 3))
+
+        for contour in contours:
+            # Connect the points from every iteration to one list
+            points = self.get_pc_points_in_contours([contour])
+            points_in_contours = np.vstack((points_in_contours, points))
 
         # Get rid of nan values
         points_in_contours = self.get_rid_of_nan(points_in_contours)
@@ -294,6 +315,14 @@ class Detector:
         # Get rid of nan values
         points_in_bounding_rect = self.get_rid_of_nan(points_in_bounding_rect)
 
+        # If there are no points in the bounding rectangle, return None
+        if len(points_in_bounding_rect) == 0:
+            print("WARNING: No valid points in the point cloud in the bounding rectangle!")
+            return None
+        elif len(points_in_bounding_rect) < self.detection_cfg['min_valid_points_in_bounding_rect']:
+            print("WARNING: Not enough valid points in the point cloud in the bounding rectangle!")
+            return None
+
         # Calculate median of the x and y coordinates
         x = np.median(points_in_bounding_rect[:, 0])
         y = np.median(points_in_bounding_rect[:, 2])
@@ -306,8 +335,6 @@ class Detector:
         :param bounding_rect: The bounding rectangle.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-        # Make the bounding rectangle smaller TODO do at home
-        bounding_rect = (bounding_rect[0], (bounding_rect[1][0], bounding_rect[1][1]), bounding_rect[2])
 
         # Get the corners of the bounding rectangle
         corners = cv.boxPoints(bounding_rect)
@@ -321,22 +348,23 @@ class Detector:
         :param contours: The contours.
         :return: The points of the point cloud that are in the bounding rectangle.
         """
-        # Get the points of the point cloud that are in the bounding rectangle
-        points_in_contours = []
-
         # Create img of the same dimensions as the RGB image, filled with zeros
+<<<<<<< HEAD
         img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
 
         # Draw filled bounding rectangle on the image
         cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
+=======
+        img_with_contours = np.zeros((self.rgb_img.shape[0], self.rgb_img.shape[1]), np.uint8)
 
-        # Decide whether point is in the rectangle
-        for i, line in enumerate(self.processed_point_cloud):
-            for j, point in enumerate(line):
-                if self.is_point_in_rect((i, j), img_with_contours):
-                    points_in_contours.append(point)
+        # Draw the contours on the img
+        cv.drawContours(img_with_contours, contours, 0, 255, -1)
+>>>>>>> c97eaa913bf6b3362a60aa2e15b3c1cee14cc6be
 
-        return np.array(points_in_contours)
+        # Get the points of the point cloud that are  in the bounding rectangle
+        points_in_contours = self.processed_point_cloud[np.where(img_with_contours == 255)]
+
+        return points_in_contours
 
     def rotate_point_cloud(self) -> None:
         """
@@ -350,24 +378,6 @@ class Detector:
                                     [0, np.sin(angle), np.cos(angle)]])
         # Rotate the point cloud
         self.processed_point_cloud = np.dot(self.point_cloud, rotation_matrix)
-
-    @staticmethod
-    def is_point_in_rect(point: tuple, img_with_rectangle: np.ndarray) -> bool:
-        """
-        Check if the point is in the rectangle.
-        :param point: The point.
-        :param img_with_rectangle: The image with the rectangle.
-        :return: True if the point is in the rectangle, False otherwise.
-        """
-        # Get the point's coordinates
-        x = int(point[0])
-        y = int(point[1])
-
-        # Check if the point is in the rectangle
-        if img_with_rectangle[x, y, 0] == 255:
-            return True
-        else:
-            return False
 
     @staticmethod
     def get_rid_of_nan(array: np.ndarray) -> np.ndarray:
