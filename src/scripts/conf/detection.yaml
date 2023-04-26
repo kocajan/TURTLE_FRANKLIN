@@ -33,7 +33,7 @@ map:
   tag: 'map'
   dimensions: [ 5, 5 ]
   resolution: 0.01
-  heuristic: 'euclidian' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
+  heuristic: 'euclidean' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
   search_algorithm: 'A_star' # 'A_start' or 'BFS'
   goal:
     min_distance_threshold: 40  # in pixels ~ cm
