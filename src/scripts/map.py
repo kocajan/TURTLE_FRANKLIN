@@ -93,8 +93,8 @@ class Map:
             if current_node == goal:
                 path = []
                 while current_node:
-                    current_node = (current_node[1], current_node[0])
-                    path.append(current_node)
+                    tmp_node = (current_node[1], current_node[0])
+                    path.append(tmp_node)
                     current_node = parent[current_node]
                 return path[::-1]
 

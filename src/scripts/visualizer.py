@@ -95,7 +95,7 @@ class Visualizer:
         if path is not None:
             path_col = self.detection_cfg["map"]["id"]["path"]
             for point in path:
-                world_map[point[0], point[1]] = path_col
+                world_map[point[1], point[0]] = path_col
 
         n = len(color_map)
         fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
