@@ -175,7 +175,7 @@ class Map:
             self.fill_in_robot()
 
         # Draw vision cone
-        self.draw_vision_cone()
+        #self.draw_vision_cone()
 
         # Handle the goal
         self.calculate_goal(pillars=pillars)
