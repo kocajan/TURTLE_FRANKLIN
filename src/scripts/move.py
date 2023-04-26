@@ -6,7 +6,7 @@ import yaml
 #from SingleMove import SingleMove
 #from robot import GLOBAL_STOP
 
-from rospy import Rate
+#from rospy import Rate
 
 
 class SingleMove:
@@ -39,10 +39,10 @@ class Move:
     # TODO: --------------------------------------------------------------------
 
     def __init__(self, robot, move_coords, detection_cfg):
-        self.detection_cfg = detection_cfg                  # TODO: delete this? (not used)
+        #self.detection_cfg = detection_cfg                  # TODO: delete this? (not used)
         self.move_coords = move_coords
-        self.robot = robot
-        self.rate = Rate(10)
+        #self.robot = robot
+        #self.rate = Rate(10)
 
     def execute_move(self):
         """
