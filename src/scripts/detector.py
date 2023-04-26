@@ -328,18 +328,7 @@ class Detector:
         img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
 
         # Draw filled bounding rectangle on the image
-        contours = np.array(contours)
-        if len(contours.shape) == 1:
-            print('ahojda')
-            for contour in contours:
-                print(np.array(contour).shape)
-                cv.drawContours(img_with_contours, contour, 0, (255, 255, 255), -1)
-        else:
-            print('zdary')
-            cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
-
-        cv.imshow('wtf', img_with_contours)
-        cv.waitKey(0)
+        cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
 
         # Decide whether point is in the rectangle
         for i, line in enumerate(self.processed_point_cloud):

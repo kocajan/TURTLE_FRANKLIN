@@ -31,17 +31,19 @@ class Map:
             if(0 <= tmp[0] < self.world_map.shape[0] and 0 <= tmp[1] < self.world_map.shape[1] and self.world_map[tmp] < 2 and tmp not in memory.keys()):
                 result.append(tmp)
         return result
+
     def bfs(self, start, goal) -> np.ndarray:
         q = queue.Queue()
         q.put(start)
         path = []
 
         while(not q.empty()):
-            to_expand = q.pop()
-            if(to_expand == goal):
-                return path
-            path.append(to_expand)
-            q.put(self.expand(to_expand))
+            to_expand = q.get()
+            for node in self.expand(to_expand):
+                if(node == goal):
+                    return path
+                path.append(node)
+                q.put(node)
 
 
     def find_way(self, start, goal, search_algorithm) -> np.ndarray:
