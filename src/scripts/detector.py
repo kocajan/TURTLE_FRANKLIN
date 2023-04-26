@@ -349,17 +349,10 @@ class Detector:
         :return: The points of the point cloud that are in the bounding rectangle.
         """
         # Create img of the same dimensions as the RGB image, filled with zeros
-<<<<<<< HEAD
-        img_with_contours = np.zeros(self.rgb_img.shape, np.uint8)
-
-        # Draw filled bounding rectangle on the image
-        cv.drawContours(img_with_contours, contours, 0, (255, 255, 255), -1)
-=======
         img_with_contours = np.zeros((self.rgb_img.shape[0], self.rgb_img.shape[1]), np.uint8)
 
         # Draw the contours on the img
         cv.drawContours(img_with_contours, contours, 0, 255, -1)
->>>>>>> c97eaa913bf6b3362a60aa2e15b3c1cee14cc6be
 
         # Get the points of the point cloud that are  in the bounding rectangle
         points_in_contours = self.processed_point_cloud[np.where(img_with_contours == 255)]
