@@ -137,7 +137,6 @@ class Move:
         prev_index = None
         prev_rotation = 0   # TODO: delete this? (not used) as well as trend?
 
-        #TODO vyresit posledni node, ta se jenom apenduje, bude stejna jako vsechny ostatni
         sequence.append(SingleMove(0, 0))  # dummy move to prevent out of bounds in array
         sequence.append(SingleMove(0, 0))  # dummy move to prevent out of bounds in array
 
