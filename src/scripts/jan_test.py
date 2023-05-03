@@ -94,7 +94,6 @@ def huge_test() -> None:
     search_algorithm = detection_cfg['map']['search_algorithm']
 
     path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
-    print(path)
 
     vis.visualize_rgb()
     # vis.visualize_point_cloud()
@@ -265,9 +264,9 @@ def main():
     elif test == "map":
         map_visualization_test()
     elif test == "pc":
-        for i in range(14):
-            img = cv.imread(f'camera/shoot3/RGB{i}.png')
-            pc = np.load(f'camera/shoot3/PC{i}.npy')
+        for i in range(1):
+            img = cv.imread(f'camera/shoot6/RGB{i}.png')
+            pc = np.load(f'camera/shoot6/PC{i}.npy')
             image_man(img, pc)
     elif test == "pc1":
         img = cv.imread(f'camera/shoot3/RGB13.png')

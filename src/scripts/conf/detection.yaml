@@ -37,7 +37,7 @@ map:
   search_algorithm: 'A_star' # 'A_start' or 'BFS'
   goal:
     min_distance_threshold: 40  # in pixels ~ cm
-  safety_margin: 0.02
+  safety_margin: 0.15
   vision_cone: [[0, 0], [0, 500], [30, 500], [230, 0], [500, 0], [500, 500], [470, 500], [270, 0]] # four points defining the vision cone of the robot (experimentally determined)
   max_id: 9
   id:
