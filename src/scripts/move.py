@@ -276,7 +276,24 @@ class Move:
                 self.robot.cmd_velocity(angular = -0.6)
                 prev_rot = act_rot
             self.compensation(-1)
+    def execute_small_rot_positive(self):
+        rotation = SingleMove(self, 10, 0)
 
+        if not self.robot.get_stop():
+            # print('here', move.get_distance(), move.get_rotation())
+            self.rotate_degrees(rotation.get_rotation())
+            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+        else:
+            sys.exit()
+    def execute_small_rot_positive(self):
+        rotation = SingleMove(self, -10, 0)
+
+        if not self.robot.get_stop():
+            # print('here', move.get_distance(), move.get_rotation())
+            self.rotate_degrees(rotation.get_rotation())
+            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+        else:
+            sys.exit()
 
 if __name__ == '__main__':
     #path =  [(250, 0), (251, 1), (252, 2), (253, 3), (253, 4), (253, 5), (253, 6), (253, 7), (253, 8), (253, 9), (253, 10), (253, 11), (253, 12), (253, 13), (253, 14), (253, 15), (253, 16), (253, 17), (253, 18), (253, 19), (253, 20), (253, 21), (253, 22), (253, 23), (253, 24), (253, 25), (253, 26), (253, 27), (253, 28), (253, 29), (253, 30), (253, 31), (253, 32), (253, 33), (253, 34), (253, 35), (253, 36), (253, 37), (253, 38), (253, 39), (253, 40), (253, 41), (253, 42), (253, 43), (253, 44), (253, 45), (253, 46), (253, 47), (253, 48), (253, 49), (253, 50), (253, 51), (253, 52), (253, 53), (253, 54), (253, 55), (253, 56), (253, 57), (253, 58), (253, 59), (253, 60), (253, 61), (253, 62), (253, 63), (253, 64), (253, 65), (253, 66), (253, 67)]
