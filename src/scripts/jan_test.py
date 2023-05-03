@@ -10,6 +10,56 @@ from map import Map
 from visualizer import Visualizer
 
 
+def automate_test() -> None:
+    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
+
+    dims = detection_cfg['map']['dimensions']
+    res = detection_cfg['map']['resolution']
+
+    while True:
+        map = Map(dims, res, detection_cfg)
+
+        rad = objects_cfg['robot']['radius']
+        hei = objects_cfg['robot']['height']
+        col = objects_cfg['robot']['color']
+
+        rob = Robot(rad, col, 'black')
+        print('robot object created')
+        print('bumper initialized')
+
+        rob.set_world_coordinates((0, 0))
+        map.set_robot(rob)
+
+        img = rob.take_rgb_img()
+        pc = rob.take_point_cloud()
+
+        det = Detector(map, img, pc, detection_cfg, objects_cfg)
+        det.process_rgb()
+        det.process_point_cloud()
+
+        map.fill_world_map()
+        if (map.goal == None):
+            bla = move.Move(rob, None, None)
+            bla.execute_small_rot_positive()
+            continue
+
+        vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+
+        search_algorithm = detection_cfg['map']['search_algorithm']
+
+        path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
+        print(path)
+
+        vis.visualize_rgb()
+        # vis.visualize_point_cloud()
+        vis.visualize_map(path=path)
+
+        tmp = move.Move(rob, path, detection_cfg)
+        print(path)
+        tmp.execute_move()
+
+
 def huge_test() -> None:
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
