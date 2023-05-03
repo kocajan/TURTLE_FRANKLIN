@@ -166,6 +166,7 @@ class Map:
         self.fill_in_garage(pillars)
 
         # Obstacles
+        print(self.obstacles)
         for obstacle in self.obstacles:
             self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
             self.fill_in_obstacle(obstacle)

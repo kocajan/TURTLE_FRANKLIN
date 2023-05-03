@@ -286,7 +286,7 @@ class Move:
         else:
             sys.exit()
     def execute_small_rot_positive(self):
-        rotation = SingleMove(-10, 0)
+        rotation = SingleMove(-40, 0)
 
         if not self.robot.get_stop():
             # print('here', move.get_distance(), move.get_rotation())
