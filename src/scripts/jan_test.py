@@ -196,7 +196,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "pc"
+    test = "huge"
     if test == "image":
         for i in range(16):
             if i == 3:
