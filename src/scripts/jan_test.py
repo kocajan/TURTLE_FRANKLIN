@@ -39,9 +39,9 @@ def automate_test() -> None:
         det.process_point_cloud()
 
         map.fill_world_map()
-        if (map.goal == None):
-            bla = move.Move(rob, None, None)
-            bla.execute_small_rot_positive()
+        if map.goal == None:
+            small_rot_move = move.Move(rob, None, None)
+            small_rot_move.execute_small_rot_positive()
             continue
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -246,7 +246,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "huge"
+    test = "automate"
     if test == "image":
         for i in range(16):
             if i == 3:
@@ -285,6 +285,8 @@ def main():
             big_test(img, pc)
     elif test == "huge":
         huge_test()
+    elif test == "automate":
+        automate_test()
 
 
 if __name__ == '__main__':
