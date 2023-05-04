@@ -42,6 +42,8 @@ def automate_test() -> None:
         if map.goal == None:
             small_rot_move = move.Move(rob, None, None)
             small_rot_move.execute_small_rot_positive()
+            gate = map.get_gate()
+            gate.get_num_pillars()
             continue
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
