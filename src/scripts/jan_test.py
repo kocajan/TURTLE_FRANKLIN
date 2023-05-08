@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import yaml
-import move
+# import move
 
 from objects import Obstacle, Gate, Garage
 from robot import Robot
@@ -108,11 +108,11 @@ def image_man(img: np.ndarray, pc: np.ndarray) -> None:
 
     det = Detector(map, img, pc, detection_cfg, objects_cfg)
     det.process_rgb()
-    # det.process_point_cloud()
+    det.process_point_cloud()
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
     vis.visualize_rgb()
-    # vis.visualize_point_cloud()
+    vis.visualize_point_cloud()
 
 
 def map_visualization_test() -> None:
