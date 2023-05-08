@@ -10,6 +10,37 @@ from map import Map
 from visualizer import Visualizer
 
 
+def take_image_and_process_map():
+    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r')) # TODO remove multiple definitions
+    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
+
+    dims = detection_cfg['map']['dimensions']
+    res = detection_cfg['map']['resolution']
+
+    map = Map(dims, res, detection_cfg)
+
+    rad = objects_cfg['robot']['radius']
+    hei = objects_cfg['robot']['height']
+    col = objects_cfg['robot']['color']
+
+    rob = Robot(rad, col, 'black')  # is it neccessary to make new object?
+    print('robot object created')
+    print('bumper initialized')
+
+    rob.set_world_coordinates((0, 0))
+    map.set_robot(rob)
+
+    img = rob.take_rgb_img()
+    pc = rob.take_point_cloud()
+
+    det = Detector(map, img, pc, detection_cfg, objects_cfg)
+    det.process_rgb()
+    det.process_point_cloud()
+
+    map.fill_world_map()
+
+    return map, rob, img, pc, det
+
 def automate_test() -> None:
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
@@ -17,6 +48,7 @@ def automate_test() -> None:
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
 
+    # BEGIN OF STATE AUTOMAT
     while True:
         map = Map(dims, res, detection_cfg)
 
@@ -24,7 +56,7 @@ def automate_test() -> None:
         hei = objects_cfg['robot']['height']
         col = objects_cfg['robot']['color']
 
-        rob = Robot(rad, col, 'black')
+        rob = Robot(rad, col, 'black') # is it neccessary to make new object?
         print('robot object created')
         print('bumper initialized')
 
@@ -39,12 +71,87 @@ def automate_test() -> None:
         det.process_point_cloud()
 
         map.fill_world_map()
+        gate = map.get_gate()
         if map.goal == None:
             small_rot_move = move.Move(rob, None, None)
             small_rot_move.execute_small_rot_positive()
-            gate = map.get_gate()
+
+            #gate = map.get_gate()
             gate.get_num_pillars()
-            continue
+            continue # continue to search for gate
+        else:
+            # we have found gate entry, path to gate entry will be executed
+            if gate.get_num_pillars == 2:
+                break
+            # try to find more pillars, if impossible, execute path to just one pillar
+            if gate.get_num_pillars == 1:
+                while True:
+                    if gate.get_num_pillars == 2:
+                        break
+                    if map.goal == None:
+                        small_rot_move = move.Move(rob, None, None)
+                        small_rot_move.execute_small_rot_negative()
+                        small_rot_move.execute_small_rot_negative()
+                        break
+                    small_rot_move = move.Move(rob, None, None)
+                    small_rot_move.execute_small_rot_positive()
+                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                    gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
+                while True:
+                    if gate.get_num_pillars == 2:
+                        break
+                    # we have lost the garage. Break and execute the best possible move
+                    if map.goal == None:
+                        small_rot_move = move.Move(rob, None, None)
+                        small_rot_move.execute_small_rot_positive()
+                        small_rot_move.execute_small_rot_positive()
+                        break
+                    small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+                    small_rot_move.execute_small_rot_negative()
+                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                    gate = map.get_gate()
+                break # break from outer loop to execute path to goal
+
+            # try to find more pillars, if impossible, execute path to yellow area
+            # just find one and then continue because loop for this is already written
+            if gate.get_num_pillars == 0:
+                one_found = False
+                while True:
+                    if gate.get_num_pillars == 1:
+                        one_found = True
+                        break
+                    if map.goal == None:
+                        small_rot_move = move.Move(rob, None, None)
+                        small_rot_move.execute_small_rot_positive()
+                        small_rot_move.execute_small_rot_positive()
+                        break
+
+                    small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+                    small_rot_move.execute_small_rot_negative()
+                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                    gate = map.get_gate()
+                # if we have found one, let other loop to handle that
+                if one_found:
+                    continue
+
+                while True:
+                    if gate.get_num_pillars == 1:
+                        one_found = True
+                        break
+                    if map.goal == None:
+                        small_rot_move = move.Move(rob, None, None)
+                        small_rot_move.execute_small_rot_negative()
+                        small_rot_move.execute_small_rot_negative()
+                        break
+
+                    small_rot_move = move.Move(rob, None, None)  # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+                    small_rot_move.execute_small_rot_positive()
+                    map, rob, img, pc, det = take_image_and_process_map()  # take new image, will it be available also for other while??
+                    gate = map.get_gate()
+                if one_found:
+                    continue
+                break
+# END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
