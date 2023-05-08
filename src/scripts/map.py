@@ -166,6 +166,7 @@ class Map:
         self.fill_in_garage(pillars)
 
         # Obstacles
+        print(self.obstacles)
         for obstacle in self.obstacles:
             self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
             self.fill_in_obstacle(obstacle)
@@ -395,8 +396,11 @@ class Map:
         indices = np.where(self.world_map == id)
         distances = np.sqrt((indices[1] - ref_point[0])**2 + (indices[0] - ref_point[1])**2)
 
-        # Get the index of the closest point
-        closest_index = np.argmin(distances)
+        # Get the index of the closest point if there is any
+        if len(distances) == 0:
+            return None 
+        else:
+            closest_index = np.argmin(distances)
 
         # Return the map coordinates of the closest point
         return indices[1][closest_index], indices[0][closest_index]
