@@ -38,10 +38,10 @@ class Map:
         q.put(start)
         path = []
 
-        while(not q.empty()):
+        while not q.empty():
             to_expand = q.get()
             for node in self.expand(to_expand):
-                if(node == goal):
+                if node == goal:
                     return path
                 path.append(node)
                 q.put(node)
@@ -210,7 +210,7 @@ class Map:
                 p1 = self.calculate_next_point(ref_pillar, orientation-np.pi/2, garage_width)
                 p2 = self.calculate_next_point(p1, orientation, garage_length)
 
-            # Connect these points by lines
+            # Connect these points with lines
             other_pillar = pillars[0] if pillars[0] != ref_pillar else pillars[1]
             cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
             cv.line(self.world_map, p1, p2, garage_id, 2)
@@ -222,11 +222,9 @@ class Map:
             # Get the coordinates of the garage
             if self.garage is not None:
                 coords = self.garage.get_world_coordinates()
-                xs = coords[0]
-                ys = coords[1]
-                for i in range(len(xs)):
-                    x = self.conv_real_to_map(xs[i], add=True)
-                    y = self.conv_real_to_map(ys[i])
+                xs = self.conv_real_to_map(coords[0], add=True)
+                ys = self.conv_real_to_map(coords[1])
+                for x, y in zip(xs, ys):
                     cv.circle(self.world_map, (x, y), 1, garage_id, -1)
         else:
             raise ValueError("The gate has more than 2 pillars.")
@@ -297,6 +295,17 @@ class Map:
             cv.circle(self.world_map, self.goal, 5, goal_id, -1)
         if self.goal_calculated is not None:
             cv.circle(self.world_map, self.goal_calculated, 5, calculated_goal_id, -1)
+
+    def fit_and_fill_garage_rectangle(self):
+        """
+        Fit a rectangle (garage size) to the garage points and fill it in the world map.
+        """
+        # Get dimensions of the garage
+        garage_width = self.garage.get_width()
+        garage_length = self.garage.get_length()
+
+        # Get the detected points of the garage
+        points = self.garage.get_world_coordinates()
 
     def calculate_goal(self, pillars) -> None:
         """
@@ -416,7 +425,7 @@ class Map:
             return None
 
         # Convert
-        mapc = int(realc / self.resolution)
+        mapc = np.round(realc / self.resolution).astype(int)
         if add:
             mapc += self.world_map.shape[0] // 2
         return mapc

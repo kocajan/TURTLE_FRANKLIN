@@ -355,7 +355,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "automate"
+    test = "big"
     if test == "image":
         for i in range(16):
             if i == 3:
@@ -373,13 +373,13 @@ def main():
     elif test == "map":
         map_visualization_test()
     elif test == "pc":
-        for i in range(1):
-            img = cv.imread(f'camera/shoot6/RGB{i}.png')
-            pc = np.load(f'camera/shoot6/PC{i}.npy')
+        for i in range(15):
+            img = cv.imread(f'camera/shoot3/RGB{i}.png')
+            pc = np.load(f'camera/shoot3/PC{i}.npy')
             image_man(img, pc)
     elif test == "pc1":
-        img = cv.imread(f'camera/shoot3/RGB13.png')
-        pc = np.load(f'camera/shoot3/PC13.npy')
+        img = cv.imread(f'camera/shoot6/RGB0.png')
+        pc = np.load(f'camera/shoot6/PC0.npy')
         image_man(img, pc)
     elif test == "big":
         all = False
@@ -389,8 +389,8 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot3/RGB13.png')
-            pc = np.load(f'camera/shoot3/PC13.npy')
+            img = cv.imread(f'camera/shoot3/RGB5.png')
+            pc = np.load(f'camera/shoot3/PC5.npy')
             big_test(img, pc)
     elif test == "huge":
         huge_test()
