@@ -66,3 +66,12 @@ height_scale: 0.9
 
 # Minimum number of valid points in a bounding rectangle
 min_valid_points_in_bounding_rect: 150
+
+# Number of RANSAC iterations
+ransac_iterations: 1000
+
+# RANSAC inliers threshold
+ransac_inliers_threshold: 2
+
+# RANSAC minimum number of points
+ransac_min_points: 20
