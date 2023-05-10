@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import yaml
-# import move
+import move
 
 from objects import Obstacle, Gate, Garage
 from robot import Robot
@@ -72,85 +72,88 @@ def automate_test() -> None:
 
         map.fill_world_map()
         gate = map.get_gate()
+
         if map.goal == None:
             small_rot_move = move.Move(rob, None, None)
             small_rot_move.execute_small_rot_positive()
 
             #gate = map.get_gate()
-            gate.get_num_pillars()
+            #gate.get_num_pillars()
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
-            if gate.get_num_pillars == 2:
-                break
-            # try to find more pillars, if impossible, execute path to just one pillar
-            if gate.get_num_pillars == 1:
-                while True:
-                    if gate.get_num_pillars == 2:
-                        break
-                    if map.goal == None:
-                        small_rot_move = move.Move(rob, None, None)
-                        small_rot_move.execute_small_rot_negative()
-                        small_rot_move.execute_small_rot_negative()
-                        break
-                    small_rot_move = move.Move(rob, None, None)
-                    small_rot_move.execute_small_rot_positive()
-                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
-                    gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
-                while True:
-                    if gate.get_num_pillars == 2:
-                        break
-                    # we have lost the garage. Break and execute the best possible move
-                    if map.goal == None:
+            if(gate != None) and gate.get_num_pillars != 2 :
+            
+                #if gate.get_num_pillars == 2:
+                #    break
+                # try to find more pillars, if impossible, execute path to just one pillar
+                if gate.get_num_pillars == 1:
+                    while True:
+                        if gate.get_num_pillars == 2:
+                            break
+                        if map.goal == None:
+                            small_rot_move = move.Move(rob, None, None)
+                            small_rot_move.execute_small_rot_negative()
+                            small_rot_move.execute_small_rot_negative()
+                            break
                         small_rot_move = move.Move(rob, None, None)
                         small_rot_move.execute_small_rot_positive()
-                        small_rot_move.execute_small_rot_positive()
-                        break
-                    small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
-                    small_rot_move.execute_small_rot_negative()
-                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
-                    gate = map.get_gate()
-                break # break from outer loop to execute path to goal
-
-            # try to find more pillars, if impossible, execute path to yellow area
-            # just find one and then continue because loop for this is already written
-            if gate.get_num_pillars == 0:
-                one_found = False
-                while True:
-                    if gate.get_num_pillars == 1:
-                        one_found = True
-                        break
-                    if map.goal == None:
-                        small_rot_move = move.Move(rob, None, None)
-                        small_rot_move.execute_small_rot_positive()
-                        small_rot_move.execute_small_rot_positive()
-                        break
-
-                    small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
-                    small_rot_move.execute_small_rot_negative()
-                    map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
-                    gate = map.get_gate()
-                # if we have found one, let other loop to handle that
-                if one_found:
-                    continue
-
-                while True:
-                    if gate.get_num_pillars == 1:
-                        one_found = True
-                        break
-                    if map.goal == None:
-                        small_rot_move = move.Move(rob, None, None)
+                        map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                        gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
+                    while True:
+                        if gate.get_num_pillars == 2:
+                            break
+                        # we have lost the garage. Break and execute the best possible move
+                        if map.goal == None:
+                            small_rot_move = move.Move(rob, None, None)
+                            small_rot_move.execute_small_rot_positive()
+                            small_rot_move.execute_small_rot_positive()
+                            break
+                        small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
                         small_rot_move.execute_small_rot_negative()
-                        small_rot_move.execute_small_rot_negative()
-                        break
+                        map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                        gate = map.get_gate()
+                    break # break from outer loop to execute path to goal
 
-                    small_rot_move = move.Move(rob, None, None)  # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
-                    small_rot_move.execute_small_rot_positive()
-                    map, rob, img, pc, det = take_image_and_process_map()  # take new image, will it be available also for other while??
-                    gate = map.get_gate()
-                if one_found:
-                    continue
-                break
+                # try to find more pillars, if impossible, execute path to yellow area
+                # just find one and then continue because loop for this is already written
+                if gate.get_num_pillars == 0:
+                    one_found = False
+                    while True:
+                        if gate.get_num_pillars == 1:
+                            one_found = True
+                            break
+                        if map.goal == None:
+                            small_rot_move = move.Move(rob, None, None)
+                            small_rot_move.execute_small_rot_positive()
+                            small_rot_move.execute_small_rot_positive()
+                            break
+
+                        small_rot_move = move.Move(rob, None, None) # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+                        small_rot_move.execute_small_rot_negative()
+                        map, rob, img, pc, det = take_image_and_process_map() # take new image, will it be available also for other while??
+                        gate = map.get_gate()
+                    # if we have found one, let other loop to handle that
+                    if one_found:
+                        continue
+
+                    while True:
+                        if gate.get_num_pillars == 1:
+                            one_found = True
+                            break
+                        if map.goal == None:
+                            small_rot_move = move.Move(rob, None, None)
+                            small_rot_move.execute_small_rot_negative()
+                            small_rot_move.execute_small_rot_negative()
+                            break
+
+                        small_rot_move = move.Move(rob, None, None)  # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+                        small_rot_move.execute_small_rot_positive()
+                        map, rob, img, pc, det = take_image_and_process_map()  # take new image, will it be available also for other while??
+                        gate = map.get_gate()
+                    if one_found:
+                        continue
+                    break
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -170,8 +173,7 @@ def automate_test() -> None:
 
 
 def huge_test() -> None:
-    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
-    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
+    detection_cfg = yaml.safe_load(opython3 /opt/ros/lar/share/robolab_turtlebot/scripts/example_move_1m.pyn('conf/objects.yaml', 'r'))
 
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
@@ -364,7 +366,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "big"
+    test = "automate"
     if test == "image":
         for i in range(16):
             if i == 3:
