@@ -75,7 +75,7 @@ def automate_test() -> None:
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
-            if gate != None and gate.get_num_pillars != 2:
+            if gate != None and gate.get_num_pillars != 2: # if perfect case, just go
             
                 # try to find more pillars, if impossible, execute path to just one pillar
                 if gate.get_num_pillars == 1:
