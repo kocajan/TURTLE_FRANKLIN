@@ -283,8 +283,9 @@ class Move:
                 self.robot.cmd_velocity(angular = -0.6)
                 prev_rot = act_rot
             self.compensation(-1)
-    def execute_small_rot_positive(self):
-        rotation = SingleMove(self, 10, 0)
+
+    def execute_small_rot_positive(self, degrees):
+        rotation = SingleMove(-degrees, 0, None)
 
         if not self.robot.get_stop():
             # print('here', move.get_distance(), move.get_rotation())
@@ -292,8 +293,8 @@ class Move:
             self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
         else:
             sys.exit()
-    def execute_small_rot_positive(self):
-        rotation = SingleMove(-40, 0)
+    def execute_small_rot_negative(self, degrees):
+        rotation = SingleMove(degrees, 0, None)
 
         if not self.robot.get_stop():
             # print('here', move.get_distance(), move.get_rotation())

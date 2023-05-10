@@ -71,7 +71,7 @@ def automate_test() -> None:
         gate = map.get_gate()
 
         if map.goal == None:
-            small_rot_move.execute_small_rot_positive(10)
+            small_rot_move.execute_small_rot_positive()
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
@@ -83,29 +83,28 @@ def automate_test() -> None:
                     while True:
                         print("One pillar negative ")
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_negative(40)
-                            small_rot_move.execute_small_rot_negative(40)
+                            small_rot_move.execute_small_rot_negative()
+                            small_rot_move.execute_small_rot_negative()
                             break
                         if gate.get_num_pillars() == 2:
                             break
                         small_rot_move = move.Move(rob, None, None)
-                        small_rot_move.execute_small_rot_positive(40)
+                        small_rot_move.execute_small_rot_positive()
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_positive(40)
-                            small_rot_move.execute_small_rot_positive(40)
+                            small_rot_move.execute_small_rot_positive()
+                            small_rot_move.execute_small_rot_positive()
                             break
                         if gate.get_num_pillars() == 2:
                             break
                         
-                        small_rot_move.execute_small_rot_negative(40)
+                        small_rot_move.execute_small_rot_negative()
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
-
                     #break # break from outer loop to execute path to goal
 
                 # try to find more pillars, if impossible, execute path to yellow area
@@ -113,15 +112,15 @@ def automate_test() -> None:
                 if gate.get_num_pillars() == 0:  #TODO zde chyba
                     one_found = False
                     while True:
-                        if map.goal == None:
-                            small_rot_move.execute_small_rot_positive(40)
-                            small_rot_move.execute_small_rot_positive(40)
-                            break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
+                        if map.goal == None:
+                            small_rot_move.execute_small_rot_positive()
+                            small_rot_move.execute_small_rot_positive()
+                            break
 
-                        small_rot_move.execute_small_rot_negative(40)
+                        small_rot_move.execute_small_rot_negative()
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     # if we have found one, let other loop to handle that
@@ -129,42 +128,20 @@ def automate_test() -> None:
                         continue
 
                     while True:
-                        if map.goal == None:
-                            small_rot_move.execute_small_rot_negative(40)
-                            small_rot_move.execute_small_rot_negative(40)
-                            break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
+                        if map.goal == None:
+                            small_rot_move.execute_small_rot_negative()
+                            small_rot_move.execute_small_rot_negative()
+                            break
 
-                        small_rot_move.execute_small_rot_positive(40)
+                        small_rot_move.execute_small_rot_positive()
                         map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     if one_found:
                         continue
-            else:
-                max_val = 0
-                prev_max = -1
-                while True:
-                    map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
-                    gate = map.get_gate()  # WARNING, not sure about shadowing in python. Expecting variables are shadowing
-                    if gate is not None:
-                        break
-                    num_points = len(map.get_garage().get_world_coordinates()) if map.get_garage() is not None else -1
-                    if num_points == -1:
-                        prev_max = 0
-                        num_points = 0
-
-                    if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(10)
-                    else:
-                        if num_points >= prev_max:
-                            prev_max = max_val
-                            max_val = num_points
-                            small_rot_move.execute_small_rot_negative(10)
-                        else:
-                            small_rot_move.execute_small_rot_positive(10)
-                            break
+                    #break
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -254,7 +231,10 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     map.fill_world_map()
     search_algorithm = detection_cfg['map']['search_algorithm']
+<<<<<<< HEAD
     
+=======
+>>>>>>> 92de590e67e6153a19303deeb2cc0f590743a3b1
     path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
 
     gar_coord = map.get_garage().get_world_coordinates()

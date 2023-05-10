@@ -36,7 +36,7 @@ map:
   heuristic: 'euclidean' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
   search_algorithm: 'A_star' # 'A_star' or 'BFS'
   goal:
-    min_distance_threshold: 40  # in pixels ~ cm
+    min_distance_threshold: 60  # in pixels ~ cm
   safety_margin: 0.15
   vision_cone: [[0, 0], [0, 500], [30, 500], [230, 0], [500, 0], [500, 500], [470, 500], [270, 0]] # four points defining the vision cone of the robot (experimentally determined)
   max_id: 9
@@ -68,7 +68,7 @@ height_scale: 0.9
 min_valid_points_in_bounding_rect: 150
 
 # Number of RANSAC iterations
-ransac_iterations: 1000
+ransac_iterations: 300
 
 # RANSAC inliers threshold
 ransac_inliers_threshold: 2
