@@ -330,10 +330,11 @@ class Map:
     def fit_and_fill_garage_rectangle(self):
         """
         Fit a rectangle (garage size) to the garage points and fill it in the world map.
+        :return: points of the fitted rectangle and the lengths of the lines used to fit the rectangle
         """
         # Get dimensions of the garage
-        garage_width = self.garage.get_width()
-        garage_length = self.garage.get_length()
+        garage_width = self.conv_real_to_map(self.garage.get_width())
+        garage_length = self.conv_real_to_map(self.garage.get_length())
 
         # Get the detected points of the garage
         points = self.garage.get_world_coordinates()
@@ -346,11 +347,21 @@ class Map:
         if xs is not None and ys is not None:
             # The rectangle will be fitted to the points by fitting lines to the points
             # and finding the intersection points of these lines
-            rect = self.fit_rectangle(xs, ys, garage_width, garage_length)
-            if rect is not None:
-                # Fill the rectangle in the world map
-                print(rect)
-                cv.fillPoly(self.world_map, rect, self.detection_cfg['map']['id']['garage'])
+            p1, p2, p3, p4, first_line_len, second_line_len = self.fit_rectangle(xs, ys, garage_width, garage_length)
+
+            # Make the points integers
+            p1 = (int(p1[0]), int(p1[1]))
+            p2 = (int(p2[0]), int(p2[1]))
+            p3 = (int(p3[0]), int(p3[1]))
+            p4 = (int(p4[0]), int(p4[1]))
+
+            # Fill the rectangle in the world map
+            cv.line(self.world_map, p1, p2, self.detection_cfg['map']['id']['garage'], 2)
+            cv.line(self.world_map, p2, p3, self.detection_cfg['map']['id']['garage'], 2)
+            cv.line(self.world_map, p3, p4, self.detection_cfg['map']['id']['garage'], 2)
+            cv.line(self.world_map, p4, p1, self.detection_cfg['map']['id']['garage'], 2)
+
+            return p1, p2, p3, p4, first_line_len, second_line_len
 
     def fit_rectangle(self, xs, ys, garage_width, garage_length):
         """
@@ -506,7 +517,7 @@ class Map:
             p3 = self.calculate_next_point(p2, angle1 - np.pi/2, second_line_length)
             p4 = self.calculate_next_point(p3, angle1 - np.pi, first_line_length)
 
-        return np.array([p1, p2, p3, p4])
+        return np.array([p1, p2, p3, p4]), first_line_length, second_line_length
 
     def fit_line(self, xs, ys):
         """
@@ -607,8 +618,17 @@ class Map:
             dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
             if distance < dist_threshold:
                 # In this case, fit the garage rectangle to the garage points
-                self.fit_and_fill_garage_rectangle()
-                self.goal_calculated = None                                                         # TODO: what to do here?
+                p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
+
+                # Decide where are the pillars of the gate
+                if first_line_len > second_line_len:
+                    pillar1 = p3
+                    pillar2 = p4
+                else:
+                    pillar1 = p2
+                    pillar2 = p3
+
+                self.calculate_goal([pillar1, pillar2])
             # Otherwise, we will try to get closer to the pillar (point on the line between the robot and the pillar)
             else:
                 # Get the vector between the robot and the reference object
@@ -853,6 +873,8 @@ if __name__ == "__main__":
 
     # Fit a rectangle to the garage points
     p1, p2, p3, p4 = map.fit_rectangle(garage_points[0], garage_points[1], garage_length_map, garage_width_map)
+
+    print(p1, p2, p3, p4)
 
     # Show the rectangle
     plt.scatter(garage_points[0], garage_points[1])
