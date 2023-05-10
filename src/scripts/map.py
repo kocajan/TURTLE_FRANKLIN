@@ -4,6 +4,38 @@ import heapq
 import queue
 
 
+# TODO: ------------------------ DELETE THIS ------------------------------
+def generate_rectangle_points(rect_length, rect_width):
+    """
+    Generate 100 points on the sides of a rectangle with given length and width.
+    """
+    # Define number of points to generate
+    num_points = 1000
+
+    # Generate points on the sides of the rectangle
+    X = np.zeros((num_points, 2))
+    X[:num_points//4, 0] = np.linspace(0, rect_length, num_points//4)
+    X[num_points//4:num_points//2, 0] = rect_length
+    X[num_points//2:3*num_points//4, 0] = np.linspace(rect_length, 0, num_points//4)
+    X[3*num_points//4:, 0] = 0
+    X[:num_points//4, 1] = 0
+    X[num_points//4:num_points//2, 1] = np.linspace(0, rect_width//2, num_points//4)
+    # X[num_points//2:3*num_points//4, 1] = rect_width
+    # X[3*num_points//4:, 1] = np.linspace(rect_width, 0, num_points//4)
+
+    # Add noise to the points
+    X += np.random.normal(0, 0.5, X.shape)
+
+    # Randomly shift and rotate the points (but keep it a rectangle)
+    theta = np.random.uniform(-np.pi/2, np.pi/2)
+    shift = np.random.uniform(0.5, 1, 2)
+    X = np.dot(X, np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])) + shift
+
+    return X
+
+# TODO: -------------------------------------------------------------------------------------
+
+
 class Map:
     def __init__(self, dimensions, resolution, detection_cfg):
         self.dimensions = dimensions
@@ -14,8 +46,8 @@ class Map:
         self.obstacles = []
         self.robot = None
 
-        x = self.conv_real_to_map(dimensions[0])
-        y = self.conv_real_to_map(dimensions[1])
+        x = int(self.conv_real_to_map(dimensions[0]))
+        y = int(self.conv_real_to_map(dimensions[1]))
         self.world_map = np.zeros((x, y), dtype=np.uint8)
         self.goal_calculated = None
         self.goal = None
@@ -38,10 +70,10 @@ class Map:
         q.put(start)
         path = []
 
-        while(not q.empty()):
+        while not q.empty():
             to_expand = q.get()
             for node in self.expand(to_expand):
-                if(node == goal):
+                if node == goal:
                     return path
                 path.append(node)
                 q.put(node)
@@ -166,7 +198,6 @@ class Map:
         self.fill_in_garage(pillars)
 
         # Obstacles
-        print(self.obstacles)
         for obstacle in self.obstacles:
             self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
             self.fill_in_obstacle(obstacle)
@@ -210,7 +241,7 @@ class Map:
                 p1 = self.calculate_next_point(ref_pillar, orientation-np.pi/2, garage_width)
                 p2 = self.calculate_next_point(p1, orientation, garage_length)
 
-            # Connect these points by lines
+            # Connect these points with lines
             other_pillar = pillars[0] if pillars[0] != ref_pillar else pillars[1]
             cv.line(self.world_map, ref_pillar, p1, garage_id, 2)
             cv.line(self.world_map, p1, p2, garage_id, 2)
@@ -222,11 +253,9 @@ class Map:
             # Get the coordinates of the garage
             if self.garage is not None:
                 coords = self.garage.get_world_coordinates()
-                xs = coords[0]
-                ys = coords[1]
-                for i in range(len(xs)):
-                    x = self.conv_real_to_map(xs[i], add=True)
-                    y = self.conv_real_to_map(ys[i])
+                xs = self.conv_real_to_map(coords[0], add=True)
+                ys = self.conv_real_to_map(coords[1])
+                for x, y in zip(xs, ys):
                     cv.circle(self.world_map, (x, y), 1, garage_id, -1)
         else:
             raise ValueError("The gate has more than 2 pillars.")
@@ -298,6 +327,227 @@ class Map:
         if self.goal_calculated is not None:
             cv.circle(self.world_map, self.goal_calculated, 5, calculated_goal_id, -1)
 
+    def fit_and_fill_garage_rectangle(self):
+        """
+        Fit a rectangle (garage size) to the garage points and fill it in the world map.
+        """
+        # Get dimensions of the garage
+        garage_width = self.garage.get_width()
+        garage_length = self.garage.get_length()
+
+        # Get the detected points of the garage
+        points = self.garage.get_world_coordinates()
+
+        # Convert real world parameters to map parameters
+        xs = self.conv_real_to_map(points[0], add=True)
+        ys = self.conv_real_to_map(points[1])
+
+        # Fit a rectangle of the garage size to the detected points
+        if xs is not None and ys is not None:
+            # The rectangle will be fitted to the points by fitting lines to the points
+            # and finding the intersection points of these lines
+            rect = self.fit_rectangle(xs, ys, garage_width, garage_length)
+            if rect is not None:
+                # Fill the rectangle in the world map
+                print(rect)
+                cv.fillPoly(self.world_map, rect, self.detection_cfg['map']['id']['garage'])
+
+    def fit_rectangle(self, xs, ys, garage_width, garage_length):
+        """
+        Fit a rectangle to the given points.
+        :param xs: The x map coordinates of the points.
+        :param ys: The y map coordinates of the points.
+        :param garage_width: The width of the garage. (map size)
+        :param garage_length: The length of the garage. (map size)
+        :return: The rectangle fitted to the points.
+        """
+        lines = []
+
+        # The robot can see only 2 sides of the garage at a time
+        for i in range(2):
+            # Fit a line to the points
+            xs, ys, line, inliers = self.fit_line(xs, ys)
+            if line is not None:
+                lines.append([line, inliers])
+
+        # Robot can see only 1 side of the garage
+        if len(lines) == 1:
+            # Get the line parameters (a, b: y=ax+b)
+            a, b = lines[0][0]
+
+            # Get the leftmost and rightmost points of the line (inliers)
+            inliers = lines[0][1]
+            leftmost = inliers[np.argmin(inliers[:, 0])]
+            rightmost = inliers[np.argmax(inliers[:, 0])]
+
+            # Project these points to the line
+            leftmost[1] = a*leftmost[0] + b
+            rightmost[1] = a*rightmost[0] + b
+
+            # Choose reference point (probably the point that is closer to the robot)
+            # --------------------------------------
+            # Get robot coordinates
+            robot_x = self.conv_real_to_map(self.robot.get_world_coordinates()[0], add=True)
+            robot_y = self.conv_real_to_map(self.robot.get_world_coordinates()[1])
+            robot_point = np.array([robot_x, robot_y])
+
+            # Get the distance of the points to the robot
+            left_dist = np.linalg.norm(leftmost - robot_point)
+            right_dist = np.linalg.norm(rightmost - robot_point)
+
+            # Choose the closer point as the reference point
+            ref_point = leftmost if left_dist < right_dist else rightmost
+            other_point = rightmost if left_dist < right_dist else leftmost
+            # --------------------------------------
+
+            # Get the angle of the line from the two points
+            angle = np.arctan2(other_point[1] - ref_point[1], other_point[0] - ref_point[0])
+
+            # Get length of the line
+            length = np.linalg.norm(leftmost - rightmost)
+
+            # Calculate the difference between the garage dimensions and the line length
+            length_diff = np.abs(length - garage_length)
+            width_diff = np.abs(length - garage_width)
+
+            # Decide which side of the garage the robot sees
+            visible_side_length = garage_length if length_diff < width_diff else garage_width
+            non_visible_side_length = garage_width if length_diff < width_diff else garage_length
+
+            # Find the rectangle points
+            p1 = ref_point
+            p2 = self.calculate_next_point(p1, angle, visible_side_length)
+            p3 = self.calculate_next_point(p2, angle + np.pi/2, non_visible_side_length)
+            p4 = self.calculate_next_point(p3, angle + np.pi, visible_side_length)
+
+        # Robot can see 2 sides of the garage
+        else:
+            # Get the lines
+            line1 = lines[0][0]
+            line2 = lines[1][0]
+
+            # Get the intersection point of the lines
+            inter_x = (line2[1] - line1[1]) / (line1[0] - line2[0])
+            inter_y = line1[0] * inter_x + line1[1]
+            inter_point = np.array([inter_x, inter_y])
+
+            # Find points that are farthest from the intersection point on both lines
+            # --------------------------------------
+            # Get the inliers
+            inliers1 = lines[0][1]
+            inliers2 = lines[1][1]
+
+            # Get the distances of the inliers to the intersection point
+            dists1 = np.linalg.norm(inliers1 - inter_point, axis=1)
+            dists2 = np.linalg.norm(inliers2 - inter_point, axis=1)
+
+            # Get the farthest points
+            farthest1 = inliers1[np.argmax(dists1)]
+            farthest2 = inliers2[np.argmax(dists2)]
+
+            # Project these points to the lines
+            farthest1[1] = line1[0] * farthest1[0] + line1[1]
+            farthest2[1] = line2[0] * farthest2[0] + line2[1]
+            # --------------------------------------
+
+            # Get lengths of the lines
+            length1 = np.linalg.norm(inter_point - farthest1)
+            length2 = np.linalg.norm(inter_point - farthest2)
+
+            # Get angles of the lines
+            angle1 = np.arctan2(farthest1[1] - inter_point[1], farthest1[0] - inter_point[0])
+            angle2 = np.arctan2(farthest2[1] - inter_point[1], farthest2[0] - inter_point[0])
+
+            # Calculate the difference between the garage dimensions and the line lengths
+            length_diff1 = np.abs(length1 - garage_length)
+            length_diff2 = np.abs(length2 - garage_length)
+            width_diff1 = np.abs(length1 - garage_width)
+            width_diff2 = np.abs(length2 - garage_width)
+
+            # TODO: ------------------------------- DELETE THIS -------------------------------
+            print("garage_length, garage_width")
+            print(garage_length, garage_width)
+            print("length1, length2")
+            print(length1, length2)
+            print("length_diff1, length_diff2, width_diff1, width_diff2")
+            print(length_diff1, length_diff2, width_diff1, width_diff2)
+
+            # TODO: ----------------------------------------------------------------------------
+
+            # Decide which sides of the garage the robot sees
+            # --------------------------------------
+            # First case: the first line is the width of the garage and the second line is the length
+            if length1 > garage_length and length_diff2 < width_diff2:
+                first_line_length = garage_width
+                second_line_length = garage_length
+                print("here1")
+            # Second case: the first line is the length of the garage and the second line is the width
+            elif length2 > garage_length and length_diff1 < width_diff1:
+                first_line_length = garage_length
+                second_line_length = garage_width
+                print("here2")
+            # Third case: Something is wrong (the smallest difference will decide)
+            else:
+                print("here3")
+                diffs = np.array([length_diff1, length_diff2, width_diff1, width_diff2])
+                min_diff = np.argmin(diffs)
+                # If the smallest difference is 0 or 2, then the first line is the length and the second is the width
+                if min_diff == 0 or min_diff == 2:
+                    first_line_length = garage_length
+                    second_line_length = garage_width
+                # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
+                else:
+                    first_line_length = garage_width
+                    second_line_length = garage_length
+            # --------------------------------------
+
+            # Find the rectangle points
+            p1 = inter_point
+            p2 = self.calculate_next_point(p1, angle1, first_line_length)
+            p3 = self.calculate_next_point(p2, angle1 - np.pi/2, second_line_length)
+            p4 = self.calculate_next_point(p3, angle1 - np.pi, first_line_length)
+
+        return np.array([p1, p2, p3, p4])
+
+    def fit_line(self, xs, ys):
+        """
+        Fit a line to the given points using RANSAC.
+        :param xs: The x coordinates of the points.
+        :param ys: The y coordinates of the points.
+        :return: xs, ys, line, inliers: the outlier points, fitted line (a, b: y=ax+b), inliers
+        """
+        if len(xs) < self.detection_cfg["ransac_min_points"]:
+            return xs, ys, None, None
+
+        best_inliers = [[]]
+        best_outliers = [[]]
+        for _ in range(self.detection_cfg["ransac_iterations"]):
+            idx = np.random.choice(len(xs), 2, replace=False)
+            x1, x2 = xs[idx]
+            y1, y2 = ys[idx]
+            # The line is represented by the equation y = ax + b
+            a = (y2 - y1) / (x2 - x1)
+            b = y1 - a * x1
+            # Calculate the distance of each point to the line
+            distances = np.abs(a * xs + b - ys) / np.sqrt(a ** 2 + 1)
+            # Calculate the inliers
+            threshold = self.detection_cfg["ransac_inliers_threshold"]
+            inliers = np.where(distances < threshold)
+
+            outliers = np.where(distances >= threshold)
+            # If the number of inliers is greater than the best number of inliers so far, update the best inliers
+            if len(inliers[0]) > len(best_inliers[0]):
+                best_inliers = inliers
+                best_outliers = outliers
+
+        # Fit a line to the best inliers
+        if len(best_inliers) > 0:
+            line = np.polyfit(xs[best_inliers], ys[best_inliers], 1)
+            inliers = np.array([xs[best_inliers], ys[best_inliers]]).T
+            return xs[best_outliers], ys[best_outliers], line, inliers
+        else:
+            return xs, ys, None, None
+
     def calculate_goal(self, pillars) -> None:
         """
         Set the goal of OUR JOURNEY:). (policy differs based on the number of pillars)
@@ -354,9 +604,11 @@ class Map:
             # Calculate the distance between the robot and the pillar
             distance = np.sqrt((ref_object_x - x_robot)**2 + (ref_object_y - y_robot)**2)
 
-            # If the distance is smaller than the threshold, we are close enough to the pillar
+            # If the distance is smaller than the threshold, we are close enough to the reference object
             dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
             if distance < dist_threshold:
+                # In this case, fit the garage rectangle to the garage points
+                self.fit_and_fill_garage_rectangle()
                 self.goal_calculated = None                                                         # TODO: what to do here?
             # Otherwise, we will try to get closer to the pillar (point on the line between the robot and the pillar)
             else:
@@ -416,7 +668,7 @@ class Map:
             return None
 
         # Convert
-        mapc = int(realc / self.resolution)
+        mapc = np.round(realc / self.resolution).astype(int)
         if add:
             mapc += self.world_map.shape[0] // 2
         return mapc
@@ -559,3 +811,71 @@ class Map:
 
     def get_goal(self):
         return self.goal
+
+
+if __name__ == "__main__":
+    # Create random points that are almost on a line using numpy
+    # np.random.seed(8)
+    num = 100
+    points = np.random.rand(num, 2)
+    points[:, 1] = points[:, 0] + 0.1 * np.random.normal(size=num)
+    points = np.vstack([[0, 0], points, [1, 1]])
+
+    # Show these points
+    import matplotlib.pyplot as plt
+    # plt.scatter(points[:, 0], points[:, 1])
+    # plt.show()
+
+    # Create a map
+    import yaml
+
+    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
+
+    dims = detection_cfg['map']['dimensions']
+    res = detection_cfg['map']['resolution']
+
+    map = Map(dimensions=dims, resolution=res, detection_cfg=detection_cfg)
+
+    from robot import Robot
+    height = objects_cfg['robot']['height']
+    radius = objects_cfg['robot']['radius']
+    color = objects_cfg['robot']['color']
+    robot = Robot(height, radius, color)
+    robot.set_world_coordinates((0, 0))
+
+    map.set_robot(robot)
+
+    # Fit a line to the points
+    xs, ys, line, inliers = map.fit_line(points[:, 0], points[:, 1])
+
+    # Show the line
+    # plt.scatter(points[:, 0], points[:, 1])
+    # plt.plot([0, 1], [line[1], line[0]], color='red')
+    # plt.show()
+
+    # Get garage dimensions
+    garage_length = objects_cfg['garage']['length']
+    garage_width = objects_cfg['garage']['width']
+
+    # Convert garage dimensions to map coordinates
+    garage_length_map = map.conv_real_to_map(garage_length)
+    garage_width_map = map.conv_real_to_map(garage_width)
+
+    # Generate garage points
+    garage_points = generate_rectangle_points(garage_length_map, garage_width_map)
+
+    # # Show these points
+    # plt.scatter(garage_points[:, 0], garage_points[:, 1])
+    # plt.show()
+
+    # Fit a rectangle to the garage points
+    p1, p2, p3, p4 = map.fit_rectangle(garage_points[:, 0], garage_points[:, 1], garage_length_map, garage_width_map)
+
+    # Show the rectangle
+    plt.scatter(garage_points[:, 0], garage_points[:, 1])
+    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color='red')
+    plt.plot([p2[0], p3[0]], [p2[1], p3[1]], color='red')
+    plt.plot([p3[0], p4[0]], [p3[1], p4[1]], color='red')
+    plt.plot([p4[0], p1[0]], [p4[1], p1[1]], color='red')
+    plt.show()

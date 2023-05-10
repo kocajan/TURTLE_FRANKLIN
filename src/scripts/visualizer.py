@@ -140,7 +140,7 @@ class Visualizer:
 
         # Draw both point clouds
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(xs, ys, zs, c='r', s=0.1)
+        # ax.scatter(xs, ys, zs, c='r', s=0.1)
         ax.scatter(xs_p, ys_p, zs_p, c='b', s = 0.1)
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')

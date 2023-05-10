@@ -1,8 +1,6 @@
 import numpy as np
 import cv2 as cv
 
-import time                 # debug - time
-
 from objects import Obstacle, Garage, Gate
 from map import Map
 
@@ -135,7 +133,6 @@ class Detector:
         elif len(bounding_rects) == 0:
             return
         # We have found at least one pillar of the gate
-
         # Calculate the lowest points of the gate
         lowest_points = []
         if len(bounding_rects) == 2:
@@ -227,16 +224,11 @@ class Detector:
 
         # Get world coordinates of the objects in the RGB image
         # Obstacles
-        start = time.time()  # delete
         for obstacle in self.map.get_obstacles():
-            # TODO: Find out what takes so long and how to prevent it
             w_coords = self.get_world_coordinates_using_bounding_rect(obstacle.get_bounding_rect())
             obstacle.set_world_coordinates(w_coords)
-        end = time.time()  # delete
-        print("Obstacles: ", end - start)  # delete
 
         # Gate
-        start = time.time()  # delete
         gate = self.map.get_gate()
         if gate is not None:
             w_coords = []
@@ -248,19 +240,12 @@ class Detector:
                     gate.remove_pillar(pillar)
             gate.set_world_coordinates(w_coords)
 
-        end = time.time()  # delete
-        print("Gate: ", end - start)  # delete
-
         # Garage
-        start = time.time()  # delete
         garage = self.map.get_garage()
         if garage is not None:
             # Get rid of outliers
             w_coords = self.get_world_coordinates_using_contours(garage.get_contours())
             garage.set_world_coordinates(w_coords)
-
-        end = time.time()  # delete
-        print("Garage: ", end - start)  # delete
 
     # HELPER FUNCTIONS
     def get_world_coordinates_using_contours(self, contours: list) -> tuple:
