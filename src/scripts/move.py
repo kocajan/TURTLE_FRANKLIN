@@ -114,6 +114,19 @@ class Move:
         for idx in range(2, len(sequence)):
             sequence[idx].set_rotation(-sequence[idx].get_rotation())
 
+    def append_last_dummy_pixel(self):
+        x = self.move_coords[-1][0]
+        y = self.move_coords[-1][1]
+        x_prev = self.move_coords[-2][0]
+        y_prev = self.move_coords[-2][1]
+
+        # this is diagonal, append straight
+        if(abs(x-x_prev) == 1 and abs(y-y_prev) == 1):
+            self.move_coords.append((self.move_coords[-1][0], self.move_coords[-1][1] + 1))
+        # this is straight, append diagonal
+        if(abs(x-x_prev) == 0 and abs(y-y_prev) == 1):
+            self.move_coords.append((self.move_coords[-1][0] + 1, self.move_coords[-1][1] + 1))
+
     #creates SingleMove classes. SingleMove classes are then executed
     def move_sequence(self):
         """
@@ -126,7 +139,9 @@ class Move:
         prev_coord = None
         prev_index = None
 
-        self.move_coords.append((self.move_coords[-1][0], self.move_coords[-1][1]+1)) # append last straight to properly end second-last move
+        #self.move_coords.append((self.move_coords[-1][0]+1, self.move_coords[-1][1]+1)) # append last straight to properly end second-last move
+        self.append_last_dummy_pixel()
+        
         sequence.append(SingleMove(0, 0, False))  # dummy move to prevent out of bounds in array
         sequence.append(SingleMove(0, 0, False))  # dummy move to prevent out of bounds in array
 
@@ -188,8 +203,7 @@ class Move:
             prev_coord = self.move_coords[pos]
             last_compensation = 0 if prev_index == 0 else sequence[-1].get_rotation()
         sequence.append(self.check_trend(index, 10, rotation - last_compensation, translation, sequence))
-        if(len(sequence) > 3):
-            sequence.pop() # remove last move
+        sequence.pop() # remove last move
         self.revert_rotations(sequence)
         return sequence
 

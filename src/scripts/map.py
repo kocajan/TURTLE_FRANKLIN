@@ -652,7 +652,7 @@ class Map:
                 v = (v[0] / distance, v[1] / distance)
 
                 # Calculate the point that is in the distance of the threshold from the pillar
-                dist_threshold = dist_threshold*1.1                         # Make the goal a bit closer
+                dist_threshold = dist_threshold*0.9                         # Make the goal a bit closer
                 x_goal = ref_object_x - v[0] * dist_threshold
                 y_goal = ref_object_y - v[1] * dist_threshold
                 self.goal_calculated = (int(x_goal), int(y_goal))
