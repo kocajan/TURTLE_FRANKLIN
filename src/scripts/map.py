@@ -517,7 +517,7 @@ class Map:
             p3 = self.calculate_next_point(p2, angle1 - np.pi/2, second_line_length)
             p4 = self.calculate_next_point(p3, angle1 - np.pi, first_line_length)
 
-        return np.array([p1, p2, p3, p4]), first_line_length, second_line_length
+        return p1, p2, p3, p4, first_line_length, second_line_length
 
     def fit_line(self, xs, ys):
         """
