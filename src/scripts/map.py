@@ -349,7 +349,8 @@ class Map:
             rect = self.fit_rectangle(xs, ys, garage_width, garage_length)
             if rect is not None:
                 # Fill the rectangle in the world map
-                cv.fillPoly(self.world_map, [rect], self.detection_cfg['map']['id']['garage'])
+                print(rect)
+                cv.fillPoly(self.world_map, rect, self.detection_cfg['map']['id']['garage'])
 
     def fit_rectangle(self, xs, ys, garage_width, garage_length):
         """
