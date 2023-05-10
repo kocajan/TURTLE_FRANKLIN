@@ -229,6 +229,15 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     search_algorithm = detection_cfg['map']['search_algorithm']
     path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
 
+    gar_coord = map.get_garage().get_world_coordinates()
+    gar_map_x = map.conv_real_to_map(gar_coord[0], True)
+    gar_map_y = map.conv_real_to_map(gar_coord[1])
+
+    gar_coord_map = np.array([gar_map_x, gar_map_y])
+
+    # Save garage coordinates to file
+    np.save("garage_coordinates.npy", gar_coord_map)
+
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
     vis.visualize_rgb()
@@ -375,8 +384,8 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot3/RGB5.png')
-            pc = np.load(f'camera/shoot3/PC5.npy')
+            img = cv.imread(f'camera/shoot3/RGB7.png')
+            pc = np.load(f'camera/shoot3/PC7.npy')
             big_test(img, pc)
     elif test == "huge":
         huge_test()

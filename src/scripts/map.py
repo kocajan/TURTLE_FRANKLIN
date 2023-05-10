@@ -13,23 +13,23 @@ def generate_rectangle_points(rect_length, rect_width):
     num_points = 1000
 
     # Generate points on the sides of the rectangle
-    X = np.zeros((num_points, 2))
-    X[:num_points//4, 0] = np.linspace(0, rect_length, num_points//4)
-    X[num_points//4:num_points//2, 0] = rect_length
-    X[num_points//2:3*num_points//4, 0] = np.linspace(rect_length, 0, num_points//4)
-    X[3*num_points//4:, 0] = 0
-    X[:num_points//4, 1] = 0
-    X[num_points//4:num_points//2, 1] = np.linspace(0, rect_width//2, num_points//4)
-    # X[num_points//2:3*num_points//4, 1] = rect_width
-    # X[3*num_points//4:, 1] = np.linspace(rect_width, 0, num_points//4)
+    X = np.zeros((2, num_points))
+    X[0, :num_points//4] = np.linspace(0, rect_length, num_points//4)
+    X[0, num_points//4:num_points//2] = rect_length
+    X[0, num_points//2:3*num_points//4] = np.linspace(rect_length, 0, num_points//4)
+    X[0, 3*num_points//4:] = 0
+    X[1, :num_points//4] = 0
+    X[1, num_points//4:num_points//2] = np.linspace(0, rect_width//2, num_points//4)
+    # X[1, num_points//2:3*num_points//4] = rect_width
+    # X[1, 3*num_points//4:] = np.linspace(rect_width, 0, num_points//4)
 
     # Add noise to the points
     X += np.random.normal(0, 0.5, X.shape)
 
-    # Randomly shift and rotate the points (but keep it a rectangle)
+    # Randomly shift and rotate the points (but keep it a rectangle) Be careful about the dimensions
     theta = np.random.uniform(-np.pi/2, np.pi/2)
-    shift = np.random.uniform(0.5, 1, 2)
-    X = np.dot(X, np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])) + shift
+    shift = np.random.uniform(5, 10, 2)
+    X = (np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), X).T + shift).T
 
     return X
 
@@ -471,7 +471,6 @@ class Map:
             print(length1, length2)
             print("length_diff1, length_diff2, width_diff1, width_diff2")
             print(length_diff1, length_diff2, width_diff1, width_diff2)
-
             # TODO: ----------------------------------------------------------------------------
 
             # Decide which sides of the garage the robot sees
@@ -814,20 +813,10 @@ class Map:
 
 
 if __name__ == "__main__":
-    # Create random points that are almost on a line using numpy
-    # np.random.seed(8)
-    num = 100
-    points = np.random.rand(num, 2)
-    points[:, 1] = points[:, 0] + 0.1 * np.random.normal(size=num)
-    points = np.vstack([[0, 0], points, [1, 1]])
-
-    # Show these points
-    import matplotlib.pyplot as plt
-    # plt.scatter(points[:, 0], points[:, 1])
-    # plt.show()
 
     # Create a map
     import yaml
+    import matplotlib.pyplot as plt
 
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
@@ -846,14 +835,6 @@ if __name__ == "__main__":
 
     map.set_robot(robot)
 
-    # Fit a line to the points
-    xs, ys, line, inliers = map.fit_line(points[:, 0], points[:, 1])
-
-    # Show the line
-    # plt.scatter(points[:, 0], points[:, 1])
-    # plt.plot([0, 1], [line[1], line[0]], color='red')
-    # plt.show()
-
     # Get garage dimensions
     garage_length = objects_cfg['garage']['length']
     garage_width = objects_cfg['garage']['width']
@@ -863,19 +844,21 @@ if __name__ == "__main__":
     garage_width_map = map.conv_real_to_map(garage_width)
 
     # Generate garage points
-    garage_points = generate_rectangle_points(garage_length_map, garage_width_map)
+    # garage_points = generate_rectangle_points(garage_length_map, garage_width_map)
+    # print(garage_points.shape)
 
-    # # Show these points
-    # plt.scatter(garage_points[:, 0], garage_points[:, 1])
-    # plt.show()
+    # Load garage points from file
+    garage_points = np.load('garage_coordinates.npy')
+    print(garage_points.shape)
 
     # Fit a rectangle to the garage points
-    p1, p2, p3, p4 = map.fit_rectangle(garage_points[:, 0], garage_points[:, 1], garage_length_map, garage_width_map)
+    p1, p2, p3, p4 = map.fit_rectangle(garage_points[0], garage_points[1], garage_length_map, garage_width_map)
 
     # Show the rectangle
-    plt.scatter(garage_points[:, 0], garage_points[:, 1])
+    plt.scatter(garage_points[0], garage_points[1])
     plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color='red')
     plt.plot([p2[0], p3[0]], [p2[1], p3[1]], color='red')
     plt.plot([p3[0], p4[0]], [p3[1], p4[1]], color='red')
     plt.plot([p4[0], p1[0]], [p4[1], p1[1]], color='red')
+    plt.axis('equal')
     plt.show()
