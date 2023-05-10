@@ -76,39 +76,43 @@ def automate_test() -> None:
         else:
             # we have found gate entry, path to gate entry will be executed
             if gate != None and gate.get_num_pillars != 2:
-            
+                print("ELSE running")
+                print("Pillars"  + str(gate.get_num_pillars()))
                 # try to find more pillars, if impossible, execute path to just one pillar
-                if gate.get_num_pillars == 1:
+                if gate.get_num_pillars() == 1:
                     while True:
-                        if gate.get_num_pillars == 2:
-                            break
+                        print("One pillar negative ")
                         if map.goal == None:
                             small_rot_move.execute_small_rot_negative()
                             small_rot_move.execute_small_rot_negative()
+                            break
+                        if gate.get_num_pillars() == 2:
                             break
                         small_rot_move = move.Move(rob, None, None)
                         small_rot_move.execute_small_rot_positive()
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     while True:
-                        if gate.get_num_pillars == 2:
-                            break
+                        print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
                         if map.goal == None:
                             small_rot_move.execute_small_rot_positive()
                             small_rot_move.execute_small_rot_positive()
                             break
+                        if gate.get_num_pillars() == 2:
+                            break
+                        
                         small_rot_move.execute_small_rot_negative()
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
-                    break # break from outer loop to execute path to goal
+                    #break # break from outer loop to execute path to goal
 
                 # try to find more pillars, if impossible, execute path to yellow area
                 # just find one and then continue because loop for this is already written
-                if gate.get_num_pillars == 0:
+                if gate.get_num_pillars() == 0:  #TODO zde chyba
                     one_found = False
                     while True:
-                        if gate.get_num_pillars == 1:
+                        if gate.get_num_pillars() == 1:
                             one_found = True
                             break
                         if map.goal == None:
@@ -124,7 +128,7 @@ def automate_test() -> None:
                         continue
 
                     while True:
-                        if gate.get_num_pillars == 1:
+                        if gate.get_num_pillars() == 1:
                             one_found = True
                             break
                         if map.goal == None:
@@ -137,7 +141,7 @@ def automate_test() -> None:
                         gate = map.get_gate()
                     if one_found:
                         continue
-                    break
+                    #break
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -145,14 +149,14 @@ def automate_test() -> None:
         search_algorithm = detection_cfg['map']['search_algorithm']
 
         path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
-        print(path)
+        #print(path)
 
         vis.visualize_rgb()
         # vis.visualize_point_cloud()
         vis.visualize_map(path=path)
 
         tmp = move.Move(rob, path, detection_cfg)
-        print(path)
+        #print(path)
         tmp.execute_move()
 
 
