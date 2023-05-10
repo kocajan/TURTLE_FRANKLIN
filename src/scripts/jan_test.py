@@ -231,10 +231,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     map.fill_world_map()
     search_algorithm = detection_cfg['map']['search_algorithm']
-<<<<<<< HEAD
     
-=======
->>>>>>> 92de590e67e6153a19303deeb2cc0f590743a3b1
     path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
 
     gar_coord = map.get_garage().get_world_coordinates()

@@ -359,7 +359,7 @@ class Map:
             center = (int((p1[0] + p3[0]) / 2), int((p1[1] + p3[1]) / 2))
 
             # Get distance between the center and the corners of the garage
-            size = np.sqrt((p1[0] - center[0]) ** 2 + (p1[1] - center[1]) ** 2)
+            size = np.sqrt((p1[0] - center[0]) ** 2 + (p1[1] - center[1]) ** 2) / 2
 
             # Draw the restricted area
             self.draw_restricted_area(center, size, convert=False)
