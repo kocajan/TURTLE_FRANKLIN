@@ -1,8 +1,8 @@
 import numpy as np
 import cv2 as cv
 import yaml
-import move
 
+# import move
 from objects import Obstacle, Gate, Garage
 from robot import Robot
 from detector import Detector
@@ -243,6 +243,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     map.fill_world_map()
     search_algorithm = detection_cfg['map']['search_algorithm']
+    map.set_goal((0, 0))  # TODO delete this
     path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
 
     gar_coord = map.get_garage().get_world_coordinates()
@@ -250,8 +251,11 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     gar_map_y = map.conv_real_to_map(gar_coord[1])
 
     gar_coord_map = np.array([gar_map_x, gar_map_y])
+    print("zdarec")
+
 
     # Save garage coordinates to file
+    print("ahojda")
     np.save("garage_coordinates.npy", gar_coord_map)
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -366,7 +370,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "automate"
+    test = "big"
     if test == "image":
         for i in range(16):
             if i == 3:
@@ -400,8 +404,8 @@ def main():
                 pc = np.load(f'camera/shoot3/PC{i}.npy')
                 big_test(img, pc)
         else:
-            img = cv.imread(f'camera/shoot3/RGB7.png')
-            pc = np.load(f'camera/shoot3/PC7.npy')
+            img = cv.imread(f'camera/shoot7/RGB0.png')
+            pc = np.load(f'camera/shoot7/PC0.npy')
             big_test(img, pc)
     elif test == "huge":
         huge_test()
