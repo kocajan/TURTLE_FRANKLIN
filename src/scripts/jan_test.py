@@ -71,7 +71,7 @@ def automate_test() -> None:
         gate = map.get_gate()
 
         if map.goal == None:
-            small_rot_move.execute_small_rot_positive(10)
+            small_rot_move.execute_small_rot_positive(40)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
@@ -146,25 +146,26 @@ def automate_test() -> None:
                 max_val = 0
                 prev_max = -1
                 while True:
-                    map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
-                    gate = map.get_gate()  # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     if gate is not None:
                         break
-                    num_points = len(map.get_garage().get_world_coordinates()) if map.get_garage() is not None else -1
+                    num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
+                    print(num_points)
                     if num_points == -1:
                         prev_max = 0
                         num_points = 0
 
                     if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(10)
+                        small_rot_move.execute_small_rot_positive(20)
                     else:
                         if num_points >= prev_max:
                             prev_max = max_val
                             max_val = num_points
-                            small_rot_move.execute_small_rot_negative(10)
+                            small_rot_move.execute_small_rot_negative(20)
                         else:
-                            small_rot_move.execute_small_rot_positive(10)
+                            small_rot_move.execute_small_rot_positive(20)
                             break
+                    map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
+                    gate = map.get_gate()  # WARNING, not sure about shadowing in python. Expecting variables are shadowing
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -175,7 +176,7 @@ def automate_test() -> None:
         #print(path)
 
         vis.visualize_rgb()
-        # vis.visualize_point_cloud()
+        #vis.visualize_point_cloud()
         vis.visualize_map(path=path)
 
         tmp = move.Move(rob, path, detection_cfg)

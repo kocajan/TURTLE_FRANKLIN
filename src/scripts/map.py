@@ -441,6 +441,10 @@ class Map:
             p3 = self.calculate_next_point(p2, angle + np.pi/2, non_visible_side_length)
             p4 = self.calculate_next_point(p3, angle + np.pi, visible_side_length)
 
+            # Rename the sides
+            first_line_length = visible_side_length
+            second_line_length = non_visible_side_length
+
         # Robot can see 2 sides of the garage
         else:
             # Get the lines
