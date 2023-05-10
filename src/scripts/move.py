@@ -188,7 +188,8 @@ class Move:
             prev_coord = self.move_coords[pos]
             last_compensation = 0 if prev_index == 0 else sequence[-1].get_rotation()
         sequence.append(self.check_trend(index, 10, rotation - last_compensation, translation, sequence))
-        sequence.pop() # remove last move
+        if(len(sequence) > 3):
+            sequence.pop() # remove last move
         self.revert_rotations(sequence)
         return sequence
 
