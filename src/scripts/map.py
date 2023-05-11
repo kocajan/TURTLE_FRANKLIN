@@ -504,13 +504,13 @@ class Map:
             if length1 > garage_length and length_diff2 < width_diff2:
                 first_line_length = garage_width
                 second_line_length = garage_length
-                angle = angle1 if angle1 < angle2 else angle2
+                angle = angle1
                 print("here1")
             # Second case: the first line is the length of the garage and the second line is the width
             elif length2 > garage_length and length_diff1 < width_diff1:
                 first_line_length = garage_width
                 second_line_length = garage_length
-                angle = angle2 if angle2 > angle1 else angle1
+                angle = angle2
                 print("here2")
             # Third case: Something is wrong (the smallest difference will decide)
             else:
@@ -867,8 +867,6 @@ if __name__ == "__main__":
     # Create a map
     import yaml
     import matplotlib.pyplot as plt
-    from robot import Robot
-    from detector import Detector
 
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
@@ -879,6 +877,8 @@ if __name__ == "__main__":
     map = Map(dims, res, detection_cfg)
 
     if False:
+        # from robot import Robot
+        # from detector import Detector
         # Set up robot -------------------------------
         rad = objects_cfg['robot']['radius']
         hei = objects_cfg['robot']['height']
@@ -927,7 +927,7 @@ if __name__ == "__main__":
     # print(garage_points.shape)
 
     # Load garage points from file
-    garage_points = np.load('wrong_fit1.npy')
+    garage_points = np.load('wrong_fit.npy')
     print(garage_points.shape)
 
     # Fit a rectangle to the garage points
