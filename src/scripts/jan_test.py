@@ -199,8 +199,8 @@ def automate_test() -> None:
 
 
 def huge_test() -> None:
-    detection_cfg = yaml.safe_load('conf/detection.yaml', 'r')
-    objects_cfg = yaml.safe_load('conf/objects.yaml', 'r')
+    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
+    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
 
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
@@ -394,7 +394,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "automate"
+    test = "big"
     if test == "image":
         for i in range(16):
             if i == 3:

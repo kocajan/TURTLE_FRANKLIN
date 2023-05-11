@@ -494,8 +494,8 @@ class Map:
             print(garage_length, garage_width)
             print("length1, length2")
             print(length1, length2)
-            print("length_diff1, length_diff2, width_diff1, width_diff2")
-            print(length_diff1, length_diff2, width_diff1, width_diff2)
+            print("length_diff1, length_diff2, width_diff1, width_diff2, angle1, angle2")
+            print(length_diff1, length_diff2, width_diff1, width_diff2, angle1, angle2)
             # TODO: ----------------------------------------------------------------------------
 
             # Decide which sides of the garage the robot sees
@@ -504,11 +504,13 @@ class Map:
             if length1 > garage_length and length_diff2 < width_diff2:
                 first_line_length = garage_width
                 second_line_length = garage_length
+                angle = angle1 if angle1 < angle2 else angle2
                 print("here1")
             # Second case: the first line is the length of the garage and the second line is the width
             elif length2 > garage_length and length_diff1 < width_diff1:
-                first_line_length = garage_length
-                second_line_length = garage_width
+                first_line_length = garage_width
+                second_line_length = garage_length
+                angle = angle2 if angle2 > angle1 else angle1
                 print("here2")
             # Third case: Something is wrong (the smallest difference will decide)
             else:
@@ -519,17 +521,19 @@ class Map:
                 if min_diff == 0 or min_diff == 2:
                     first_line_length = garage_length
                     second_line_length = garage_width
+                    angle = angle2
                 # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
                 else:
                     first_line_length = garage_width
                     second_line_length = garage_length
+                    angle = angle1
             # --------------------------------------
 
             # Find the rectangle points
             p1 = inter_point
-            p2 = self.calculate_next_point(p1, angle1, first_line_length)
-            p3 = self.calculate_next_point(p2, angle1 - np.pi/2, second_line_length)
-            p4 = self.calculate_next_point(p3, angle1 - np.pi, first_line_length)
+            p2 = self.calculate_next_point(p1, angle, first_line_length)
+            p3 = self.calculate_next_point(p2, angle - np.pi/2, second_line_length)
+            p4 = self.calculate_next_point(p3, angle - np.pi, first_line_length)
 
         return p1, p2, p3, p4, first_line_length, second_line_length
 
@@ -863,6 +867,8 @@ if __name__ == "__main__":
     # Create a map
     import yaml
     import matplotlib.pyplot as plt
+    from robot import Robot
+    from detector import Detector
 
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
@@ -870,16 +876,42 @@ if __name__ == "__main__":
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
 
-    map = Map(dimensions=dims, resolution=res, detection_cfg=detection_cfg)
+    map = Map(dims, res, detection_cfg)
 
-    from robot import Robot
-    height = objects_cfg['robot']['height']
-    radius = objects_cfg['robot']['radius']
-    color = objects_cfg['robot']['color']
-    robot = Robot(height, radius, color)
-    robot.set_world_coordinates((0, 0))
+    if False:
+        # Set up robot -------------------------------
+        rad = objects_cfg['robot']['radius']
+        hei = objects_cfg['robot']['height']
+        col = objects_cfg['robot']['color']
 
-    map.set_robot(robot)
+        rob = Robot(rad, col, 'black')
+        print('robot object created')
+        print('bumper initialized')
+
+        rob.set_world_coordinates((0, 0))
+        map.set_robot(rob)
+        # --------------------------------------------
+
+        img = rob.take_rgb_img()
+        pc = rob.take_point_cloud()
+
+        det = Detector(map, img, pc, detection_cfg, objects_cfg)
+        det.process_rgb()
+        det.process_point_cloud()
+
+        map.fill_world_map()
+        search_algorithm = detection_cfg['map']['search_algorithm']
+        
+        path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
+
+        gar_coord = map.get_garage().get_world_coordinates()
+        gar_map_x = map.conv_real_to_map(gar_coord[0], True)
+        gar_map_y = map.conv_real_to_map(gar_coord[1])
+
+        gar_coord_map = np.array([gar_map_x, gar_map_y])
+
+        # Save garage coordinates to file
+        np.save("garage_coordinates.npy", gar_coord_map)
 
     # Get garage dimensions
     garage_length = objects_cfg['garage']['length']
@@ -895,7 +927,7 @@ if __name__ == "__main__":
     # print(garage_points.shape)
 
     # Load garage points from file
-    garage_points = np.load('garage_coordinates.npy')
+    garage_points = np.load('wrong_fit1.npy')
     print(garage_points.shape)
 
     # Fit a rectangle to the garage points
