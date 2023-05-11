@@ -438,8 +438,8 @@ class Map:
             # Find the rectangle points
             p1 = ref_point
             p2 = self.calculate_next_point(p1, angle, visible_side_length)
-            p3 = self.calculate_next_point(p2, angle + np.pi/2, non_visible_side_length)
-            p4 = self.calculate_next_point(p3, angle + np.pi, visible_side_length)
+            p3 = self.calculate_next_point(p2, angle - np.pi/2, non_visible_side_length)
+            p4 = self.calculate_next_point(p3, angle - np.pi, visible_side_length)
 
             # Rename the sides
             first_line_length = visible_side_length
@@ -531,23 +531,23 @@ class Map:
                 if min_diff == 0 or min_diff == 2:
                     print("here3.1")
                     if angle1 < angle2:
-                        first_line_length = garage_length
-                        second_line_length = garage_width
-                        angle = angle2
-                    else:
                         first_line_length = garage_width
                         second_line_length = garage_length
+                        angle = angle2
+                    else:
+                        first_line_length = garage_length
+                        second_line_length = garage_width
                         angle = angle1
                 # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
                 else:
                     print("here3.2")
                     if angle2 < angle1:
-                        first_line_length = garage_width
-                        second_line_length = garage_length
-                        angle = angle1
-                    else:
                         first_line_length = garage_length
                         second_line_length = garage_width
+                        angle = angle1
+                    else:
+                        first_line_length = garage_width
+                        second_line_length = garage_length
                         angle = angle2
             # --------------------------------------
 
@@ -898,7 +898,7 @@ if __name__ == "__main__":
     map = Map(dims, res, detection_cfg)
 
 
-    if False:
+    if True:
         from robot import Robot
         from detector import Detector
         # Set up robot -------------------------------
@@ -950,7 +950,7 @@ if __name__ == "__main__":
     # print(garage_points.shape)
     name = 'kratka.npy'
     # Load garage points from file
-    garage_points = np.load(name)
+    #garage_points = np.load(name)
     print(name)
     print(garage_points.shape)
 

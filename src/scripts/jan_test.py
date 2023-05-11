@@ -394,7 +394,7 @@ def map_visualization_test() -> None:
 
 
 def main():
-    test = "big"
+    test = "automate"
     if test == "image":
         for i in range(16):
             if i == 3:
