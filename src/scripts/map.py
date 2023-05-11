@@ -878,7 +878,7 @@ if __name__ == "__main__":
 
     map = Map(dims, res, detection_cfg)
 
-    if False:
+    if True:
         # Set up robot -------------------------------
         rad = objects_cfg['robot']['radius']
         hei = objects_cfg['robot']['height']
@@ -908,10 +908,11 @@ if __name__ == "__main__":
         gar_map_x = map.conv_real_to_map(gar_coord[0], True)
         gar_map_y = map.conv_real_to_map(gar_coord[1])
 
-        gar_coord_map = np.array([gar_map_x, gar_map_y])
+        garage_points = np.array([gar_map_x, gar_map_y])
 
         # Save garage coordinates to file
-        np.save("garage_coordinates.npy", gar_coord_map)
+        print('saving')
+        np.save("garage_coordinates.npy", garage_points)
 
     # Get garage dimensions
     garage_length = objects_cfg['garage']['length']
@@ -927,7 +928,7 @@ if __name__ == "__main__":
     # print(garage_points.shape)
 
     # Load garage points from file
-    garage_points = np.load('wrong_fit1.npy')
+    #garage_points = np.load('wrong_fit1.npy')
     print(garage_points.shape)
 
     # Fit a rectangle to the garage points
