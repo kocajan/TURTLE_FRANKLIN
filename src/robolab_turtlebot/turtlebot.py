@@ -102,9 +102,6 @@ class Turtlebot(object):
         self.depth_msg = None
         self.pc_msg = None
 
-        print("__________TIMER INITIALIZED_________")
-        timer = rospy.Timer(rospy.Duration(1.0), my_function)
-
     def reset_odometry(self):
         t_start = rospy.get_time()
         while self.pub_reset_odometry.get_num_connections() <= 0:
@@ -241,7 +238,9 @@ class Turtlebot(object):
     def is_shutting_down(self):
         return rospy.is_shutdown()
 
-    def my_function(event):
+    def timer_start(cb_reference):
         # Your code here
         # This function will be executed at each time interval specified
-        print("___TIMER___")
+        timer = rospy.Timer(rospy.Duration(1.0), cb_reference)
+        print("__________TIMER INITIALIZED_________")
+
