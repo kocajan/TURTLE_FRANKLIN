@@ -71,7 +71,7 @@ def automate_test() -> None:
         gate = map.get_gate()
 
         if map.goal == None:
-            small_rot_move.execute_small_rot_positive(40)
+            small_rot_move.execute_small_rot_positive(40, 0.9)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
@@ -83,26 +83,26 @@ def automate_test() -> None:
                     while True:
                         print("One pillar negative ")
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_negative(40)
-                            small_rot_move.execute_small_rot_negative(40)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
                             break
                         if gate.get_num_pillars() == 2:
                             break
                         small_rot_move = move.Move(rob, None, None)
-                        small_rot_move.execute_small_rot_positive(40)
+                        small_rot_move.execute_small_rot_positive(40, 0.9)
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_positive(40)
-                            small_rot_move.execute_small_rot_positive(40)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
                         if gate.get_num_pillars() == 2:
                             break
                         
-                        small_rot_move.execute_small_rot_negative(40)
+                        small_rot_move.execute_small_rot_negative(40, 0.9)
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
 
@@ -114,14 +114,14 @@ def automate_test() -> None:
                     one_found = False
                     while True:
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_positive(40)
-                            small_rot_move.execute_small_rot_positive(40)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
 
-                        small_rot_move.execute_small_rot_negative(40)
+                        small_rot_move.execute_small_rot_negative(40, 0.9)
                         map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     # if we have found one, let other loop to handle that
@@ -130,14 +130,14 @@ def automate_test() -> None:
 
                     while True:
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_negative(40)
-                            small_rot_move.execute_small_rot_negative(40)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
                             break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
 
-                        small_rot_move.execute_small_rot_positive(40)
+                        small_rot_move.execute_small_rot_positive(40, 0.9)
                         map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     if one_found:
@@ -160,15 +160,15 @@ def automate_test() -> None:
                         num_points = 0
 
                     if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(20)
+                        small_rot_move.execute_small_rot_positive(20, 0.9)
                     else:
                         if num_points >= prev_max:
                             prev_max = max_val
                             max_val = num_points
-                            small_rot_move.execute_small_rot_negative(20)
+                            small_rot_move.execute_small_rot_negative(20, 0.9)
                         else:
                             # rotate back to the best image taken and end finding proccess
-                            small_rot_move.execute_small_rot_positive(20)
+                            small_rot_move.execute_small_rot_positive(20, 0.9)
                             map, img, pc, det = take_image_and_process_map(rob)  # take new image
                             break
 # END OF STATE AUTOMAT
