@@ -142,16 +142,19 @@ def automate_test() -> None:
                         gate = map.get_gate()
                     if one_found:
                         continue
+            # PROBLEM - we are rotated OK but image is old
             else:
                 max_val = 0
                 prev_max = -1
                 while True:
+                    # if we can see gate, deal work to others, which will find pillars
                     if gate is not None:
                         break
                     num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
-                    map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
-                    gate = map.get_gate()  # WARNING, not sure about shadowing in python. Expecting variables are shadowing
+                    map, img, pc, det = take_image_and_process_map(rob)  # take new image
+                    gate = map.get_gate()  # update gate info
                     print(num_points)
+                    # we can not see any yellow point
                     if num_points == -1:
                         prev_max = 0
                         num_points = 0
@@ -164,7 +167,9 @@ def automate_test() -> None:
                             max_val = num_points
                             small_rot_move.execute_small_rot_negative(20)
                         else:
+                            # rotate back to the best image taken and end finding proccess
                             small_rot_move.execute_small_rot_positive(20)
+                            map, img, pc, det = take_image_and_process_map(rob)  # take new image
                             break
 # END OF STATE AUTOMAT
 
