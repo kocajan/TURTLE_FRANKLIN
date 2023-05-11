@@ -10,6 +10,7 @@ class Robot(Turtlebot):
         self.world_coordinates = None
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
+        self.timer_start(self.timer_cb)
 
     def take_rgb_img(self):
         """
@@ -50,6 +51,9 @@ class Robot(Turtlebot):
         """
         self.stop = True
         self.stop_motors()
+
+    def timer_cb(self, event):
+        print("TIMER triggered")
 
     # SETTERS
     def set_radius(self, radius):
