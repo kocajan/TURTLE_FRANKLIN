@@ -2,7 +2,7 @@ from robolab_turtlebot import Rate
 from turtlebot import Turtlebot
 
 class Robot(Turtlebot):
-    def __init__(self, radius, height, color, rgb=True, depth=False, pc=True):
+    def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
         super().__init__(cb=self.timer_cb, rgb=rgb, depth=depth, pc=pc)
         self.radius = radius
         self.height = height
@@ -38,6 +38,18 @@ class Robot(Turtlebot):
         pc = self.get_point_cloud()
         return pc
 
+    def take_depth_img(self):
+        """
+        Get depth image from the robot.
+        :return: Depth image as numpy array.
+        """
+        # Wait for the camera to setup
+        self.wait_for_depth_image()
+
+        # Capture depth image
+        depth = self.get_depth_image()
+        return depth
+
     def stop_motors(self):
         """
         Force stop the robot.
@@ -55,6 +67,21 @@ class Robot(Turtlebot):
 
     def timer_cb(self, event):
         print("TIMER triggered")
+
+    def is_there_anything_close(self):
+        """
+        Check if there is anything close to the robot.
+        :return: True if there is something close, False otherwise.
+        """
+        depth = self.take_depth_img()
+
+        image = depth[:240, :]
+        image = image[0 < image < 35]
+
+        if len(image) > 100:
+            return True
+        else:
+            return False
 
     # SETTERS
     def set_radius(self, radius):
