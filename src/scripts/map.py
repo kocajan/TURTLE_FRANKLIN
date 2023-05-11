@@ -441,6 +441,10 @@ class Map:
             p3 = self.calculate_next_point(p2, angle + np.pi/2, non_visible_side_length)
             p4 = self.calculate_next_point(p3, angle + np.pi, visible_side_length)
 
+            # Rename the sides
+            first_line_length = visible_side_length
+            second_line_length = non_visible_side_length
+
         # Robot can see 2 sides of the garage
         else:
             # Get the lines
@@ -652,7 +656,7 @@ class Map:
                 v = (v[0] / distance, v[1] / distance)
 
                 # Calculate the point that is in the distance of the threshold from the pillar
-                dist_threshold = dist_threshold*1.1                         # Make the goal a bit closer
+                dist_threshold = dist_threshold*0.9                         # Make the goal a bit closer
                 x_goal = ref_object_x - v[0] * dist_threshold
                 y_goal = ref_object_y - v[1] * dist_threshold
                 self.goal_calculated = (int(x_goal), int(y_goal))

@@ -63,7 +63,7 @@ def automate_test() -> None:
         gate = map.get_gate()
 
         if map.goal == None:
-            small_rot_move.execute_small_rot_positive()
+            small_rot_move.execute_small_rot_positive(40, 0.9)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
@@ -75,28 +75,28 @@ def automate_test() -> None:
                     while True:
                         print("One pillar negative ")
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_negative()
-                            small_rot_move.execute_small_rot_negative()
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
                             break
                         if gate.get_num_pillars() == 2:
                             break
                         small_rot_move = move.Move(rob, None, None)
-                        small_rot_move.execute_small_rot_positive()
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
+                        small_rot_move.execute_small_rot_positive(40, 0.9)
+                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
                         if map.goal == None:
-                            small_rot_move.execute_small_rot_positive()
-                            small_rot_move.execute_small_rot_positive()
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
                         if gate.get_num_pillars() == 2:
                             break
-                        
-                        small_rot_move.execute_small_rot_negative()
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
+                        small_rot_move.execute_small_rot_negative(40, 0.9)
+                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
                         gate = map.get_gate()
+
                     #break # break from outer loop to execute path to goal
 
                 # try to find more pillars, if impossible, execute path to yellow area
@@ -104,36 +104,65 @@ def automate_test() -> None:
                 if gate.get_num_pillars() == 0:  #TODO zde chyba
                     one_found = False
                     while True:
+                        if map.goal == None:
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
+                            small_rot_move.execute_small_rot_positive(40, 0.9)
+                            break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
-                        if map.goal == None:
-                            small_rot_move.execute_small_rot_positive()
-                            small_rot_move.execute_small_rot_positive()
-                            break
 
-                        small_rot_move.execute_small_rot_negative()
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
+                        small_rot_move.execute_small_rot_negative(40, 0.9)
+                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
+
                         gate = map.get_gate()
                     # if we have found one, let other loop to handle that
                     if one_found:
                         continue
 
                     while True:
+                        if map.goal == None:
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
+                            small_rot_move.execute_small_rot_negative(40, 0.9)
+                            break
                         if gate.get_num_pillars() == 1:
                             one_found = True
                             break
-                        if map.goal == None:
-                            small_rot_move.execute_small_rot_negative()
-                            small_rot_move.execute_small_rot_negative()
-                            break
+                        small_rot_move.execute_small_rot_positive(40, 0.9)
+                        map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
 
-                        small_rot_move.execute_small_rot_positive()
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     if one_found:
                         continue
-                    #break
+            # PROBLEM - we are rotated OK but image is old
+            else:
+                max_val = 0
+                prev_max = -1
+                while True:
+                    # if we can see gate, deal work to others, which will find pillars
+                    if gate is not None:
+                        break
+                    num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
+                    map, img, pc, det = take_image_and_process_map(rob)  # take new image
+                    gate = map.get_gate()  # update gate info
+                    print(num_points)
+                    # we can not see any yellow point
+                    if num_points == -1:
+                        prev_max = 0
+                        num_points = 0
+
+                    if prev_max == -1:
+                        small_rot_move.execute_small_rot_positive(20, 0.9)
+                    else:
+                        if num_points >= prev_max:
+                            prev_max = max_val
+                            max_val = num_points
+                            small_rot_move.execute_small_rot_negative(20, 0.9)
+                        else:
+                            # rotate back to the best image taken and end finding proccess
+                            small_rot_move.execute_small_rot_positive(20, 0.9)
+                            map, img, pc, det = take_image_and_process_map(rob)  # take new image
+                            break
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
@@ -144,7 +173,7 @@ def automate_test() -> None:
         #print(path)
 
         vis.visualize_rgb()
-        # vis.visualize_point_cloud()
+        #vis.visualize_point_cloud()
         vis.visualize_map(path=path)
 
         tmp = move.Move(rob, path, detection_cfg)
@@ -238,7 +267,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
 
     vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
-    vis.visualize_rgb()
+    #vis.visualize_rgb()
     #vis.visualize_point_cloud()
     vis.visualize_map(path=path)
     #path = [(250, 0), (251, 1), (252, 2), (253, 3), (254, 4), (255, 5), (256, 6), (257, 7), (258, 8), (259, 9), (260, 10), (261, 11), (262, 12), (263, 13), (264, 14), (265, 15), (266, 16), (267, 17), (268, 18), (269, 19), (270, 20), (271, 21), (272, 22), (273, 23), (274, 24), (275, 25), (276, 26), (277, 27), (278, 28), (279, 29), (280, 30), (281, 31), (282, 32), (282, 33), (282, 34), (282, 35), (282, 36), (282, 37), (282, 38), (282, 39), (282, 40), (282, 41), (282, 42), (282, 43), (282, 44), (282, 45), (282, 46), (282, 47), (282, 48), (282, 49), (282, 50), (282, 51), (282, 52), (282, 53), (282, 54), (282, 55), (282, 56), (282, 57), (282, 58), (282, 59), (282, 60), (282, 61), (282, 62), (283, 63), (284, 64), (285, 65), (286, 66), (287, 67), (288, 68), (289, 69), (290, 70), (291, 71), (292, 72), (293, 73), (293, 74), (293, 75), (293, 76), (293, 77), (293, 78), (293, 79), (293, 80), (293, 81), (293, 82), (293, 83), (293, 84), (293, 85), (292, 86), (291, 87), (290, 88), (289, 89), (288, 90), (287, 91), (286, 92), (285, 93), (284, 94), (284, 95), (284, 96), (284, 97), (284, 98), (284, 99), (284, 100), (284, 101), (284, 102), (284, 103), (284, 104), (284, 105), (284, 106), (284, 107), (284, 108), (284, 109), (284, 110), (284, 111), (284, 112), (284, 113), (284, 114)]
