@@ -671,7 +671,6 @@ class Map:
                 # In this case, fit the garage rectangle to the garage points
                 p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
 
-                print(p1, p2, p3, p4, first_line_len, second_line_len)
                 # Decide where are the pillars of the gate
                 if first_line_len > second_line_len:
                     pillar1 = p3
