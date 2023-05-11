@@ -72,7 +72,7 @@ min_valid_points_in_bounding_rect: 150
 ransac_iterations: 300
 
 # RANSAC inliers threshold
-ransac_inliers_threshold: 2
+ransac_inliers_threshold: 5
 
 # RANSAC minimum number of points
 ransac_min_points: 20

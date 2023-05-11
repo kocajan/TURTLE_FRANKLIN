@@ -436,6 +436,10 @@ class Map:
             non_visible_side_length = garage_width if length_diff < width_diff else garage_length
 
             # Find the rectangle points
+            if angle < np.pi/2:
+                angle += np.pi
+                visible_side_length = -visible_side_length 
+                
             p1 = ref_point
             p2 = self.calculate_next_point(p1, angle, visible_side_length)
             p3 = self.calculate_next_point(p2, angle - np.pi/2, non_visible_side_length)
@@ -667,7 +671,6 @@ class Map:
                 # In this case, fit the garage rectangle to the garage points
                 p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
 
-                print(p1, p2, p3, p4, first_line_len, second_line_len)
                 # Decide where are the pillars of the gate
                 if first_line_len > second_line_len:
                     pillar1 = p3
@@ -936,6 +939,10 @@ if __name__ == "__main__":
         # Save garage coordinates to file
         print('saving')
         np.save("garage_coordinates.npy", garage_points)
+
+        from visualizer import Visualizer
+        vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+        vis.visualize_rgb()
 
     # Get garage dimensions
     garage_length = objects_cfg['garage']['length']
