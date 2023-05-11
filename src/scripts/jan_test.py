@@ -10,25 +10,63 @@ from map import Map
 from visualizer import Visualizer
 
 
-def take_image_and_process_map(rob, detection_cfg, objects_cfg):
-    dims = detection_cfg['map']['dimensions']
-    res = detection_cfg['map']['resolution']
+def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True):
+    """
+    Function that takes image and point cloud from the robot and extracts information about the surrounding world.
+    :param rob: Robot object
+    :param detection_cfg: Configuration file for detection
+    :param objects_cfg: Configuration file for objects
+    :param visualize: Boolean value that determines if the process should be visualized
+    :param fill_map: Boolean value that determines if the map should be filled with information
+    :return: The map, number of pillars of the gate and goal object
+    """
+    # Load map parameters
+    map_dimensions = detection_cfg['map']['dimensions']
+    map_resolution = detection_cfg['map']['resolution']
 
-    map = Map(dims, res, detection_cfg)
-
-    rob.set_world_coordinates((0, 0))
-    map.set_robot(rob)
-
+    # Take image and point cloud
     img = rob.take_rgb_img()
     pc = rob.take_point_cloud()
 
+    # Create map object
+    map = Map(map_dimensions, map_resolution, detection_cfg)
+    map.set_robot(rob)
+
+    # Create detector object
     det = Detector(map, img, pc, detection_cfg, objects_cfg)
+
+    # Process image and point cloud
     det.process_rgb()
     det.process_point_cloud()
 
+    # Extract information from the map
     map.fill_world_map()
 
-    return map, img, pc, det
+    # Get information to return
+    gate = map.get_gate()
+    if gate is not None:
+        number_gate_pillars = gate.get_num_pillars()
+    else:
+        number_gate_pillars = -1
+
+    goal = map.get_goal()
+
+    if visualize:
+        # Select search algorithm
+        search_algorithm = detection_cfg['map']['search_algorithm']
+        start_point = detection_cfg['map']['start_point']
+
+        # Calculate path from start to goal
+        path = map.find_way(start_point, tuple(map.get_goal()), search_algorithm)
+
+        # Initialize visualizer object
+        vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+
+        vis.visualize_rgb()
+        # vis.visualize_point_cloud()
+        vis.visualize_map(path=path)
+
+    return map, number_gate_pillars, goal
 
 
 def automate_test() -> None:
@@ -41,97 +79,72 @@ def automate_test() -> None:
     rob = Robot(robot_cfg['radius'], robot_cfg['height'], robot_cfg['color'])
     rob.set_world_coordinates(robot_cfg['world_coordinates'])
 
-    # Load map parameters
-    map_dimensions = detection_cfg['map']['dimensions']
-    map_resolution = detection_cfg['map']['resolution']
-
     # Create small rotation move object (used for small rotations during the searching process)
     small_rot_move = move.Move(rob, None, None)
 
     # BEGIN OF STATE AUTOMAT
     while True:
-        map = Map(map_dimensions, map_resolution, detection_cfg)
-        map.set_robot(rob)
-        img = rob.take_rgb_img()
-        pc = rob.take_point_cloud()
-
-        det = Detector(map, img, pc, detection_cfg, objects_cfg)
-        det.process_rgb()
-        det.process_point_cloud()
-
-        map.fill_world_map()
-        gate = map.get_gate()
-
-        if map.goal == None:
+        # Extract information from the surrounding world
+        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+        if goal is None:
             small_rot_move.execute_small_rot_positive(40, 0.9)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
-            if gate != None and gate.get_num_pillars != 2:
+            if number_gate_pillars == 0 or number_gate_pillars == 1:
                 print("ELSE running")
-                print("Pillars" + str(gate.get_num_pillars()))
                 # try to find more pillars, if impossible, execute path to just one pillar
-                if gate.get_num_pillars() == 1:
+                if number_gate_pillars == 1:
                     while True:
                         print("One pillar negative ")
-                        if map.goal == None:
+                        if goal is None:
                             small_rot_move.execute_small_rot_negative(40, 0.9)
                             small_rot_move.execute_small_rot_negative(40, 0.9)
                             break
-                        if gate.get_num_pillars() == 2:
+                        if number_gate_pillars == 2:
                             break
-                        small_rot_move = move.Move(rob, None, None)
                         small_rot_move.execute_small_rot_positive(40, 0.9)
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
-                        gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
+                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
-                        if map.goal == None:
+                        if goal is None:
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
-                        if gate.get_num_pillars() == 2:
+                        if number_gate_pillars == 2:
                             break
                         small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
-                        gate = map.get_gate()
-
-                    #break # break from outer loop to execute path to goal
-
+                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
                 # try to find more pillars, if impossible, execute path to yellow area
                 # just find one and then continue because loop for this is already written
-                if gate.get_num_pillars() == 0:  #TODO zde chyba
+                if number_gate_pillars == 0:
                     one_found = False
                     while True:
-                        if map.goal == None:
+                        if goal is None:
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
-                        if gate.get_num_pillars() == 1:
+                        if  number_gate_pillars == 1:
                             one_found = True
                             break
 
                         small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
-
-                        gate = map.get_gate()
+                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
                     # if we have found one, let other loop to handle that
                     if one_found:
                         continue
 
                     while True:
-                        if map.goal == None:
+                        if goal is None:
                             small_rot_move.execute_small_rot_negative(40, 0.9)
                             small_rot_move.execute_small_rot_negative(40, 0.9)
                             break
-                        if gate.get_num_pillars() == 1:
+                        if number_gate_pillars == 1:
                             one_found = True
                             break
                         small_rot_move.execute_small_rot_positive(40, 0.9)
-                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image, will it be available also for other while??
-
-                        gate = map.get_gate()
+                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
                     if one_found:
                         continue
             # PROBLEM - we are rotated OK but image is old
@@ -140,12 +153,15 @@ def automate_test() -> None:
                 prev_max = -1
                 while True:
                     # if we can see gate, deal work to others, which will find pillars
-                    if gate is not None:
+                    if number_gate_pillars != -1:
                         break
                     num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
-                    #map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
-                    gate = map.get_gate()  # update gate info
+                    map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+                    # Print the number of points (SHOWCASE)
+                    print("Number of the detected garage points: ")
                     print(num_points)
+                    print("-------------------------------------")
+
                     # we can not see any yellow point
                     if num_points == -1:
                         prev_max = 0
@@ -161,25 +177,22 @@ def automate_test() -> None:
                         else:
                             # rotate back to the best image taken and end finding proccess
                             small_rot_move.execute_small_rot_positive(10, 0.9)
-                            #small_rot_move.execute_small_rot_positive(10, 0.9)
-                            map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
                             break
-                    map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
-# END OF STATE AUTOMAT
+    # END OF STATE AUTOMAT
+                    map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
-        vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
+        # Analyze the world and find the best path
+        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
+        # Select search algorithm
         search_algorithm = detection_cfg['map']['search_algorithm']
+        start_point = detection_cfg['map']['start_point']
 
-        path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
-        #print(path)
+        # Calculate path from start to goal
+        path = map.find_way(start_point, tuple(map.get_goal()), search_algorithm)
 
-        vis.visualize_rgb()
-        #vis.visualize_point_cloud()
-        vis.visualize_map(path=path)
-
+        # Follow the path
         tmp = move.Move(rob, path, detection_cfg)
-        #print(path)
         tmp.execute_move()
 
 

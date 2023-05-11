@@ -35,6 +35,7 @@ map:
   resolution: 0.01
   heuristic: 'euclidean' # 'euclidean' or 'manhattan' or 'chebyshev' or 'octile' or 'none'
   search_algorithm: 'A_star' # 'A_star' or 'BFS'
+  start_point: [ 250, 0 ]
   goal:
     min_distance_threshold: 80  # in pixels ~ cm
   safety_margin: 0.15
