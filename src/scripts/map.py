@@ -549,7 +549,10 @@ class Map:
             idx = np.random.choice(len(xs), 2, replace=False)
             x1, x2 = xs[idx]
             y1, y2 = ys[idx]
-            # The line is represented by the equation y = ax + b
+            # The line is represented by the equation y = ax + b (+ avoid dividing by zero)
+            if x2 == x1:
+                continue
+
             a = (y2 - y1) / (x2 - x1)
             b = y1 - a * x1
             # Calculate the distance of each point to the line
