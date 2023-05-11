@@ -36,6 +36,13 @@ def main():
 
         # assign depth i.e. distance to image
         image[mask] = np.int8(pc[:, :, 2][mask] / 3.0 * 255)
+        image = image[:240, :]
+        image1 = image[np.where(image<35)]
+        image2 = image1[np.where(image1>0)]
+        print(len(image2))
+        print()
+        print(image)
+        print(image.shape)
         im_color = cv2.applyColorMap(255 - image.astype(np.uint8),
                                      cv2.COLORMAP_JET)
 
