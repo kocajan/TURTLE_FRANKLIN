@@ -54,21 +54,12 @@ node_name = 'turtlenode'
 
 
 class Turtlebot(object):
-
     def __init__(self,
                  rgb=False,
                  depth=False,
                  pc=False):
         # init node
-        rospy.init_node(node_name)
-
-        def my_function(event):
-            # Your code here
-            # This function will be executed at each time interval specified
-            print("___TIMER___")
-
-        timer = rospy.Timer(rospy.Duration(1.0), my_function)
-        
+        rospy.init_node(node_name)        
 
         # subscribe topics
         self.sub_odom = rospy.Subscriber(topic_odom, Odometry, self.odom_cb)
@@ -110,6 +101,9 @@ class Turtlebot(object):
         self.rgb_msg = None
         self.depth_msg = None
         self.pc_msg = None
+
+        print("__________TIMER INITIALIZED_________")
+        timer = rospy.Timer(rospy.Duration(1.0), my_function)
 
     def reset_odometry(self):
         t_start = rospy.get_time()
@@ -246,3 +240,8 @@ class Turtlebot(object):
 
     def is_shutting_down(self):
         return rospy.is_shutdown()
+
+    def my_function(event):
+        # Your code here
+        # This function will be executed at each time interval specified
+        print("___TIMER___")
