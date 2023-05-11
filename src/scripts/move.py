@@ -329,18 +329,18 @@ class Move:
         rotation = SingleMove(-degrees, 0, None)
 
         if not self.robot.get_stop():
-            self.rotate_degrees_no_compensation(-degrees, speed)
-            #self.rotate_degrees(rotation.get_rotation())
-            #self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+            #self.rotate_degrees_no_compensation(-degrees, speed)
+            self.rotate_degrees(rotation.get_rotation())
+            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
         else:
             sys.exit()
     def execute_small_rot_negative(self, degrees, speed):
         rotation = SingleMove(degrees, 0, None)
 
         if not self.robot.get_stop():
-            self.rotate_degrees_no_compensation(degrees, speed)
-            #self.rotate_degrees(rotation.get_rotation())
-            #self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+            #self.rotate_degrees_no_compensation(degrees, speed)
+            self.rotate_degrees(rotation.get_rotation())
+            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
         else:
             sys.exit()
 
