@@ -238,7 +238,7 @@ class Turtlebot(object):
     def is_shutting_down(self):
         return rospy.is_shutdown()
 
-    def timer_start(cb_reference):
+    def timer_start(self, cb_reference):
         # Your code here
         # This function will be executed at each time interval specified
         timer = rospy.Timer(rospy.Duration(1.0), cb_reference)
