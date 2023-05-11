@@ -5,6 +5,7 @@ robot:
   radius: 0.18
   height: 0.385
   camera_height: 0.35
+  world_coordinates: ( 0, 0 )
 
 garage:
   tag: 'garage'

@@ -10,22 +10,11 @@ from map import Map
 from visualizer import Visualizer
 
 
-def take_image_and_process_map(rob):
-    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r')) # TODO remove multiple definitions
-    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
-
+def take_image_and_process_map(rob, detection_cfg, objects_cfg):
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
 
     map = Map(dims, res, detection_cfg)
-
-    rad = objects_cfg['robot']['radius']
-    hei = objects_cfg['robot']['height']
-    col = objects_cfg['robot']['color']
-
-    #rob = Robot(rad, col, 'black')  # is it neccessary to make new object?
-    #print('robot object created')
-    #print('bumper initialized')
 
     rob.set_world_coordinates((0, 0))
     map.set_robot(rob)
@@ -41,24 +30,27 @@ def take_image_and_process_map(rob):
 
     return map, img, pc, det
 
+
 def automate_test() -> None:
+    # Load configuration files
     detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
     objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
 
-    dims = detection_cfg['map']['dimensions']
-    res = detection_cfg['map']['resolution']
-    rad = objects_cfg['robot']['radius']
-    hei = objects_cfg['robot']['height']
-    col = objects_cfg['robot']['color']
-    rob = Robot(rad, col, 'black')  # is it neccessary to make new object?
-    print('robot object created')
-    print('bumper initialized')
-    small_rot_move = move.Move(rob, None, None)  # TODO move upper in hierarchy. It is not neccessary to create object in every iteration
+    # Create robot object (it won't be changed during the whole process)
+    robot_cfg = objects_cfg['robot']
+    rob = Robot(robot_cfg['radius'], robot_cfg['height'], robot_cfg['color'])
+    rob.set_world_coordinates(robot_cfg['world_coordinates'])
+
+    # Load map parameters
+    map_dimensions = detection_cfg['map']['dimensions']
+    map_resolution = detection_cfg['map']['resolution']
+
+    # Create small rotation move object (used for small rotations during the searching process)
+    small_rot_move = move.Move(rob, None, None)
 
     # BEGIN OF STATE AUTOMAT
     while True:
-        map = Map(dims, res, detection_cfg)
-        rob.set_world_coordinates((0, 0))
+        map = Map(map_dimensions, map_resolution, detection_cfg)
         map.set_robot(rob)
         img = rob.take_rgb_img()
         pc = rob.take_point_cloud()
@@ -77,7 +69,7 @@ def automate_test() -> None:
             # we have found gate entry, path to gate entry will be executed
             if gate != None and gate.get_num_pillars != 2:
                 print("ELSE running")
-                print("Pillars"  + str(gate.get_num_pillars()))
+                print("Pillars" + str(gate.get_num_pillars()))
                 # try to find more pillars, if impossible, execute path to just one pillar
                 if gate.get_num_pillars() == 1:
                     while True:
@@ -90,7 +82,7 @@ def automate_test() -> None:
                             break
                         small_rot_move = move.Move(rob, None, None)
                         small_rot_move.execute_small_rot_positive()
-                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
+                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
                         gate = map.get_gate() # WARNING, not sure about shadowing in python. Expecting variables are shadowing
                     while True:
                         print("One pillar negative ")
@@ -103,7 +95,7 @@ def automate_test() -> None:
                             break
                         
                         small_rot_move.execute_small_rot_negative()
-                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
+                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     #break # break from outer loop to execute path to goal
 
@@ -121,7 +113,7 @@ def automate_test() -> None:
                             break
 
                         small_rot_move.execute_small_rot_negative()
-                        map, img, pc, det = take_image_and_process_map(rob) # take new image, will it be available also for other while??
+                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg) # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     # if we have found one, let other loop to handle that
                     if one_found:
@@ -137,7 +129,7 @@ def automate_test() -> None:
                             break
 
                         small_rot_move.execute_small_rot_positive()
-                        map, img, pc, det = take_image_and_process_map(rob)  # take new image, will it be available also for other while??
+                        map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image, will it be available also for other while??
                         gate = map.get_gate()
                     if one_found:
                         continue
@@ -161,7 +153,8 @@ def automate_test() -> None:
 
 
 def huge_test() -> None:
-    detection_cfg = yaml.safe_load(opython3 /opt/ros/lar/share/robolab_turtlebot/scripts/example_move_1m.pyn('conf/objects.yaml', 'r'))
+    detection_cfg = yaml.safe_load('conf/detection.yaml', 'r')
+    objects_cfg = yaml.safe_load('conf/objects.yaml', 'r')
 
     dims = detection_cfg['map']['dimensions']
     res = detection_cfg['map']['resolution']
