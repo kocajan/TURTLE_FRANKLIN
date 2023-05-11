@@ -1,8 +1,10 @@
 import numpy as np
 import cv2 as cv
 import yaml
+import time
 
 import move
+
 from objects import Obstacle, Gate, Garage
 from robot import Robot
 from detector import Detector
@@ -40,7 +42,8 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
     det.process_point_cloud()
 
     # Extract information from the map
-    map.fill_world_map()
+    if fill_map:
+        map.fill_world_map()
 
     # Get information to return
     gate = map.get_gate()
@@ -181,7 +184,8 @@ def automate_test() -> None:
     # END OF STATE AUTOMAT
                     map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
-        # Analyze the world and find the best path
+        # Analyze the world and find the best path and wait for the robot to stop
+        time.sleep(0.3)
         map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Select search algorithm
