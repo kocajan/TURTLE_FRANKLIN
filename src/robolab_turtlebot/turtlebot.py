@@ -62,6 +62,14 @@ class Turtlebot(object):
         # init node
         rospy.init_node(node_name)
 
+        def my_function(event):
+            # Your code here
+            # This function will be executed at each time interval specified
+            print("___TIMER___")
+
+        timer = rospy.Timer(rospy.Duration(1.0), my_function)
+        
+
         # subscribe topics
         self.sub_odom = rospy.Subscriber(topic_odom, Odometry, self.odom_cb)
         self.sub_imu = rospy.Subscriber(topic_imu, Imu, self.imu_cb)
