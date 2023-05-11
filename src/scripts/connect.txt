@@ -16,3 +16,6 @@ python3 /opt/ros/lar/share/robolab_turtlebot/scripts/example_move_1m.py
 
 ps -ef | grep kocajan
 kill -9 number
+
+
+G3BDhqP3nnpyZWW
