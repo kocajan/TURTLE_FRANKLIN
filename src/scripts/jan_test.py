@@ -53,23 +53,28 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
         number_gate_pillars = -1
 
     goal = map.get_goal()
+    path = None
 
-    if visualize:
+    if goal is not None:
         # Select search algorithm
         search_algorithm = detection_cfg['map']['search_algorithm']
         start_point = detection_cfg['map']['start_point']
 
         # Calculate path from start to goal
-        path = map.find_way(start_point, tuple(map.get_goal()), search_algorithm)
+        path = map.find_way(start_point, tuple(goal), search_algorithm)
 
+    if visualize:
         # Initialize visualizer object
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
 
         vis.visualize_rgb()
         # vis.visualize_point_cloud()
-        vis.visualize_map(path=path)
+        if goal is not None:
+            vis.visualize_map(path=path)
+        else:
+            vis.visualize_map()
 
-    return map, number_gate_pillars, goal
+    return map, number_gate_pillars, goal, path
 
 
 def automate_test() -> None:
@@ -88,7 +93,7 @@ def automate_test() -> None:
     # BEGIN OF STATE AUTOMAT
     while True:
         # Extract information from the surrounding world
-        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
         if goal is None:
             small_rot_move.execute_small_rot_positive(40, 0.9)
             continue # continue to search for gate
@@ -107,7 +112,7 @@ def automate_test() -> None:
                         if number_gate_pillars == 2:
                             break
                         small_rot_move.execute_small_rot_positive(40, 0.9)
-                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
@@ -118,7 +123,7 @@ def automate_test() -> None:
                         if number_gate_pillars == 2:
                             break
                         small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                 # try to find more pillars, if impossible, execute path to yellow area
                 # just find one and then continue because loop for this is already written
                 if number_gate_pillars == 0:
@@ -133,7 +138,7 @@ def automate_test() -> None:
                             break
 
                         small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                     # if we have found one, let other loop to handle that
                     if one_found:
                         continue
@@ -147,7 +152,7 @@ def automate_test() -> None:
                             one_found = True
                             break
                         small_rot_move.execute_small_rot_positive(40, 0.9)
-                        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg)
+                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                     if one_found:
                         continue
             # PROBLEM - we are rotated OK but image is old
@@ -159,7 +164,6 @@ def automate_test() -> None:
                     if number_gate_pillars != -1:
                         break
                     num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
-                    map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
                     # Print the number of points (SHOWCASE)
                     print("Number of the detected garage points: ")
                     print(num_points)
@@ -171,29 +175,23 @@ def automate_test() -> None:
                         num_points = 0
 
                     if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(10, 0.9)
+                        small_rot_move.execute_small_rot_positive(10, 1.5)
                     else:
                         if num_points >= prev_max:
                             prev_max = max_val
                             max_val = num_points
-                            small_rot_move.execute_small_rot_negative(10, 0.9)
+                            small_rot_move.execute_small_rot_negative(10, 1.5)
                         else:
                             # rotate back to the best image taken and end finding proccess
-                            small_rot_move.execute_small_rot_positive(10, 0.9)
+                            small_rot_move.execute_small_rot_positive(10, 1.5)
+                            #map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
                             break
+                    map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
     # END OF STATE AUTOMAT
-                    map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
         # Analyze the world and find the best path and wait for the robot to stop
-        time.sleep(0.3)
-        map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
-
-        # Select search algorithm
-        search_algorithm = detection_cfg['map']['search_algorithm']
-        start_point = detection_cfg['map']['start_point']
-
-        # Calculate path from start to goal
-        path = map.find_way(start_point, tuple(map.get_goal()), search_algorithm)
+        time.sleep(0.5)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
         tmp = move.Move(rob, path, detection_cfg)
