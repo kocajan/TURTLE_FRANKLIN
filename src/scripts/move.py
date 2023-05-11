@@ -280,7 +280,7 @@ class Move:
                 act_rot = self.robot.get_odometry()[2]
                 if act_rot >= goal-0.08 or abs(act_rot - prev_rot) > 1:
                     break
-                self.robot.cmd_velocity(angular=speed)
+                self.robot.cmd_velocity(angular = speed)
                 prev_rot = act_rot
 
         elif degrees < 0:
@@ -292,7 +292,7 @@ class Move:
                 # print(act_rot, prev_rot)
                 if act_rot <= goal+0.08 or abs(act_rot - prev_rot) > 1:
                     break
-                self.robot.cmd_velocity(angular=-speed)
+                self.robot.cmd_velocity(angular = -speed)
                 prev_rot = act_rot
 
     # degree input range have to be +-180 deg
@@ -329,18 +329,18 @@ class Move:
         rotation = SingleMove(-degrees, 0, None)
 
         if not self.robot.get_stop():
-            #self.rotate_degrees_no_compensation(-degrees, speed)
-            self.rotate_degrees(rotation.get_rotation())
-            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+            #self.rotate_degrees(rotation.get_rotation())
+            #self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
         else:
             sys.exit()
     def execute_small_rot_negative(self, degrees, speed):
         rotation = SingleMove(degrees, 0, None)
 
         if not self.robot.get_stop():
-            #self.rotate_degrees_no_compensation(degrees, speed)
-            self.rotate_degrees(rotation.get_rotation())
-            self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+            #self.rotate_degrees(rotation.get_rotation())
+            #self.go_straight(rotation.get_distance(), np.sign(rotation.get_distance()))
         else:
             sys.exit()
 
