@@ -1,16 +1,17 @@
-from robolab_turtlebot import Turtlebot, Rate
-
+from robolab_turtlebot import Rate
+from turtlebot import Turtlebot
 
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=False, pc=True):
-        super().__init__(rgb=rgb, depth=depth, pc=pc)
+        super().__init__(cb=self.timer_cb, rgb=rgb, depth=depth, pc=pc)
         self.radius = radius
         self.height = height
         self.color = color
         self.world_coordinates = None
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
-        self.timer_start(self.timer_cb)
+
+        #super().timer_start(self.timer_cb)
 
     def take_rgb_img(self):
         """
