@@ -143,7 +143,7 @@ def automate_test() -> None:
                     if gate is not None:
                         break
                     num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
-                    map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
+                    #map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
                     gate = map.get_gate()  # update gate info
                     print(num_points)
                     # we can not see any yellow point
@@ -152,17 +152,19 @@ def automate_test() -> None:
                         num_points = 0
 
                     if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(20, 0.9)
+                        small_rot_move.execute_small_rot_positive(10, 0.9)
                     else:
                         if num_points >= prev_max:
                             prev_max = max_val
                             max_val = num_points
-                            small_rot_move.execute_small_rot_negative(20, 0.9)
+                            small_rot_move.execute_small_rot_negative(10, 0.9)
                         else:
                             # rotate back to the best image taken and end finding proccess
-                            small_rot_move.execute_small_rot_positive(20, 0.9)
+                            small_rot_move.execute_small_rot_positive(10, 0.9)
+                            #small_rot_move.execute_small_rot_positive(10, 0.9)
                             map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
                             break
+                    map, img, pc, det = take_image_and_process_map(rob, detection_cfg, objects_cfg)  # take new image
 # END OF STATE AUTOMAT
 
         vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
