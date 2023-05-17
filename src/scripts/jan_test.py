@@ -95,34 +95,32 @@ def automate_test() -> None:
         # Extract information from the surrounding world
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
         if goal is None:
-            small_rot_move.execute_small_rot_positive(40, 0.9)
+            small_rot_move.execute_small_rot_positive(20, 0.9)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
             if number_gate_pillars == 1:
-                print("ELSE running")
+                print("1 pillar seen")
                 # try to find more pillars, if impossible, execute path to just one pillar
                 if number_gate_pillars == 1:
                     while True:
                         print("One pillar negative ")
                         if goal is None:
-                            small_rot_move.execute_small_rot_negative(20, 0.9)
-                            small_rot_move.execute_small_rot_negative(20, 0.9)
+                            #small_rot_move.execute_small_rot_negative(20, 0.9)
                             break
                         if number_gate_pillars == 2:
                             break
-                        small_rot_move.execute_small_rot_positive(20, 0.9)
+                        small_rot_move.execute_small_rot_positive(2, 0.9)
                         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                     while True:
                         print("One pillar negative ")
                         # we have lost the garage. Break and execute the best possible move
                         if goal is None:
-                            small_rot_move.execute_small_rot_positive(20, 0.9)
-                            small_rot_move.execute_small_rot_positive(20, 0.9)
+                            #small_rot_move.execute_small_rot_positive(20, 0.9)
                             break
                         if number_gate_pillars == 2:
                             break
-                        small_rot_move.execute_small_rot_negative(20, 0.9)
+                        small_rot_move.execute_small_rot_negative(2, 0.9)
                         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                 # try to find more pillars, if impossible, execute path to yellow area
                 # just find one and then continue because loop for this is already written
@@ -130,8 +128,8 @@ def automate_test() -> None:
                     one_found = False
                     while True:
                         if goal is None:
-                            small_rot_move.execute_small_rot_positive(20, 0.9)
-                            small_rot_move.execute_small_rot_positive(20, 0.9)
+                            #small_rot_move.execute_small_rot_positive(20, 0.9)
+                            #small_rot_move.execute_small_rot_positive(20, 0.9)
                             break
                         if  number_gate_pillars == 1:
                             one_found = True
@@ -145,8 +143,8 @@ def automate_test() -> None:
 
                     while True:
                         if goal is None:
-                            small_rot_move.execute_small_rot_negative(20, 0.9)
-                            small_rot_move.execute_small_rot_negative(20, 0.9)
+                            #small_rot_move.execute_small_rot_negative(20, 0.9)
+                            #small_rot_move.execute_small_rot_negative(20, 0.9)
                             break
                         if number_gate_pillars == 1:
                             one_found = True

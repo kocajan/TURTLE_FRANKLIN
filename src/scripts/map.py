@@ -755,13 +755,15 @@ class Map:
             x = self.conv_real_to_map(center[0], add=True)
             y = self.conv_real_to_map(center[1])
             size = self.conv_real_to_map(size)
+            safety_margin = self.detection_cfg['map']['safety_margin_obstacles']
         else:
             x = center[0]
             y = center[1]
+            safety_margin = self.detection_cfg['map']['safety_margin_garage']
 
         # Add half of the robot radius to the radius plus safety margin
         size += self.conv_real_to_map(self.robot.get_radius()) \
-                  + self.conv_real_to_map(self.detection_cfg['map']['safety_margin'])
+                  + self.conv_real_to_map(safety_margin)
 
         # Get id of the restricted area
         id = self.detection_cfg['map']['id']['restricted']

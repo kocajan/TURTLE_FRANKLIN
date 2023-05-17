@@ -242,6 +242,6 @@ class Turtlebot(object):
     def timer_start(self, cb_reference):
         # Your code here
         # This function will be executed at each time interval specified
-        timer = rospy.Timer(rospy.Duration(0.1), cb_reference)
+        #timer = rospy.Timer(rospy.Duration(0.001), cb_reference)
         print("__________TIMER INITIALIZED_________")
 
