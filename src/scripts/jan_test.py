@@ -50,7 +50,7 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
     if gate is not None:
         number_gate_pillars = gate.get_num_pillars()
     else:
-        number_gate_pillars = -1
+        number_gate_pillars = 0
 
     goal = map.get_goal()
     path = None
@@ -95,95 +95,68 @@ def automate_test() -> None:
         # Extract information from the surrounding world
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
         if goal is None:
-            small_rot_move.execute_small_rot_positive(40, 0.9)
+            small_rot_move.execute_small_rot_positive(20, 0.9)
             continue # continue to search for gate
         else:
             # we have found gate entry, path to gate entry will be executed
-            if number_gate_pillars == 0 or number_gate_pillars == 1:
-                print("ELSE running")
+            if number_gate_pillars == 1:
+                print("1 pillar seen")
                 # try to find more pillars, if impossible, execute path to just one pillar
-                if number_gate_pillars == 1:
-                    while True:
-                        print("One pillar negative ")
-                        if goal is None:
-                            small_rot_move.execute_small_rot_negative(40, 0.9)
-                            small_rot_move.execute_small_rot_negative(40, 0.9)
-                            break
-                        if number_gate_pillars == 2:
-                            break
-                        small_rot_move.execute_small_rot_positive(40, 0.9)
+                #if number_gate_pillars == 1:
+                
+                #move right
+                both_seen = False
+
+                for i in range(2):
+                    small_rot_move.execute_small_rot_positive(10, 0.9)
+                    map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
+                    if(number_gate_pillars == 2):
+                        both_seen = True
+                        break
+                for i in range(2):
+                    small_rot_move.execute_small_rot_negative(10, 0.9)
+                
+                if not both_seen:
+                    for i in range(2):
+                        small_rot_move.execute_small_rot_negative(10, 0.9)
                         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                    while True:
-                        print("One pillar negative ")
-                        # we have lost the garage. Break and execute the best possible move
-                        if goal is None:
-                            small_rot_move.execute_small_rot_positive(40, 0.9)
-                            small_rot_move.execute_small_rot_positive(40, 0.9)
-                            break
-                        if number_gate_pillars == 2:
-                            break
-                        small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                # try to find more pillars, if impossible, execute path to yellow area
-                # just find one and then continue because loop for this is already written
-                if number_gate_pillars == 0:
-                    one_found = False
-                    while True:
-                        if goal is None:
-                            small_rot_move.execute_small_rot_positive(40, 0.9)
-                            small_rot_move.execute_small_rot_positive(40, 0.9)
-                            break
-                        if number_gate_pillars == 1:
-                            one_found = True
+                        if number_gate_pillars == 2 :
                             break
 
-                        small_rot_move.execute_small_rot_negative(40, 0.9)
-                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                    # if we have found one, let other loop to handle that
-                    if one_found:
-                        continue
-
-                    while True:
-                        if goal is None:
-                            small_rot_move.execute_small_rot_negative(40, 0.9)
-                            small_rot_move.execute_small_rot_negative(40, 0.9)
-                            break
-                        if number_gate_pillars == 1:
-                            one_found = True
-                            break
-                        small_rot_move.execute_small_rot_positive(40, 0.9)
-                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                    if one_found:
-                        continue
-            # PROBLEM - we are rotated OK but image is old
-            else:
-                max_val = 0
-                prev_max = -1
+                for i in range(2):
+                    small_rot_move.execute_small_rot_positive(10, 0.9)
+            
+            elif number_gate_pillars == 0:
+                max_val = -1
+                seen = False
                 while True:
                     # if we can see gate, deal work to others, which will find pillars
-                    if number_gate_pillars != -1:
+                    if number_gate_pillars != 0:
                         break
                     num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
+                    
                     # Print the number of points (SHOWCASE)
                     print("Number of the detected garage points: ")
+                    print('hehe')
                     print(num_points)
                     print("-------------------------------------")
 
                     # we can not see any yellow point
-                    if num_points == -1:
-                        prev_max = 0
+                    if num_points == -1 and seen:
+                        max_val = 0
                         num_points = 0
+                    elif num_points != -1 and not seen:
+                        seen = True
 
-                    if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(10, 0.7)
+                    if max_val == -1:
+                        small_rot_move.execute_small_rot_positive(2, 1)
                     else:
-                        if num_points >= prev_max:
-                            prev_max = max_val
+                        if num_points >= max_val:
                             max_val = num_points
-                            small_rot_move.execute_small_rot_negative(10, 1.5)
+                            small_rot_move.execute_small_rot_negative(2, 1)
                         else:
                             # rotate back to the best image taken and end finding proccess
-                            small_rot_move.execute_small_rot_positive(10, 1.5)
+                            small_rot_move.execute_small_rot_positive(2, 1)
                             #map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
                             break
                     map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
