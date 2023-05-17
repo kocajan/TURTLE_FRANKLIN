@@ -226,7 +226,10 @@ class Detector:
         # Obstacles
         for obstacle in self.map.get_obstacles():
             w_coords = self.get_world_coordinates_using_bounding_rect(obstacle.get_bounding_rect())
-            obstacle.set_world_coordinates(w_coords)
+            if w_coords is not None:
+                obstacle.set_world_coordinates(w_coords)
+            else:
+                self.map.get_obstacles().remove(obstacle)
 
         # Gate
         gate = self.map.get_gate()
@@ -328,7 +331,7 @@ class Detector:
         return self.get_pc_points_in_contours([corners])
 
     def get_pc_points_in_contours(self, contours: list) -> np.ndarray:
-        """s
+        """
         Get the points of the point cloud that are in the given contour.
         :param contours: The contours.
         :return: The points of the point cloud that are in the bounding rectangle.

@@ -85,6 +85,11 @@ class Robot(Turtlebot):
         if pc is None:
             return False
 
+        # Get rid of nans and infs
+        pc[np.isnan(pc)] = 0
+        pc[np.isinf(pc)] = 0
+
+
         # Mask out floor points
         mask = pc[:, :, 1] > x_range[0]
 
