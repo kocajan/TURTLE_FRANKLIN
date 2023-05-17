@@ -104,9 +104,9 @@ class Robot(Turtlebot):
         image = np.zeros(mask.shape)
 
         # Assign depth i.e. distance to image
-        image[mask] = np.int8(pc[:, :, 2][mask] / 3.0 * 255)
+        image[mask] = np.int16(pc[:, :, 2][mask] / 3.0 * 255)
         image = image[:240, :]
-        image1 = image[np.where(image<15)]
+        image1 = image[np.where(image<35)]
         image2 = image1[np.where(image1>0)]
 
         num_danger_points = len(image2)
