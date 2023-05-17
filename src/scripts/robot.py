@@ -66,19 +66,25 @@ class Robot(Turtlebot):
         self.stop_motors()
 
     def timer_cb(self, event):
-        print("TIMER triggered")
+        print(0)
+        if(self.is_there_anything_close()):
+            self.set_stop(True)
+            self.stop_motors()
 
     def is_there_anything_close(self):
         """
         Check if there is anything close to the robot.
         :return: True if there is something close, False otherwise.
         """
+        print(" feffwf")
         depth = self.take_depth_img()
 
         image = depth[:240, :]
-        image = image[0 < image < 35]
+        image1 = image[image < 35]
+        image1 = image1[0 < image1]
+        print(len(image1))
 
-        if len(image) > 100:
+        if len(image1) > 100:
             return True
         else:
             return False
