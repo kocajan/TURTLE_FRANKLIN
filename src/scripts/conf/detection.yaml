@@ -21,7 +21,7 @@ colors:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
     lower: [ 110, 70, 0 ]
-    upper: [ 140, 255, 120 ]
+    upper: [ 140, 255, 135 ]
 
   yellow:
     tag: 'yellow'
