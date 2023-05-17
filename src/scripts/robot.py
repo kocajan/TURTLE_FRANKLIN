@@ -1,3 +1,5 @@
+import numpy as np
+import cv2 as cv
 from robolab_turtlebot import Rate
 from turtlebot import Turtlebot
 
@@ -45,7 +47,6 @@ class Robot(Turtlebot):
         """
         # Wait for the camera to setup
         self.wait_for_depth_image()
-
         # Capture depth image
         depth = self.get_depth_image()
         return depth
@@ -66,7 +67,6 @@ class Robot(Turtlebot):
         self.stop_motors()
 
     def timer_cb(self, event):
-        print(0)
         if(self.is_there_anything_close()):
             self.set_stop(True)
             self.stop_motors()
@@ -76,15 +76,38 @@ class Robot(Turtlebot):
         Check if there is anything close to the robot.
         :return: True if there is something close, False otherwise.
         """
-        print(" feffwf")
-        depth = self.take_depth_img()
+        x_range = (-0.3, 0.3)
+        z_range = (0.3, 3.0)
 
-        image = depth[:240, :]
-        image1 = image[image < 35]
-        image1 = image1[0 < image1]
-        print(len(image1))
+        # Get the point cloud
+        pc = self.take_point_cloud()
 
-        if len(image1) > 100:
+        if pc is None:
+            return False
+
+        # Mask out floor points
+        mask = pc[:, :, 1] > x_range[0]
+
+        # Mask point too far and close
+        mask = np.logical_and(mask, pc[:, :, 2] > z_range[0])
+        mask = np.logical_and(mask, pc[:, :, 2] < z_range[1])
+
+        if np.count_nonzero(mask) <= 0:
+            return False
+
+        # Empty image
+        image = np.zeros(mask.shape)
+
+        # Assign depth i.e. distance to image
+        image[mask] = np.int8(pc[:, :, 2][mask] / 3.0 * 255)
+        image = image[:240, :]
+        image1 = image[np.where(image<15)]
+        image2 = image1[np.where(image1>0)]
+
+        num_danger_points = len(image2)
+        print('number of danger points: ', num_danger_points)
+
+        if num_danger_points > 100:
             return True
         else:
             return False
