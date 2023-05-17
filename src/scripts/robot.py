@@ -5,7 +5,7 @@ from turtlebot import Turtlebot
 
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
-        super().__init__(cb=self.timer_cb, rgb=rgb, depth=depth, pc=pc)
+        super().__init__(rgb=rgb, depth=depth, pc=pc)
         self.radius = radius
         self.height = height
         self.color = color
@@ -13,7 +13,7 @@ class Robot(Turtlebot):
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
 
-        #super().timer_start(self.timer_cb)
+        super().timer_start(self.timer_cb)
 
     def take_rgb_img(self):
         """

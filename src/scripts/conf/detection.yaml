@@ -20,7 +20,7 @@ colors:
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 110, 70, 0 ]
+    lower: [ 118, 70, 90 ]
     upper: [ 140, 255, 135 ]
 
   yellow:
@@ -38,6 +38,10 @@ map:
   start_point: [ 250, 0 ]
   goal:
     min_distance_threshold: 80  # in pixels ~ cm
+  goal_type:
+    'two_pillars': 2
+    'one_pillar': 1
+    'garage': 3
   safety_margin_obstacles: 0.15
   safety_margin_garage: 0.40
   vision_cone: [[0, 0], [0, 500], [30, 500], [230, 0], [500, 0], [500, 500], [470, 500], [270, 0]] # four points defining the vision cone of the robot (experimentally determined)

@@ -179,13 +179,19 @@ def automate_test() -> None:
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
-        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
 
         #  IF WE ARE IN FRONT OF GARAGE -> BREAK
 
         # Follow the path
         tmp = move.Move(rob, path, detection_cfg)
         tmp.execute_move()
+
+        if not rob.get_stop():
+            if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars']:
+                break  # break into park sequence
+        else:
+            rob.set_stop(False)
     
     # parking sequence
 
