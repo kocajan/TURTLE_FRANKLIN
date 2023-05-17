@@ -133,7 +133,7 @@ def automate_test() -> None:
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             small_rot_move.execute_small_rot_positive(40, 0.9)
                             break
-                        if  number_gate_pillars == 1:
+                        if number_gate_pillars == 1:
                             one_found = True
                             break
 
@@ -175,7 +175,7 @@ def automate_test() -> None:
                         num_points = 0
 
                     if prev_max == -1:
-                        small_rot_move.execute_small_rot_positive(10, 1.5)
+                        small_rot_move.execute_small_rot_positive(10, 0.7)
                     else:
                         if num_points >= prev_max:
                             prev_max = max_val
