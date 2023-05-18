@@ -90,98 +90,36 @@ def automate_test() -> None:
     # Create small rotation move object (used for small rotations during the searching process)
     small_rot_move = move.Move(rob, None, None)
 
-    # BEGIN OF STATE AUTOMAT
+    # STATE AUTOMAT
     while True:
         # Extract information from the surrounding world
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
+
+        # If no goal is set (robot does not see the garage [yellow] nor the gate [magenta]) then rotate and search
         if goal is None:
+            # Rotate the robot
             small_rot_move.execute_small_rot_positive(20, 0.9)
-            continue # continue to search for gate
+
+            # Continue to search for the gate or the garage
+            continue
+        # We have found the garage/gate, try to improve the robot's position to make the goal easier to set
+        # If the goal is set then there are two options:
         else:
-            # we have found gate entry, path to gate entry will be executed
+            # The robot sees one pillar of the gate
             if number_gate_pillars == 1:
-                print("1 pillar seen")
-                # try to find more pillars, if impossible, execute path to just one pillar
-                #if number_gate_pillars == 1:
-                
-                #move right
-                both_seen = False
-                rotation_cnt = 0
-                for i in range(2):
-                    small_rot_move.execute_small_rot_positive(5, 0.9)
-                    rotation_cnt += 1
-                    print("moving right")
-                    map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                    if(number_gate_pillars == 2):
-                        print("two seen while moving right")
-                        both_seen = True
-                        rotation_cnt -= 1
-                        break
-                if(number_gate_pillars != 2):
-                    for i in range(rotation_cnt):
-                        print("moving left to default pos")
-                        time.sleep(1)
-                        small_rot_move.execute_small_rot_negative(5, 0.9)
-
-                rotation_cnt = 0
-                if(not both_seen):
-                    for i in range(2):
-                        small_rot_move.execute_small_rot_negative(5, 0.9)
-                        rotation_cnt += 1
-                        print("moving left")
-                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                        if(number_gate_pillars == 2):
-                            print("two seen while moving left")
-                            rotation_cnt -= 1
-                            break
-                if(number_gate_pillars != 2):   
-                    for i in range(rotation_cnt):
-                        print("moving right to default pos")
-                        time.sleep(1)
-                        small_rot_move.execute_small_rot_positive(5, 0.9)
-
-            
+                # Try to find the second pillar
+                find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg)
+            # The robot sees the garage but not the gate
             elif number_gate_pillars == 0:
-                max_val = -1
-                seen = False
-                while True:
-                    # if we can see gate, deal work to others, which will find pillars
-                    if number_gate_pillars != 0:
-                        break
-                    num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
-                    
-                    # Print the number of points (SHOWCASE)
-                    print("Number of the detected garage points: ")
-                    print('hehe')
-                    print(num_points)
-                    print("-------------------------------------")
-
-                    # we can not see any yellow point
-                    if num_points == -1 and seen:
-                        max_val = 0
-                        num_points = 0
-                    elif num_points != -1 and not seen:
-                        seen = True
-
-                    if max_val == -1:
-                        small_rot_move.execute_small_rot_positive(2, 1)
-                    else:
-                        if num_points >= max_val:
-                            max_val = num_points
-                            small_rot_move.execute_small_rot_negative(2, 1)
-                        else:
-                            # rotate back to the best image taken and end finding proccess
-                            small_rot_move.execute_small_rot_positive(2, 1)
-                            #map, number_gate_pillars, goal = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
-                            break
-                    map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
-    # END OF STATE AUTOMAT
+                # Try to find the best position to see the gate
+                find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg,
+                                               objects_cfg)
+        # END OF THE STATE AUTOMAT
+        # -> find the best path to the goal and follow it
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
-
-        #  IF WE ARE IN FRONT OF GARAGE -> BREAK
 
         # Follow the path
         tmp = move.Move(rob, path, detection_cfg)
@@ -189,11 +127,124 @@ def automate_test() -> None:
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars']:
-                break  # break into park sequence
+                # All conditions are met, we can start the parking sequence
+                break
         else:
+            # Robot has stopped, we need to find the path again (and reset stop flag)
             rob.set_stop(False)
     
     # parking sequence
+
+
+def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg):
+    """
+    When the robot sees one gate pillar, there is a possibility that it will see the second one if it rotates.
+    This function will rotate the robot to find the second gate pillar.
+    :param rob: Robot object
+    :param small_rot_move: move object
+    :param map: Map object
+    :param number_gate_pillars: Number of the gate pillars
+    :param detection_cfg: Detection configuration
+    :param objects_cfg: Objects configuration
+    :return: rob, map, number_gate_pillars
+    """
+    # Preset the variables
+    both_seen = False
+    rotation_cnt = 0
+
+    # We assume that the robot is oriented towards the first pillar
+    # Rotate the robot to the right two times
+    for i in range(2):
+        # Execute two small rotations
+        small_rot_move.execute_small_rot_positive(5, 0.9)
+        rotation_cnt += 1
+
+        # Analyze the current situation
+        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
+
+        # Stop if the mission is accomplished (two pillars are seen)
+        if number_gate_pillars == 2:
+            both_seen = True
+            rotation_cnt -= 1
+            break
+
+    # If the robot has not seen two pillars, rotate back to the default position
+    if number_gate_pillars != 2:
+        for i in range(rotation_cnt):
+            # Execute two small rotations (make the robot wait to finish the rotation)
+            time.sleep(1)
+            small_rot_move.execute_small_rot_negative(5, 0.9)
+
+    # If the robot has not seen two pillars, rotate to the left two times
+    rotation_cnt = 0
+    if not both_seen:
+        for i in range(2):
+            # Execute two small rotations
+            small_rot_move.execute_small_rot_negative(5, 0.9)
+            rotation_cnt += 1
+
+            # Analyze the current situation
+            map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
+
+            # Stop if the mission is accomplished (two pillars are seen)
+            if number_gate_pillars == 2:
+                rotation_cnt -= 1
+                break
+
+    # If the robot has not seen two pillars, rotate back to the default position
+    if number_gate_pillars != 2:
+        for i in range(rotation_cnt):
+            # Execute two small rotations (make the robot wait to finish the rotation)
+            time.sleep(1)
+            small_rot_move.execute_small_rot_positive(5, 0.9)
+
+    return rob, map, number_gate_pillars
+
+
+def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg):
+    """
+    When the robot sees the garage and does not see the gate, this function will rotate the robot to find the best
+    position to see the garage. The number of garage points on the map is used as a metric.
+    :param rob: Robot object
+    :param small_rot_move: move object
+    :param map: Map object
+    :param number_gate_pillars: Number of the gate pillars
+    :param detection_cfg: Detection configuration
+    :param objects_cfg: Objects configuration
+    :return: None
+    """
+    # Preset the variables
+    max_val = -1
+    seen = False
+
+    # Rotate the robot until the best position is found
+    while True:
+        # If we can see gate, break from the loop
+        if number_gate_pillars != 0:
+            break
+
+        # Get the number of the garage points on the map
+        num_points = len(map.get_garage().get_world_coordinates()[0]) if map.get_garage() is not None else -1
+
+        # If we cannot see any yellow point and we have already seen it, start the search for the best position by
+        # rotating the robot back (stop when the number of points starts to decrease)
+        if num_points == -1 and seen:
+            max_val = 0
+            num_points = 0
+        elif num_points != -1 and not seen:
+            seen = True
+
+        if max_val == -1:
+            small_rot_move.execute_small_rot_positive(2, 1)
+        else:
+            if num_points >= max_val:
+                max_val = num_points
+                small_rot_move.execute_small_rot_negative(2, 1)
+            else:
+                # The robot has over-rotated, rotate back to the best position and end the searching process
+                small_rot_move.execute_small_rot_positive(2, 1)
+                break
+        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
 
 def huge_test() -> None:
