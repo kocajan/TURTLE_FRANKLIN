@@ -20,8 +20,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     small_rot_move = Move(rob, None, None)
 
     # Then search for both of the pillars (we will probably see only one of them at a time)
-    for i in range(18):
-        small_rot_move.execute_small_rot_positive(5, 0.5)
+    for i in range(9):
+        small_rot_move.execute_small_rot_positive(10, 0.5)
+        print('moved 10, sleep ?')
     # while True:
         # Turn to the left and search for the pillars
         # small_rot_move.execute_small_rot_positive(5, 0.5)
