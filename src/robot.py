@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-from turtlebot import Turtlebot
+from .turtlebot import Turtlebot
 from rospy import Rate
 
 class Robot(Turtlebot):
@@ -66,8 +66,8 @@ class Robot(Turtlebot):
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self, event):
-        if(self.is_there_anything_close()):
+    def timer_cb(self):
+        if self.is_there_anything_close():
             self.set_stop(True)
             self.stop_motors()
 
