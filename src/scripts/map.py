@@ -51,6 +51,7 @@ class Map:
         self.world_map = np.zeros((x, y), dtype=np.uint8)
         self.goal_calculated = None
         self.goal = None
+        self.goal_type = None
 
     # BEGIN: Path finding
     def expand(self, node_to_expand):
@@ -614,6 +615,10 @@ class Map:
         """
         # 2 pillars: we will try to get in front of the gate
         if len(pillars) == 2:
+            # Set goal_type
+            self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+
+            # Set pillars
             pillar1 = pillars[0]
             pillar2 = pillars[1]
 
@@ -647,11 +652,17 @@ class Map:
 
             # The reference object is the pillar
             if len(pillars) == 1:
+                # Set goal_type
+                self.goal_type = self.detection_cfg['map']['goal_type']['one_pillar']
+
                 # Get map coordinates of the pillar
                 ref_object_x = pillars[0][0]
                 ref_object_y = pillars[0][1]
             # The reference object is the closest point of the garage
             else:
+                # Set goal_type
+                self.goal_type = self.detection_cfg['map']['goal_type']['garage']
+
                 # Get the closest point of the garage (None if garage did not occur in the image)
                 garage_id = self.detection_cfg['map']['id']['garage']
                 closest_point = self.get_closest_point_on_map((x_robot, y_robot), garage_id)
@@ -860,6 +871,9 @@ class Map:
     def set_goal(self, goal):
         self.goal = goal
 
+    def set_goal_type(self, goal_type):
+        self.goal_type = goal_type
+
     # GETTERS
     def get_dimensions(self):
         return self.dimensions
@@ -887,6 +901,9 @@ class Map:
 
     def get_goal(self):
         return self.goal
+
+    def get_goal_type(self):
+        return self.goal_type
 
 
 if __name__ == "__main__":

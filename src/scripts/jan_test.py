@@ -106,25 +106,40 @@ def automate_test() -> None:
                 
                 #move right
                 both_seen = False
-
+                rotation_cnt = 0
                 for i in range(2):
-                    small_rot_move.execute_small_rot_positive(10, 0.9)
+                    small_rot_move.execute_small_rot_positive(5, 0.9)
+                    rotation_cnt += 1
+                    print("moving right")
                     map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
                     if(number_gate_pillars == 2):
+                        print("two seen while moving right")
                         both_seen = True
+                        rotation_cnt -= 1
                         break
-                for i in range(2):
-                    small_rot_move.execute_small_rot_negative(10, 0.9)
-                
-                if not both_seen:
-                    for i in range(2):
-                        small_rot_move.execute_small_rot_negative(10, 0.9)
-                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                        if number_gate_pillars == 2:
-                            break
+                if(number_gate_pillars != 2):
+                    for i in range(rotation_cnt):
+                        print("moving left to default pos")
+                        time.sleep(1)
+                        small_rot_move.execute_small_rot_negative(5, 0.9)
 
-                for i in range(2):
-                    small_rot_move.execute_small_rot_positive(10, 0.9)
+                rotation_cnt = 0
+                if(not both_seen):
+                    for i in range(2):
+                        small_rot_move.execute_small_rot_negative(5, 0.9)
+                        rotation_cnt += 1
+                        print("moving left")
+                        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
+                        if(number_gate_pillars == 2):
+                            print("two seen while moving left")
+                            rotation_cnt -= 1
+                            break
+                if(number_gate_pillars != 2):   
+                    for i in range(rotation_cnt):
+                        print("moving right to default pos")
+                        time.sleep(1)
+                        small_rot_move.execute_small_rot_positive(5, 0.9)
+
             
             elif number_gate_pillars == 0:
                 max_val = -1
@@ -164,11 +179,21 @@ def automate_test() -> None:
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
-        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
+
+        #  IF WE ARE IN FRONT OF GARAGE -> BREAK
 
         # Follow the path
         tmp = move.Move(rob, path, detection_cfg)
         tmp.execute_move()
+
+        if not rob.get_stop():
+            if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars']:
+                break  # break into park sequence
+        else:
+            rob.set_stop(False)
+    
+    # parking sequence
 
 
 def huge_test() -> None:
