@@ -3,6 +3,7 @@ import cv2 as cv
 from .turtlebot import Turtlebot
 from rospy import Rate
 
+
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
         super().__init__(rgb=rgb, depth=depth, pc=pc)
@@ -122,7 +123,6 @@ class Robot(Turtlebot):
             return True
         else:
             return False
-
     # SETTERS
     def set_radius(self, radius):
         self.radius = radius
