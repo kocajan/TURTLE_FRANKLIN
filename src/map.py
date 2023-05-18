@@ -53,33 +53,8 @@ class Map:
         self.goal = None
         self.goal_type = None
 
-    # BEGIN: Path finding
-    def expand(self, node_to_expand):
-        result = []
-        neighbours = [(0, 1), (1, 1), (-1, 1), (1, 0), (-1, 0)]
-        memory = {}
-
-        memory[str(node_to_expand)] = None
-        for tuple in neighbours:
-            tmp = (node_to_expand[0] + tuple[0] , node_to_expand[1] + tuple[1])
-            if(0 <= tmp[0] < self.world_map.shape[0] and 0 <= tmp[1] < self.world_map.shape[1] and self.world_map[tmp] < 2 and tmp not in memory.keys()):
-                result.append(tmp)
-        return result
-
-    def bfs(self, start, goal) -> np.ndarray:
-        q = queue.Queue()
-        q.put(start)
-        path = []
-
-        while not q.empty():
-            to_expand = q.get()
-            for node in self.expand(to_expand):
-                if node == goal:
-                    return path
-                path.append(node)
-                q.put(node)
-
-    def find_way(self, start, goal, search_algorithm) -> np.ndarray:
+    # BEGIN: Path searching
+    def find_way(self, start, goal, search_algorithm) -> list:
         """
         Find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -99,7 +74,7 @@ class Map:
         else:
             raise ValueError("Unknown search algorithm")
 
-    def a_star(self, start, goal):
+    def a_star(self, start, goal) -> list:
         """
         Use A* algorithm to find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -156,7 +131,7 @@ class Map:
                         heapq.heappush(open_set, (priority, neighbor))
                         parent[neighbor] = current_node
         # If the goal cannot be reached
-        return None
+        return []
 
     def heuristic(self, a, b) -> float:
         """
@@ -181,7 +156,43 @@ class Map:
         else:
             raise ValueError("Unknown heuristic")
 
-    # END: Path finding
+    def bfs(self, start, goal) -> list:
+        """
+        Use BFS algorithm to find the way from the robot to the garage on the map.
+        :param start: The starting point.
+        :param goal: The ending point.
+        :return: The path from the robot to the garage. The path is a list of points.
+        """
+        q = queue.Queue()
+        q.put(start)
+        path = []
+
+        while not q.empty():
+            to_expand = q.get()
+            for node in self.expand(to_expand):
+                if node == goal:
+                    return path
+                path.append(node)
+                q.put(node)
+
+    def expand(self, node_to_expand) -> list:
+        """
+        Expand the node.
+        :param node_to_expand: The node to expand.
+        :return: The list of the neighbours of the node.
+        """
+        result = []
+        neighbours = [(0, 1), (1, 1), (-1, 1), (1, 0), (-1, 0)]
+        memory = {}
+
+        memory[str(node_to_expand)] = None
+        for tuple in neighbours:
+            tmp = (node_to_expand[0] + tuple[0], node_to_expand[1] + tuple[1])
+            if 0 <= tmp[0] < self.world_map.shape[0] and 0 <= tmp[1] < self.world_map.shape[1] and self.world_map[tmp] < 2 and tmp not in memory.keys():
+                result.append(tmp)
+        return result
+
+    # END: Path searching
 
     # BEGIN: Map filling
     def fill_world_map(self) -> None:
@@ -328,7 +339,7 @@ class Map:
         if self.goal_calculated is not None:
             cv.circle(self.world_map, self.goal_calculated, 5, calculated_goal_id, -1)
 
-    def fit_and_fill_garage_rectangle(self):
+    def fit_and_fill_garage_rectangle(self) -> tuple:
         """
         Fit a rectangle (garage size) to the garage points and fill it in the world map.
         :return: points of the fitted rectangle and the lengths of the lines used to fit the rectangle
@@ -374,7 +385,7 @@ class Map:
 
             return p1, p2, p3, p4, first_line_len, second_line_len
 
-    def fit_rectangle(self, xs, ys, garage_width, garage_length):
+    def fit_rectangle(self, xs, ys, garage_width, garage_length) -> tuple:
         """
         Fit a rectangle to the given points.
         :param xs: The x map coordinates of the points.
@@ -564,7 +575,7 @@ class Map:
 
         return p1, p2, p3, p4, first_line_length, second_line_length
 
-    def fit_line(self, xs, ys):
+    def fit_line(self, xs, ys) -> (np.ndarray, np.ndarray, (float, float), np.ndarray):
         """
         Fit a line to the given points using RANSAC.
         :param xs: The x coordinates of the points.
@@ -670,7 +681,7 @@ class Map:
                     ref_object_x = closest_point[0]
                     ref_object_y = closest_point[1]
                 else:
-                    self.goal_calculated = None                                                    # TODO: what to do here?
+                    self.goal_calculated = None
                     return
 
             # Calculate the distance between the robot and the pillar
@@ -800,7 +811,7 @@ class Map:
         # Draw the octagon
         cv.fillPoly(self.world_map, [np.array(vertices)], color)
 
-    def draw_vision_cone(self):
+    def draw_vision_cone(self) -> None:
         """
         Tha camera does not see the whole square in front of it, but only a triangle.
         This function draws restricted area around the vision cone of the camera.
