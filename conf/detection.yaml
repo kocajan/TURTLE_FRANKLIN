@@ -20,7 +20,7 @@ colors:
   magenta:
     tag: 'magenta'
     rgb: [ 139, 0, 139 ]
-    lower: [ 118, 70, 90 ]
+    lower: [ 118, 70, 65 ]
     upper: [ 140, 255, 135 ]
 
   yellow:

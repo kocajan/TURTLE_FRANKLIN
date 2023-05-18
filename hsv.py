@@ -3,7 +3,7 @@ import numpy as np
 
 import yaml
 
-detection_cfg = yaml.safe_load(open('src/scripts/conf/detection.yaml', 'r'))
+detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
 
 
 def nothing(x):
@@ -11,10 +11,10 @@ def nothing(x):
 
 
 # Set things up
-img = cv2.imread('src/scripts/camera/shoot8/RGB0.png')
+img = cv2.imread('camera/shoot9/RGB2.png')
 img = cv2.resize(img, (670, 500))
 
-test_color = "yellow"
+test_color = "magenta"
 
 # Create a window
 cv2.namedWindow('image')

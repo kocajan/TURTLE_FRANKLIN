@@ -3,13 +3,13 @@ import cv2 as cv
 import yaml
 import time
 
-import move
+import .move
 
-from objects import Obstacle, Gate, Garage
-from robot import Robot
-from detector import Detector
-from map import Map
-from visualizer import Visualizer
+from .objects import Obstacle, Gate, Garage
+from .robot import Robot
+from .detector import Detector
+from .map import Map
+from .visualizer import Visualizer
 
 
 def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True):
