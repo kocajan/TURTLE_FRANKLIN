@@ -1,11 +1,8 @@
-<<<<<<< HEAD:src/scripts/robot.py
-from robolab_turtlebot import Turtlebot, Rate
-=======
 import numpy as np
 import cv2 as cv
 from .turtlebot import Turtlebot
 from rospy import Rate
->>>>>>> 5c36fee23733845c080d29a468e820d6297c4bb5:src/robot.py
+
 
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
@@ -70,13 +67,8 @@ class Robot(Turtlebot):
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self, event):
-<<<<<<< HEAD:src/scripts/robot.py
-        if(MEGA_HUGE_TEST == bul TRU):
-            self.set_stop(True)
-            self.stop_motors()
-=======
-        if(self.is_there_anything_close()):
+    def timer_cb(self):
+        if self.is_there_anything_close():
             self.set_stop(True)
             self.stop_motors()
 
@@ -131,8 +123,6 @@ class Robot(Turtlebot):
             return True
         else:
             return False
->>>>>>> 5c36fee23733845c080d29a468e820d6297c4bb5:src/robot.py
-
     # SETTERS
     def set_radius(self, radius):
         self.radius = radius
