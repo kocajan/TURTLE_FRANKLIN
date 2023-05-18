@@ -1,0 +1,28 @@
+# Note: Dimensions are in meters
+robot:
+  tag: 'robot'
+  color: 'black'
+  radius: 0.18
+  height: 0.385
+  camera_height: 0.35
+  world_coordinates: [ 0, 0 ]
+
+garage:
+  tag: 'garage'
+  color: 'yellow'
+  length: 0.57
+  width: 0.495
+  height: 0.34
+
+gate:
+  tag: 'gate'
+  color: 'magenta'
+  pillars_width: 0.05
+  pillars_height: 0.34
+  pillars_distance: 0.47
+
+obstacle:
+  tag: 'obstacle'
+  color: 'red_green_blue'
+  radius: 0.0265
+  height: 0.35
