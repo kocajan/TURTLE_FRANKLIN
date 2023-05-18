@@ -1,6 +1,5 @@
 from robolab_turtlebot import Turtlebot, Rate
 
-
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=False, pc=True):
         super().__init__(rgb=rgb, depth=depth, pc=pc)
@@ -53,7 +52,9 @@ class Robot(Turtlebot):
         self.stop_motors()
 
     def timer_cb(self, event):
-        print("TIMER triggered")
+        if(MEGA_HUGE_TEST == bul TRU):
+            self.set_stop(True)
+            self.stop_motors()
 
     # SETTERS
     def set_radius(self, radius):
