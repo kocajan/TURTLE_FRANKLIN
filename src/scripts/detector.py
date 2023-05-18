@@ -127,9 +127,10 @@ class Detector:
         :return: None
         """
         if len(bounding_rects) > 2:
-            # Make number of contours equal to 2 (the gate has 2 pillars) by removing what?
-            # TODO: Think it through
-            pass
+            # Make number of contours equal to 2 (the gate has 2 pillars) by keeping the biggest ones
+            bounding_rects.sort(key=lambda rect: rect[1][0] * rect[1][1], reverse=True)
+            bounding_rects = bounding_rects[:2]
+            print("WARNING: More than 2 pillars of the gate found. Keeping the biggest ones.")
         elif len(bounding_rects) == 0:
             return
         # We have found at least one pillar of the gate

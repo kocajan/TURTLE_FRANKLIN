@@ -120,7 +120,7 @@ def automate_test() -> None:
                     for i in range(2):
                         small_rot_move.execute_small_rot_negative(10, 0.9)
                         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg)
-                        if number_gate_pillars == 2 :
+                        if number_gate_pillars == 2:
                             break
 
                 for i in range(2):
