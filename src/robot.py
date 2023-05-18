@@ -17,7 +17,7 @@ class Robot(Turtlebot):
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
 
-        super().timer_start(self.timer_cb)
+        #super().timer_start(self.timer_cb)
 
     def take_rgb_img(self):
         """
@@ -86,7 +86,7 @@ class Robot(Turtlebot):
         :return: True if there is something close, False otherwise.
         """
         x_range = (-0.3, 0.3)
-        z_range = (0.3, 3.0)
+        z_range = (0.1, 3.0)
 
         # Get the point cloud
         pc = self.take_point_cloud()
@@ -121,13 +121,12 @@ class Robot(Turtlebot):
         print("Unique values: \n", unique)
         print("Number of unique values: ", len(unique))
         print("----------------------------------")
-        input("Press Enter to continue...")
-        image1 = image[np.where(image < 31)]
+        image1 = image[np.where(image <= 18)]
         image2 = image1[np.where(image1 > 0)]
 
         num_danger_points = len(image2)
 
-        if num_danger_points > 100:
+        if num_danger_points > 350:
             print(num_danger_points, ' DANGER POINTS!')
             return True
         else:

@@ -47,7 +47,10 @@ class Move:
             if not self.robot.get_stop():
                 #print('here', move.get_distance(), move.get_rotation())
                 self.rotate_degrees(move.get_rotation())
-                self.go_straight(move.get_distance(), np.sign(move.get_distance()))
+                if abs(move.get_rotation()) == 45 or abs(move.get_rotation()) == 135: 
+                    self.go_straight(move.get_distance() -2*math.sqrt(2), np.sign(move.get_distance()))
+                else:
+                    self.go_straight(move.get_distance(), np.sign(move.get_distance()))
             else:
                 sys.exit()
 
