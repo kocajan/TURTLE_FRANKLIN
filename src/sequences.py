@@ -65,7 +65,8 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
         tmp.execute_move()
 
         if not rob.get_stop():
-            if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars']:
+            if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
+                map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
                 # All conditions are met, we can start the parking sequence
                 break
         else:
