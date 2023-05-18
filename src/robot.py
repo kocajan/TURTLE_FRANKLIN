@@ -106,8 +106,15 @@ class Robot(Turtlebot):
         # Assign depth i.e. distance to image
         image[mask] = np.int16(pc[:, :, 2][mask] / 3.0 * 255)
         image = image[:240, :]
-        image1 = image[np.where(image<31)]
-        image2 = image1[np.where(image1>0)]
+        # Show unique values up to 40
+        unique = np.unique(image[np.where(image < 31)])
+        print("----------------------------------")
+        print("Unique values: \n", unique)
+        print("Number of unique values: ", len(unique))
+        print("----------------------------------")
+        input("Press Enter to continue...")
+        image1 = image[np.where(image < 31)]
+        image2 = image1[np.where(image1 > 0)]
 
         num_danger_points = len(image2)
 
