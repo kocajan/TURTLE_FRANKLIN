@@ -66,8 +66,8 @@ class Robot(Turtlebot):
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self, event):
-        if(self.is_there_anything_close()):
+    def timer_cb(self):
+        if self.is_there_anything_close():
             self.set_stop(True)
             self.stop_motors()
 

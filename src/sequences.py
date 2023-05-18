@@ -16,8 +16,17 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     :param objects_cfg: Configuration file for objects
     :return: None
     """
-    # TODO: Implement parking sequence
-    pass
+    # Create small rotation move object (used for small rotations during the searching process)
+    small_rot_move = Move(rob, None, None)
+
+    # Then search for both of the pillars (we will probably see only one of them at a time)
+    for i in range(18):
+        small_rot_move.execute_small_rot_positive(5, 0.5)
+    # while True:
+        # Turn to the left and search for the pillars
+        # small_rot_move.execute_small_rot_positive(5, 0.5)
+        # map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+
 
 def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
     """
@@ -73,7 +82,46 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
             # Robot has stopped, we need to find the path again (and reset stop flag)
             rob.set_stop(False)
 
+
 # HELPER FUNCTIONS
+def parking_analysis(rob, detection_cfg, objects_cfg) -> (Map, int):
+    """
+    Function that takes image and point cloud from the robot and extracts information about the surrounding world
+    during the parking sequence.
+    :param rob: Robot object
+    :param detection_cfg: Configuration file for detection
+    :param objects_cfg: Configuration file for objects
+    :return: The map, number of pillars of the gate
+    """
+    # Load map parameters
+    map_dimensions = detection_cfg['map']['dimensions']
+    map_resolution = detection_cfg['map']['resolution']
+
+    # Take image and point cloud
+    img = rob.take_rgb_img()
+    pc = rob.take_point_cloud()
+
+    # Create map object
+    map = Map(map_dimensions, map_resolution, detection_cfg)
+    map.set_robot(rob)
+
+    # Create detector object
+    det = Detector(map, img, pc, detection_cfg, objects_cfg)
+
+    # Process image and point cloud
+    det.process_rgb()
+    det.process_point_cloud()
+
+    # Get information to return
+    gate = map.get_gate()
+    if gate is not None:
+        number_gate_pillars = gate.get_num_pillars()
+    else:
+        number_gate_pillars = 0
+
+    return map, number_gate_pillars
+
+
 def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True) -> (Map, int, tuple, list):
     """
     Function that takes image and point cloud from the robot and extracts information about the surrounding world.

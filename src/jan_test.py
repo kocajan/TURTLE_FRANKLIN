@@ -3,7 +3,7 @@ import cv2 as cv
 import yaml
 import time
 
-import .move
+from .move import Move
 
 from .objects import Obstacle, Gate, Garage
 from .robot import Robot
@@ -12,7 +12,7 @@ from .map import Map
 from .visualizer import Visualizer
 
 
-def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True):
+def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True) -> (Map, int, tuple, list):
     """
     Function that takes image and point cloud from the robot and extracts information about the surrounding world.
     :param rob: Robot object
@@ -88,7 +88,7 @@ def automate_test() -> None:
     rob.set_world_coordinates(robot_cfg['world_coordinates'])
 
     # Create small rotation move object (used for small rotations during the searching process)
-    small_rot_move = move.Move(rob, None, None)
+    small_rot_move = Move(rob, None, None)
 
     # STATE AUTOMAT
     while True:
@@ -122,7 +122,7 @@ def automate_test() -> None:
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
 
         # Follow the path
-        tmp = move.Move(rob, path, detection_cfg)
+        tmp = Move(rob, path, detection_cfg)
         tmp.execute_move()
 
         if not rob.get_stop():
@@ -286,7 +286,7 @@ def huge_test() -> None:
     # vis.visualize_point_cloud()
     vis.visualize_map(path=path)
 
-    tmp = move.Move(rob, path, detection_cfg)
+    tmp = Move(rob, path, detection_cfg)
     print(path)
     tmp.execute_move()
 
@@ -338,7 +338,7 @@ def big_test(img: np.ndarray, pc: np.ndarray) -> None:
     vis.visualize_map(path=path)
     #path = [(250, 0), (251, 1), (252, 2), (253, 3), (254, 4), (255, 5), (256, 6), (257, 7), (258, 8), (259, 9), (260, 10), (261, 11), (262, 12), (263, 13), (264, 14), (265, 15), (266, 16), (267, 17), (268, 18), (269, 19), (270, 20), (271, 21), (272, 22), (273, 23), (274, 24), (275, 25), (276, 26), (277, 27), (278, 28), (279, 29), (280, 30), (281, 31), (282, 32), (282, 33), (282, 34), (282, 35), (282, 36), (282, 37), (282, 38), (282, 39), (282, 40), (282, 41), (282, 42), (282, 43), (282, 44), (282, 45), (282, 46), (282, 47), (282, 48), (282, 49), (282, 50), (282, 51), (282, 52), (282, 53), (282, 54), (282, 55), (282, 56), (282, 57), (282, 58), (282, 59), (282, 60), (282, 61), (282, 62), (283, 63), (284, 64), (285, 65), (286, 66), (287, 67), (288, 68), (289, 69), (290, 70), (291, 71), (292, 72), (293, 73), (293, 74), (293, 75), (293, 76), (293, 77), (293, 78), (293, 79), (293, 80), (293, 81), (293, 82), (293, 83), (293, 84), (293, 85), (292, 86), (291, 87), (290, 88), (289, 89), (288, 90), (287, 91), (286, 92), (285, 93), (284, 94), (284, 95), (284, 96), (284, 97), (284, 98), (284, 99), (284, 100), (284, 101), (284, 102), (284, 103), (284, 104), (284, 105), (284, 106), (284, 107), (284, 108), (284, 109), (284, 110), (284, 111), (284, 112), (284, 113), (284, 114)]
 
-    # tmp = move.move(rob, path)
+    # tmp = Move(rob, path)
     # print(path)
     # tmp.execute_move()
 
