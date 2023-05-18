@@ -1,14 +1,14 @@
 import time
 
-from robot import Robot
-from move import Move
-from map import Map
-from visualizer import Visualizer
-from detector import Detector
+from .robot import Robot
+from .move import Move
+from .map import Map
+from .visualizer import Visualizer
+from .detector import Detector
 
 
 # SEQUENCE FUNCTIONS
-def park(rob: Robot, detection_cfg: , objects_cfg: ) -> None:
+def park(rob, detection_cfg, objects_cfg) -> None:
     """
     Function that parks the robot when it is in front of the gate.
     :param rob: Robot object
@@ -19,7 +19,7 @@ def park(rob: Robot, detection_cfg: , objects_cfg: ) -> None:
     # TODO: Implement parking sequence
     pass
 
-def get_to_gate(rob: Robot, detection_cfg: , objects_cfg: ) -> None:
+def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
     """
     Function that gets the robot to the gate.
     :param rob: Robot object

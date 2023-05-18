@@ -3,8 +3,6 @@ import sys
 import numpy as np
 import math
 import yaml
-#from SingleMove import SingleMove
-#from robot import GLOBAL_STOP
 
 from rospy import Rate
 

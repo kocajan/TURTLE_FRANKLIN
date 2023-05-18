@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
-from robolab_turtlebot import Rate
-from turtlebot import Turtlebot
+from .turtlebot import Turtlebot
+from rospy import Rate
 
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
@@ -110,9 +110,9 @@ class Robot(Turtlebot):
         image2 = image1[np.where(image1>0)]
 
         num_danger_points = len(image2)
-        print('number of danger points: ', num_danger_points)
 
         if num_danger_points > 100:
+            print(num_danger_points, ' DANGER POINTS!')
             return True
         else:
             return False
@@ -149,25 +149,9 @@ class Robot(Turtlebot):
     def get_stop(self):
         return self.stop
 
-    def main(self):
-        # Register bumper callback
-        self.register_bumper_event_cb(self.bumper_cb)
-
-        # Do something, the program would end otherwise
-        rate = Rate(1)
-        while not self.is_shutting_down():
-            rate.sleep()
-
-        #TODO je potreba predavat turtle jako parametr do move
-
-        # hledani branky nejakej loop {}
-        # cesta k bodu U BRANKY loop {}
-        # parkovani loop {}
-
 
 if __name__ == '__main__':
     my_robot = Robot(1, 1, 1)
-    my_robot.main()
     path = [(250, 0), (251, 1), (252, 2), (253, 3), (253, 4), (253, 5), (253, 6), (253, 7), (253, 8), (253, 9), (253, 10), (253, 11), (253, 12), (253, 13), (253, 14), (253, 15), (253, 16), (253, 17), (253, 18), (253, 19), (253, 20), (253, 21), (253, 22), (253, 23), (253, 24), (253, 25), (253, 26), (253, 27), (253, 28), (253, 29), (253, 30), (253, 31), (253, 32), (253, 33), (253, 34), (253, 35), (253, 36), (253, 37), (253, 38), (253, 39), (253, 40), (253, 41), (253, 42), (253, 43), (253, 44), (253, 45), (253, 46), (253, 47), (253, 48), (253, 49), (253, 50), (253, 51), (253, 52), (253, 53), (253, 54), (253, 55), (253, 56), (253, 57), (253, 58), (253, 59), (253, 60), (253, 61), (253, 62), (253, 63), (253, 64), (253, 65), (253, 66), (253, 67)]
     tmp = move(my_robot, path)
     # tmp.move_sequence()

@@ -1,8 +1,8 @@
 import numpy as np
 import cv2 as cv
 
-from objects import Obstacle, Garage, Gate
-from map import Map
+from .objects import Obstacle, Garage, Gate
+from .map import Map
 
 
 class Detector:
