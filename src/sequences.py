@@ -1,3 +1,4 @@
+import math
 import time
 
 from .robot import Robot
@@ -16,17 +17,94 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     :param objects_cfg: Configuration file for objects
     :return: None
     """
+    # Prepare variables
+    pillar1 = None
+    pillar2 = None
+
     # Create small rotation move object (used for small rotations during the searching process)
     small_rot_move = Move(rob, None, None)
 
     # Then search for both of the pillars (we will probably see only one of them at a time)
+<<<<<<< HEAD
     for i in range(9):
         small_rot_move.execute_small_rot_positive(10, 0.5)
         print('moved 10, sleep ?')
     # while True:
+=======
+    while True:
+>>>>>>> 4d8231b87785262178c5f05b236e1246f27cf058
         # Turn to the left and search for the pillars
-        # small_rot_move.execute_small_rot_positive(5, 0.5)
-        # map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+        small_rot_move.execute_small_rot_positive(5, 0.5)
+        map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+
+        # Check if we see at least one pillar
+        if number_gate_pillars != 0:
+            break
+
+    # If we have one pillar, then we need to find the second one
+    if number_gate_pillars == 1:
+        # Set angle
+        angle = 10
+
+        # Turn to the right and search for the second pillar
+        tmp_pillar, pillar2 = search_for_pillar("right", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
+
+        # Get the first pillar and compensate for the angle
+        pillar1 = map.get_gate().get_world_coordinates()[0]
+        pillar1 = rotate_vector(pillar1, -angle)
+
+        # If we haven't found the second pillar, so we need to turn back to the first one and turn to the left
+        if pillar2 is None:
+            # Turn back to the first pillar
+            small_rot_move.execute_small_rot_positive(angle, 0.5)
+
+            # Just to be sure, analyze the world again
+            map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+
+            # Get the first pillar and compensate for the angle
+            pillar1 = map.get_gate().get_world_coordinates()[0]
+            pillar1 = rotate_vector(pillar1, -angle)
+
+            # Turn to the left and search for the second pillar
+            tmp_pillar, pillar2 = search_for_pillar("left", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
+
+            # If we haven't found the second pillar, then we are v piči
+            if pillar2 is None:
+                # TODO:
+                print("We are v piči. They stole our precious.")
+                exit(-1)
+
+        # We have found both pillars
+        # If they are both from the same picture, we can find their map coordinates
+        if tmp_pillar is not None:
+            pillar1 = tmp_pillar
+    elif number_gate_pillars == 2:
+        # Get the pillars
+        pillar1 = map.get_gate().get_world_coordinates()[0]
+        pillar2 = map.get_gate().get_world_coordinates()[1]
+
+    # We have now found both pillars, we can get map coordinates of the gate
+    pillar1_map = (map.conv_real_to_map(pillar1[0], add=True), map.conv_real_to_map(pillar1[1]))
+    pillar2_map = (map.conv_real_to_map(pillar2[0], add=True), map.conv_real_to_map(pillar2[1]))
+
+    # Get the center of the gate
+    gate_center_map = ((pillar1_map[0] + pillar2_map[0]) // 2, (pillar1_map[1] + pillar2_map[1]) // 2)
+
+    # Get perpendicular vector to the gate
+    perpendicular_vector = (pillar2_map[1] - pillar1_map[1], pillar1_map[0] - pillar2_map[0])
+
+    # Get the robot's position
+    robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
+                 map.conv_real_to_map(rob.get_world_coordinates[1]))
+
+    # Find the closest point on a line leading through the gate's center and perpendicular to the gate
+    closest_point = find_closest_point_on_line(gate_center_map, perpendicular_vector, robot_pos)
+
+
+
+
+
+
 
 
 def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
@@ -206,7 +284,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
 
     # We assume that the robot is oriented towards the first pillar
     # Rotate the robot to the right two times
-    for i in range(2):
+    for _ in range(2):
         # Execute two small rotations
         small_rot_move.execute_small_rot_positive(5, 0.9)
         rotation_cnt += 1
@@ -222,7 +300,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
 
     # If the robot has not seen two pillars, rotate back to the default position
     if number_gate_pillars != 2:
-        for i in range(rotation_cnt):
+        for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
             time.sleep(1)
             small_rot_move.execute_small_rot_negative(5, 0.9)
@@ -245,7 +323,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
 
     # If the robot has not seen two pillars, rotate back to the default position
     if number_gate_pillars != 2:
-        for i in range(rotation_cnt):
+        for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
             time.sleep(1)
             small_rot_move.execute_small_rot_positive(5, 0.9)
@@ -297,3 +375,93 @@ def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pilla
                 small_rot_move.execute_small_rot_positive(2, 1)
                 break
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+
+
+def rotate_vector(vector, angle):
+    """
+    Rotate a vector by a given angle
+    :param vector: Vector to rotate
+    :param angle: Angle to rotate by
+    :return: Rotated vector
+    """
+    x = vector[0] * math.cos(angle) - vector[1] * math.sin(angle)
+    y = vector[0] * math.sin(angle) + vector[1] * math.cos(angle)
+    return [x, y]
+
+
+def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, objects_cfg) -> tuple:
+    """
+    This function will rotate the robot to find the second gate pillar.
+    :param side: Side of the first pillar to search for the second one
+    :param angle: Angle to rotate by
+    :param small_rot_move: move object
+    :param map: Map object
+    :param rob: Robot object
+    :param detection_cfg: Detection configuration
+    :param objects_cfg: Objects configuration
+    :return: None
+    """
+    # Set the first pillar
+    pillar1 = map.get_gate().get_world_coordinates()[0]
+    pillar2 = None
+
+    # Turn to the side and search for the second pillar
+    if side == "left":
+        small_rot_move.execute_small_rot_positive(angle, 0.5)
+    else:
+        small_rot_move.execute_small_rot_negative(angle, 0.5)
+        angle = -angle
+
+    # Analyze the current situation
+    map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+
+    # Check if we see at least one pillar
+    if number_gate_pillars == 2:
+        pillar1 = map.get_gate().get_world_coordinates()[0]
+        pillar2 = map.get_gate().get_world_coordinates()[1]
+        return pillar1, pillar2
+    elif number_gate_pillars == 1:
+        # Check if the pillar is not the same as the first one (it is not in predefined radius)
+        pillar2 = map.get_gate().get_world_coordinates()[0]
+
+        # Rotate coordinates of the first pillar
+        pillar1 = rotate_vector(pillar1, -angle)
+
+        # Calculate the distance
+        distance = ((pillar1[0] - pillar2[0]) ** 2 + (pillar1[1] - pillar2[1]) ** 2) ** 0.5
+
+        if distance < 5:
+            pillar2 = None
+    return None, pillar2
+
+
+def find_closest_point_on_line(line_point, line_vector, point) -> list:
+    """
+    Find the closest point on the line to the given point. The line is defined by a point and a vector.
+    """
+    # Get a vector perpendicular to the line
+    perp_vector = [line_vector[1], -line_vector[0]]
+
+    # Calculate the intersection point of the line and the perpendicular line going through the point
+    intersection_point = find_intersection_point(line_point, line_vector, point, perp_vector)
+
+    return intersection_point
+
+
+def find_intersection_point(point1, vector1, point2, vector2) -> list:
+    """
+    Find the intersection point of two lines. The lines are defined by a point and a vector.
+    """
+    # Calculate the determinant of the matrix
+    det = vector1[0] * vector2[1] - vector1[1] * vector2[0]
+
+    # If the determinant is zero, the lines are parallel
+    if det == 0:
+        return []
+
+    # Calculate the intersection point
+    t = (vector2[0] * (point1[1] - point2[1]) - vector2[1] * (point1[0] - point2[0])) / det
+    intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
+
+    return intersection_point
+
