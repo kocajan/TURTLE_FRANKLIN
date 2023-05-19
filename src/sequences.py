@@ -27,7 +27,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Then search for both of the pillars (we will probably see only one of them at a time)
     while True:
         # Turn to the left and search for the pillars
-        small_rot_move.execute_small_rot_positive(5, 0.5)
+        small_rot_move.execute_small_rot_positive(10, 0.5)
         map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
 
         # Check if we see at least one pillar
@@ -37,7 +37,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # If we have one pillar, then we need to find the second one
     if number_gate_pillars == 1:
         # Set angle
-        angle = 10
+        angle = 20
+        print('angle: ', angle)
 
         # Turn to the right and search for the second pillar
         tmp_pillar, pillar2 = search_for_pillar("right", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
@@ -88,7 +89,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # Get the robot's position
     robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
-                 map.conv_real_to_map(rob.get_world_coordinates[1]))
+                 map.conv_real_to_map(rob.get_world_coordinates()[1]))
 
     # Find the closest point on a line leading through the gate's center and perpendicular to the gate
     closest_point = find_closest_point_on_line(gate_center_map, perpendicular_vector, robot_pos)
@@ -100,6 +101,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Create a path of points that the robot will follow from robot position to the closest point on the line
     search_algorithm = detection_cfg["map"]["search_algorithm"]
     path = map.find_way(robot_pos, closest_point, search_algorithm)
+    print('path: ', path)
 
     # Execute path
     tmp = Move(rob, path, detection_cfg)
