@@ -125,28 +125,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     path = map.find_way(robot_pos, closest_point, search_algorithm)
     print('path: ', path)
 
-    # TODO: delte this
-    # Visualize the situation (path, points, ...)
-    import numpy as np
-    map = np.zeros_like(map.get_world_map())
-
-    # Fill the map
-    for point in path:
-        map[point[0], point[1]] = 1
-
-    # Draw a circle around the points
-    import cv2
-    map = cv2.circle(map, robot_pos, 5, 0, -1)
-    map = cv2.circle(map, closest_point, 5, 2, -1)
-    map = cv2.circle(map, gate_center_map, 5, 3, -1)
-    map = cv2.circle(map, pillar1_map, 5, 4, -1)
-    map = cv2.circle(map, pillar2_map, 5, 4, -1)
-
-    # Show the map (color use colormap to distinguish between points - not grey)
-    import matplotlib.pyplot as plt
-    plt.imshow(map, cmap='tab10')
-    plt.show()
-
     # Execute path
     tmp = Move(rob, path, detection_cfg)
     tmp.execute_move()
@@ -507,15 +485,6 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     # Calculate the intersection point
     t = (vector2[0] * (point1[1] - point2[1]) - vector2[1] * (point1[0] - point2[0])) / det
     intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
-
-    # TODO: delete this
-    # Visualize the situation
-    import matplotlib.pyplot as plt
-    plt.plot([point1[0], point1[0] + vector1[0]], [point1[1], point1[1] + vector1[1]], 'b')
-    plt.plot([point2[0], point2[0] + vector2[0]], [point2[1], point2[1] + vector2[1]], 'r')
-    plt.plot(intersection_point[0], intersection_point[1], 'go', markersize=10)
-    plt.show()
-
 
     return intersection_point
 
