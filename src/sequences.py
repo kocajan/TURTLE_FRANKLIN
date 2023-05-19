@@ -1,9 +1,11 @@
+
 import numpy as np
 import math
 import time
 
 from .robot import Robot
 from .move import Move
+from .regulated_move import regulated_move
 from .map import Map
 from .visualizer import Visualizer
 from .detector import Detector
@@ -159,8 +161,10 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
 
     # Execute path
-    tmp = Move(rob, path, detection_cfg)
-    tmp.execute_move()
+    #tmp = Move(rob, path, detection_cfg)
+    #tmp.execute_move()
+    tmp = regulated_move(rob)
+    tmp.go(path)
 
 
 def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
@@ -205,8 +209,10 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
-        tmp = Move(rob, path, detection_cfg)
-        tmp.execute_move()
+        #tmp = Move(rob, path, detection_cfg)
+        #tmp.execute_move()
+        tmp = regulated_move(rob)
+        tmp.go(path)
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
