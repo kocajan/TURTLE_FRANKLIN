@@ -142,10 +142,10 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map = cv2.circle(map, pillar1_map, 5, 4, -1)
     map = cv2.circle(map, pillar2_map, 5, 4, -1)
 
-    # Show the map (color coded)
-    cv2.imshow("map", map)
-    cv2.waitKey(0)
-
+    # Show the map (color use colormap to distinguish between points - not grey)
+    import matplotlib.pyplot as plt
+    plt.imshow(map, cmap='tab10')
+    plt.show()
 
     # Execute path
     tmp = Move(rob, path, detection_cfg)
