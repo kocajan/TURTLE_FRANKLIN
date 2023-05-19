@@ -486,5 +486,14 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     t = (vector2[0] * (point1[1] - point2[1]) - vector2[1] * (point1[0] - point2[0])) / det
     intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
 
+    # TODO: delete this
+    # Visualize the situation
+    import matplotlib.pyplot as plt
+    plt.plot([point1[0], point1[0] + vector1[0]], [point1[1], point1[1] + vector1[1]], 'b')
+    plt.plot([point2[0], point2[0] + vector2[0]], [point2[1], point2[1] + vector2[1]], 'r')
+    plt.plot(intersection_point[0], intersection_point[1], 'go', markersize=10)
+    plt.show()
+
+
     return intersection_point
 
