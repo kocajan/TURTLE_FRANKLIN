@@ -56,7 +56,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         if pillar2 is None:
             print("The second pillar was not found, turning back to the first one...")
             # Turn back to the first pillar
-            small_rot_move.execute_small_rot_positive(angle, 0.5)
+            small_rot_move.execute_small_rot_negative(angle, 0.5)
 
             # Just to be sure, analyze the world again
             map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
