@@ -446,11 +446,11 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
     pillar2 = None
 
     # Turn to the side and search for the second pillar
-    if side == "left":
+    if side == "right":
         small_rot_move.execute_small_rot_positive(angle, 0.5)
+        angle = -angle
     else:
         small_rot_move.execute_small_rot_negative(angle, 0.5)
-        angle = -angle
 
     # Analyze the current situation
     map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
