@@ -1,3 +1,4 @@
+import numpy as np
 import math
 import time
 
@@ -28,13 +29,13 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     while True:
         # Turn to the left and search for the pillars
         print("Searching for the pillars...")
-        small_rot_move.execute_small_rot_positive(10, 0.5)
         map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
 
         # Check if we see at least one pillar
         if number_gate_pillars != 0:
             print("Found at least one pillar!")
             break
+        small_rot_move.execute_small_rot_positive(10, 0.5)
 
     # If we have one pillar, then we need to find the second one
     if number_gate_pillars == 1:
@@ -56,7 +57,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         if pillar2 is None:
             print("The second pillar was not found, turning back to the first one...")
             # Turn back to the first pillar
-            small_rot_move.execute_small_rot_positive(angle, 0.5)
+            small_rot_move.execute_small_rot_negative(angle, 0.5)
 
             # Just to be sure, analyze the world again
             map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
@@ -88,8 +89,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         pillar1 = map.get_gate().get_world_coordinates()[0]
         pillar2 = map.get_gate().get_world_coordinates()[1]
         print("Found both pillars!")
-        print("First pillar: ", pillar1)
-        print("Second pillar: ", pillar2)
+
+    print("First pillar: ", pillar1)
+    print("Second pillar: ", pillar2)
 
     # We have now found both pillars, we can get map coordinates of the gate
     pillar1_map = (map.conv_real_to_map(pillar1[0], add=True), map.conv_real_to_map(pillar1[1]))
@@ -102,8 +104,10 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     gate_center_map = ((pillar1_map[0] + pillar2_map[0]) // 2, (pillar1_map[1] + pillar2_map[1]) // 2)
     print("Gate center (map): ", gate_center_map)
 
-    # Get perpendicular vector to the gate
+    # Get perpendicular vector to the gate (normalized)
     perpendicular_vector = (pillar2_map[1] - pillar1_map[1], pillar1_map[0] - pillar2_map[0])
+    perpendicular_vector = np.array(perpendicular_vector)
+    perpendicular_vector = perpendicular_vector / np.linalg.norm(perpendicular_vector)
 
     # Get the robot's position
     robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
@@ -115,15 +119,45 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Convert the closest point to whole numbers (pixels)
     closest_point = (int(closest_point[0]), int(closest_point[1]))
 
-    # Get a point on the line going through the gate's center and perpendicular to the gate
-    # but on the other side of the gate than the robot
-    # TODO
+    # Get a point on the line going through the gate's center and perpendicular to the gate that is on the other side
+    # of the gate than the robot
+    distance_from_gate = np.linalg.norm(np.array(pillar1) - np.array(pillar2))
+    final_point1 = (gate_center_map[0] + perpendicular_vector[0] * distance_from_gate,
+                   gate_center_map[1] + perpendicular_vector[1] * distance_from_gate)
+    final_point2 = (gate_center_map[0] - perpendicular_vector[0] * distance_from_gate,
+                     gate_center_map[1] - perpendicular_vector[1] * distance_from_gate)
+
+    # Choose the one with greater y coordinate
+    final_point = final_point1 if final_point1[1] > final_point2[1] else final_point2
+
+    # Convert the final point to whole numbers (pixels)
+    final_point = (int(final_point[0]), int(final_point[1]))
 
     # Create a path of points that the robot will follow from robot position to the closest point on the line
     search_algorithm = detection_cfg["map"]["search_algorithm"]
     print("start point: ", robot_pos, "\nend point: ", closest_point)
-    path = map.find_way(robot_pos, closest_point, search_algorithm)
+    path1 = map.find_way(robot_pos, closest_point, search_algorithm)
+    path2 = map.find_way(closest_point, final_point, search_algorithm)
+    path = path1 + path2
     print('path: ', path)
+
+    # TODO: delete this
+    # Visualize the situation (path, points, ...)
+    # Show the map
+    import numpy as np
+    import matplotlib.pyplot as plt
+    plt.scatter(robot_pos[0], robot_pos[1], color='red', label='robot position', s=20)
+    plt.scatter(closest_point[0], closest_point[1], color='green', label='closest point', s=10)
+    plt.scatter(gate_center_map[0], gate_center_map[1], color='blue', label='gate center', s=10)
+    plt.scatter(pillar1_map[0], pillar1_map[1], color='yellow', label='pillar1', s=10)
+    plt.scatter(pillar2_map[0], pillar2_map[1], color='orange', label='pillar2', s=10)
+    plt.scatter(np.array(path)[:, 0], np.array(path)[:, 1], color='black', label='path', s=1)
+    plt.xlim(0, 500)
+    plt.ylim(0, 500)
+    plt.legend()
+    plt.show()
+
+
 
     # Execute path
     tmp = Move(rob, path, detection_cfg)
@@ -195,6 +229,9 @@ def parking_analysis(rob, detection_cfg, objects_cfg) -> (Map, int):
     :param objects_cfg: Configuration file for objects
     :return: The map, number of pillars of the gate
     """
+    # Wait for the robot ot fully stop
+    time.sleep(0.5)
+
     # Load map parameters
     map_dimensions = detection_cfg['map']['dimensions']
     map_resolution = detection_cfg['map']['resolution']
@@ -429,11 +466,11 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
     pillar2 = None
 
     # Turn to the side and search for the second pillar
-    if side == "left":
+    if side == "right":
         small_rot_move.execute_small_rot_positive(angle, 0.5)
+        angle = -angle
     else:
         small_rot_move.execute_small_rot_negative(angle, 0.5)
-        angle = -angle
 
     # Analyze the current situation
     map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
@@ -442,6 +479,7 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
     if number_gate_pillars == 2:
         pillar1 = map.get_gate().get_world_coordinates()[0]
         pillar2 = map.get_gate().get_world_coordinates()[1]
+        print('We found both during search_for_pillar()!')
         return pillar1, pillar2
     elif number_gate_pillars == 1:
         # Check if the pillar is not the same as the first one (it is not in predefined radius)
@@ -485,15 +523,6 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     # Calculate the intersection point
     t = (vector2[0] * (point1[1] - point2[1]) - vector2[1] * (point1[0] - point2[0])) / det
     intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
-
-    # TODO: delete this
-    # Visualize the situation
-    import matplotlib.pyplot as plt
-    plt.plot([point1[0], point1[0] + vector1[0]], [point1[1], point1[1] + vector1[1]], 'b')
-    plt.plot([point2[0], point2[0] + vector2[0]], [point2[1], point2[1] + vector2[1]], 'r')
-    plt.plot(intersection_point[0], intersection_point[1], 'go', markersize=10)
-    plt.show()
-
 
     return intersection_point
 
