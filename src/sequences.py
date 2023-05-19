@@ -27,28 +27,34 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Then search for both of the pillars (we will probably see only one of them at a time)
     while True:
         # Turn to the left and search for the pillars
+        print("Searching for the pillars...")
         small_rot_move.execute_small_rot_positive(10, 0.5)
         map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
 
         # Check if we see at least one pillar
         if number_gate_pillars != 0:
+            print("Found at least one pillar!")
             break
 
     # If we have one pillar, then we need to find the second one
     if number_gate_pillars == 1:
         # Set angle
         angle = 20
-        print('angle: ', angle)
-
-        # Turn to the right and search for the second pillar
-        tmp_pillar, pillar2 = search_for_pillar("right", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
+        print(f"Found one pillar, searching for the second one... (angle = {angle})")
 
         # Get the first pillar and compensate for the angle
         pillar1 = map.get_gate().get_world_coordinates()[0]
+        print("First pillar: ", pillar1)
         pillar1 = rotate_vector(pillar1, -angle)
+        print("First pillar (rotated): ", pillar1)
+
+        # Turn to the right and search for the second pillar
+        print("Turning to the right...")
+        tmp_pillar, pillar2 = search_for_pillar("right", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
 
         # If we haven't found the second pillar, so we need to turn back to the first one and turn to the left
         if pillar2 is None:
+            print("The second pillar was not found, turning back to the first one...")
             # Turn back to the first pillar
             small_rot_move.execute_small_rot_positive(angle, 0.5)
 
@@ -57,8 +63,11 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
             # Get the first pillar and compensate for the angle
             pillar1 = map.get_gate().get_world_coordinates()[0]
+            print("Redefined first pillar: ", pillar1)
             pillar1 = rotate_vector(pillar1, -angle)
+            print("Redefined first pillar (rotated): ", pillar1)
 
+            print("Turning to the left...")
             # Turn to the left and search for the second pillar
             tmp_pillar, pillar2 = search_for_pillar("left", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
 
@@ -68,21 +77,30 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                 print("We are v piči. They stole our precious.")
                 exit(-1)
 
+        print("Found the second pillar!")
         # We have found both pillars
         # If they are both from the same picture, we can find their map coordinates
         if tmp_pillar is not None:
+            print("Both pillars are from the same picture, we can find their map coordinates.")
             pillar1 = tmp_pillar
     elif number_gate_pillars == 2:
         # Get the pillars
         pillar1 = map.get_gate().get_world_coordinates()[0]
         pillar2 = map.get_gate().get_world_coordinates()[1]
+        print("Found both pillars!")
+        print("First pillar: ", pillar1)
+        print("Second pillar: ", pillar2)
 
     # We have now found both pillars, we can get map coordinates of the gate
     pillar1_map = (map.conv_real_to_map(pillar1[0], add=True), map.conv_real_to_map(pillar1[1]))
     pillar2_map = (map.conv_real_to_map(pillar2[0], add=True), map.conv_real_to_map(pillar2[1]))
 
+    print("First pillar (map): ", pillar1_map)
+    print("Second pillar (map): ", pillar2_map)
+
     # Get the center of the gate
     gate_center_map = ((pillar1_map[0] + pillar2_map[0]) // 2, (pillar1_map[1] + pillar2_map[1]) // 2)
+    print("Gate center (map): ", gate_center_map)
 
     # Get perpendicular vector to the gate
     perpendicular_vector = (pillar2_map[1] - pillar1_map[1], pillar1_map[0] - pillar2_map[0])
@@ -100,6 +118,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # Create a path of points that the robot will follow from robot position to the closest point on the line
     search_algorithm = detection_cfg["map"]["search_algorithm"]
+    print("start point: ", robot_pos, "\nend point: ", closest_point)
     path = map.find_way(robot_pos, closest_point, search_algorithm)
     print('path: ', path)
 
