@@ -144,7 +144,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # TODO: delete this
     # Visualize the situation (path, points, ...)
     # Show the map
-    import numpy as np
     import matplotlib.pyplot as plt
     plt.scatter(robot_pos[0], robot_pos[1], color='red', label='robot position', s=20)
     plt.scatter(closest_point[0], closest_point[1], color='green', label='closest point', s=10)
