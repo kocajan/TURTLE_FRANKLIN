@@ -38,53 +38,80 @@ class regulated_move:
             new_path.append( (item[0]-x_offset, item[1]) )
         return new_path
 
-
     def go(self, path):
-
-        # reset odometry??
-        # kdyz jsme v dostatecne blizkosti pozadovaneho setpointu tak posunem index v path
-        path = self.substract_offset(path, 269)
-        x_offset = 250
-        P = 0#.04
-        I = 0#0.05
+        x_offset = 269
+        path = self.substract_offset(path, x_offset)
+        P = 0
+        I = 0
         sum = 0
-        error = 0
-        setpoint_idx = 1
+        setpoint_idx = 10
         setpoint = path[setpoint_idx] # protoze na prvnim stojime
-        prev_setpoint = path[0]
+
+        prev_odometry_values = []
 
         goal = path[-1][0]
 
-        # pri jizde dopredu se nemeni get_odometry[1] - odometry[1] je ve svete robota x
-        # odometry[0] je ve
-        # takze pro pocitani erroru je pro nas dulezite odometry[]
-
-        # pro index v path plati ze bereme zaokrouhlenou get_odometry[0]
-        # pro error jizdy plati ze bereme get_odometry[1]
         self.odometry_hard_reset()
 
         while not self.robot.is_shutting_down() and not self.robot.get_stop():
 
             odometry_cm = self.robot.get_odometry()[:2]*100 # take actual odometry in cm [x,y,rot]
 
-            error = self.calculate_distance(odometry_cm[::-1], setpoint) #path[setpoint_idx][0] - odometry_cm[1]
-            print(error)
-            #error_y = path[setpoint_idx][1] - odometry_cm[0]
+            prev_odometry_values.append(odometry_cm)
+
+            if len(prev_odometry_values) > 100:
+                prev_odometry_values.pop(0)
+
+            error = self.calculate_error(setpoint, odometry_cm[::-1], )
+            print("Error: ", error)
+
             if abs(sum) > 10:
                 sum = 0
             else:
                 sum = error + sum
-            #print(sum)
 
-            #print("odometry     ", round(odometry_cm[::-1][0], 2), "       ", round(odometry_cm[::-1][1], 2), "       setpoint     ", setpoint, "     anglular    ", P*error)
-            #if self.calculate_distance(odometry_cm[::-1], setpoint) < self.calculate_distance(odometry_cm[::-1], prev_setpoint):
             if self.calculate_distance(odometry_cm[::-1], setpoint) < 5:
-                prev_setpoint = setpoint
                 setpoint_idx += 5
                 setpoint = path[setpoint_idx]
 
             self.robot.cmd_velocity(linear=0.1, angular=P*error + I*sum)
             self.rate.sleep()
+
+    def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values):
+        """
+        Calculate the error for the robot's regulator.
+        It is represented as the difference between velocity vector and the vector from the robot to the goal.
+        The odometry value is in the form of (y, x).
+        :param setpoint: Setpoint for the robot's regulator.
+        :param current_odometry_value: Current odometry value.
+        :param previous_odometry_values: List of previous odometry values.
+        :return: Error for the robot's regulator. (the angle)
+        """
+        # Calculate the difference between the current odometry value and the previous odometry value
+        # Take the n-th previous odometry value (It will represent the velocity vector)
+        velocity_vector = self.calculate_difference(current_odometry_value, previous_odometry_values, n=1)
+
+        # Calculate the vector from the robot to the goal.
+        vector_to_goal = np.array(setpoint) - np.array(current_odometry_value)
+
+        # Calculate the angle between the vector from the robot to the goal and the robot's velocity vector
+        # The angle is in radians
+        angle = math.atan2(vector_to_goal[0], vector_to_goal[1]) - math.atan2(velocity_vector[0], velocity_vector[1])
+
+        return angle
+
+     @staticmethod
+    def calculate_difference(current_odometry_value, previous_odometry_values, n=1):
+        """
+        Calculate the difference between the current odometry value and the previous odometry value.
+        Take the n-th previous odometry value.
+        The odometry value is in the form of (y, x).
+        :param current_odometry_value: Current odometry value.
+        :param previous_odometry_values: List of previous odometry values.
+        :param n: Take the n-th previous odometry value.
+        :return: Difference between the current odometry value and the previous odometry value.
+        """
+        return current_odometry_value - previous_odometry_values[-n]
 
 if __name__ == '__main__':
 
