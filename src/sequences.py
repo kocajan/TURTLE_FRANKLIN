@@ -141,6 +141,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map = cv2.circle(map, gate_center_map, 5, 3, -1)
     map = cv2.circle(map, pillar1_map, 5, 4, -1)
     map = cv2.circle(map, pillar2_map, 5, 4, -1)
+    print("ahojda")
 
     # Show the map (color use colormap to distinguish between points - not grey)
     import matplotlib.pyplot as plt
