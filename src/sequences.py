@@ -129,14 +129,14 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Visualize the situation (path, points, ...)
     # Show the map
     import matplotlib.pyplot as plt
-    plt.plot(robot_pos[0], robot_pos[1], color='red', markersize=10, label='Robot')
-    plt.plot(closest_point[0], closest_point[1], color='green', markersize=5, label='closest point')
-    plt.plot(gate_center_map[0], gate_center_map[1], color='blue', markersize=5, label='gate center')
-    plt.plot(pillar1_map[0], pillar1_map[1], color='yellow', markersize=5, label='pillar1')
-    plt.plot(pillar2_map[0], pillar2_map[1], color='orange', markersize=5, label='pillar2')
+    plt.scatter(robot_pos[0], robot_pos[1], color='red', markersize=10, label='Robot')
+    plt.scatter(closest_point[0], closest_point[1], color='green', markersize=5, label='closest point')
+    plt.scatter(gate_center_map[0], gate_center_map[1], color='blue', markersize=5, label='gate center')
+    plt.scatter(pillar1_map[0], pillar1_map[1], color='yellow', markersize=5, label='pillar1')
+    plt.scatter(pillar2_map[0], pillar2_map[1], color='orange', markersize=5, label='pillar2')
     plt.plot(path[0], path[1], color='black', markersize=1, label='path')
-    plt.xlim(0, map.get_dimensions()[0])
-    plt.ylim(0, map.get_dimensions()[1])
+    plt.xlim(0, 500)
+    plt.ylim(0, 500)
     plt.legend()
     plt.show()
 
