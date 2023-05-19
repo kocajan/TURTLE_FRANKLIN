@@ -125,8 +125,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     path = map.find_way(robot_pos, closest_point, search_algorithm)
     print('path: ', path)
 
-<<<<<<< HEAD
-=======
     # TODO: delte this
     # Visualize the situation (path, points, ...)
     import numpy as np
@@ -150,7 +148,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     plt.imshow(map, cmap='tab10')
     plt.show()
 
->>>>>>> b604d1eae1bb415bb61bafa0206f4e4276d98ad6
     # Execute path
     tmp = Move(rob, path, detection_cfg)
     tmp.execute_move()
