@@ -93,11 +93,17 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Find the closest point on a line leading through the gate's center and perpendicular to the gate
     closest_point = find_closest_point_on_line(gate_center_map, perpendicular_vector, robot_pos)
 
+    # Get a point on the line going through the gate's center and perpendicular to the gate
+    # but on the other side of the gate than the robot
+    # TODO
 
+    # Create a path of points that the robot will follow from robot position to the closest point on the line
+    search_algorithm = detection_cfg["map"]["search_algorithm"]
+    path = map.find_way(robot_pos, closest_point, search_algorithm)
 
-
-
-
+    # Execute path
+    tmp = Move(rob, path, detection_cfg)
+    tmp.execute_move()
 
 
 def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
@@ -133,7 +139,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
             elif number_gate_pillars == 0:
                 # Try to find the best position to see the gate
                 find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg,
-                                               objects_cfg)
+                                                 objects_cfg)
         # END OF THE STATE AUTOMAT
         # -> find the best path to the goal and follow it
 
@@ -147,7 +153,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
-                map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
+                    map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
                 # All conditions are met, we can start the parking sequence
                 break
         else:
