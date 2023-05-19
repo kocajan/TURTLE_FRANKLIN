@@ -1,7 +1,8 @@
 import numpy as np
 import cv2 as cv
-from .turtlebot import Turtlebot
+from turtlebot import Turtlebot
 from rospy import Rate
+
 
 class Robot(Turtlebot):
     def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
@@ -122,7 +123,6 @@ class Robot(Turtlebot):
             return True
         else:
             return False
-
     # SETTERS
     def set_radius(self, radius):
         self.radius = radius
