@@ -28,13 +28,13 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     while True:
         # Turn to the left and search for the pillars
         print("Searching for the pillars...")
-        small_rot_move.execute_small_rot_positive(10, 0.5)
         map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
 
         # Check if we see at least one pillar
         if number_gate_pillars != 0:
             print("Found at least one pillar!")
             break
+        small_rot_move.execute_small_rot_positive(10, 0.5)
 
     # If we have one pillar, then we need to find the second one
     if number_gate_pillars == 1:
@@ -56,7 +56,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         if pillar2 is None:
             print("The second pillar was not found, turning back to the first one...")
             # Turn back to the first pillar
-            small_rot_move.execute_small_rot_positive(angle, 0.5)
+            small_rot_move.execute_small_rot_negative(angle, 0.5)
 
             # Just to be sure, analyze the world again
             map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
@@ -88,8 +88,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         pillar1 = map.get_gate().get_world_coordinates()[0]
         pillar2 = map.get_gate().get_world_coordinates()[1]
         print("Found both pillars!")
-        print("First pillar: ", pillar1)
-        print("Second pillar: ", pillar2)
+
+    print("First pillar: ", pillar1)
+    print("Second pillar: ", pillar2)
 
     # We have now found both pillars, we can get map coordinates of the gate
     pillar1_map = (map.conv_real_to_map(pillar1[0], add=True), map.conv_real_to_map(pillar1[1]))
@@ -213,6 +214,9 @@ def parking_analysis(rob, detection_cfg, objects_cfg) -> (Map, int):
     :param objects_cfg: Configuration file for objects
     :return: The map, number of pillars of the gate
     """
+    # Wait for the robot ot fully stop
+    time.sleep(0.5)
+
     # Load map parameters
     map_dimensions = detection_cfg['map']['dimensions']
     map_resolution = detection_cfg['map']['resolution']
@@ -460,6 +464,7 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
     if number_gate_pillars == 2:
         pillar1 = map.get_gate().get_world_coordinates()[0]
         pillar2 = map.get_gate().get_world_coordinates()[1]
+        print('We found both during search_for_pillar()!')
         return pillar1, pillar2
     elif number_gate_pillars == 1:
         # Check if the pillar is not the same as the first one (it is not in predefined radius)
