@@ -145,7 +145,15 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # Show the map (color use colormap to distinguish between points - not grey)
     import matplotlib.pyplot as plt
+    # Create legend
+    plt.plot([], [], ' ', label="Path")
+    plt.plot([], [], ' ', label="Robot position")
+    plt.plot([], [], ' ', label="Closest point")
+    plt.plot([], [], ' ', label="Gate center")
+    plt.plot([], [], ' ', label="First pillar")
+    plt.plot([], [], ' ', label="Second pillar")
     plt.imshow(map, cmap='tab10')
+    plt.legend()
     plt.show()
 
     # Execute path
