@@ -112,6 +112,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Find the closest point on a line leading through the gate's center and perpendicular to the gate
     closest_point = find_closest_point_on_line(gate_center_map, perpendicular_vector, robot_pos)
 
+    # Convert the closest point to whole numbers (pixels)
+    closest_point = (int(closest_point[0]), int(closest_point[1]))
+
     # Get a point on the line going through the gate's center and perpendicular to the gate
     # but on the other side of the gate than the robot
     # TODO
