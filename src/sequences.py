@@ -127,34 +127,18 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # TODO: delte this
     # Visualize the situation (path, points, ...)
-    import numpy as np
-    map = np.zeros_like(map.get_world_map())
-
-    # Fill the map
-    for point in path:
-        map[point[0], point[1]] = 1
-
-    # Draw a circle around the points
-    import cv2
-    map = cv2.circle(map, robot_pos, 5, 0, -1)
-    map = cv2.circle(map, closest_point, 5, 2, -1)
-    map = cv2.circle(map, gate_center_map, 5, 3, -1)
-    map = cv2.circle(map, pillar1_map, 5, 4, -1)
-    map = cv2.circle(map, pillar2_map, 5, 4, -1)
-    print("ahojda")
-
-    # Show the map (color use colormap to distinguish between points - not grey)
+    # Show the map
     import matplotlib.pyplot as plt
-    # Create legend
-    plt.plot([], [], ' ', label="Path")
-    plt.plot([], [], ' ', label="Robot position")
-    plt.plot([], [], ' ', label="Closest point")
-    plt.plot([], [], ' ', label="Gate center")
-    plt.plot([], [], ' ', label="First pillar")
-    plt.plot([], [], ' ', label="Second pillar")
-    plt.imshow(map, cmap='tab10')
+    plt.plot(robot_pos[0], robot_pos[1], 'robot', color='red', markersize=10)
+    plt.plot(closest_point[0], closest_point[1], 'closest point', color='green', markersize=5)
+    plt.plot(gate_center_map[0], gate_center_map[1], 'gate center', color='blue', markersize=5)
+    plt.plot(pillar1_map[0], pillar1_map[1], 'pillar1', color='yellow', markersize=5)
+    plt.plot(pillar2_map[0], pillar2_map[1], 'pillar2', color='yellow', markersize=5)
+    plt.plot(path[0], path[1], 'path', color='black', markersize=1)
     plt.legend()
     plt.show()
+
+
 
     # Execute path
     tmp = Move(rob, path, detection_cfg)
