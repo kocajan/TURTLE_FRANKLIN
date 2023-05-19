@@ -1,3 +1,4 @@
+import numpy as np
 import math
 import time
 
@@ -103,8 +104,10 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     gate_center_map = ((pillar1_map[0] + pillar2_map[0]) // 2, (pillar1_map[1] + pillar2_map[1]) // 2)
     print("Gate center (map): ", gate_center_map)
 
-    # Get perpendicular vector to the gate
+    # Get perpendicular vector to the gate (normalized)
     perpendicular_vector = (pillar2_map[1] - pillar1_map[1], pillar1_map[0] - pillar2_map[0])
+    perpendicular_vector = np.array(perpendicular_vector)
+    perpendicular_vector = perpendicular_vector / np.linalg.norm(perpendicular_vector)
 
     # Get the robot's position
     robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
@@ -116,17 +119,29 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     # Convert the closest point to whole numbers (pixels)
     closest_point = (int(closest_point[0]), int(closest_point[1]))
 
-    # Get a point on the line going through the gate's center and perpendicular to the gate
-    # but on the other side of the gate than the robot
-    # TODO
+    # Get a point on the line going through the gate's center and perpendicular to the gate that is on the other side
+    # of the gate than the robot
+    distance_from_gate = np.linalg.norm(np.array(pillar1) - np.array(pillar2))
+    final_point1 = (gate_center_map[0] + perpendicular_vector[0] * distance_from_gate,
+                   gate_center_map[1] + perpendicular_vector[1] * distance_from_gate)
+    final_point2 = (gate_center_map[0] - perpendicular_vector[0] * distance_from_gate,
+                     gate_center_map[1] - perpendicular_vector[1] * distance_from_gate)
+
+    # Choose the one with greater y coordinate
+    final_point = final_point1 if final_point1[1] > final_point2[1] else final_point2
+
+    # Convert the final point to whole numbers (pixels)
+    final_point = (int(final_point[0]), int(final_point[1]))
 
     # Create a path of points that the robot will follow from robot position to the closest point on the line
     search_algorithm = detection_cfg["map"]["search_algorithm"]
     print("start point: ", robot_pos, "\nend point: ", closest_point)
-    path = map.find_way(robot_pos, closest_point, search_algorithm)
+    path1 = map.find_way(robot_pos, closest_point, search_algorithm)
+    path2 = map.find_way(closest_point, final_point, search_algorithm)
+    path = path1 + path2
     print('path: ', path)
 
-    # TODO: delte this
+    # TODO: delete this
     # Visualize the situation (path, points, ...)
     # Show the map
     import numpy as np
