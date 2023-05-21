@@ -62,7 +62,7 @@ class regulated_move:
             if len(prev_odometry_values) > 100:
                 prev_odometry_values.pop(0)
 
-            error = self.calculate_error(setpoint, odometry_cm[::-1], )
+            error = self.calculate_error(setpoint, odometry_cm[::-1], prev_odometry_values)
             print("Error: ", error)
 
             if abs(sum) > 10:
@@ -100,7 +100,7 @@ class regulated_move:
 
         return angle
 
-     @staticmethod
+    @staticmethod
     def calculate_difference(current_odometry_value, previous_odometry_values, n=1):
         """
         Calculate the difference between the current odometry value and the previous odometry value.
