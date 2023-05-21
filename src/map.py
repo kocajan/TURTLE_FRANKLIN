@@ -627,7 +627,10 @@ class Map:
         # 2 pillars: we will try to get in front of the gate
         if len(pillars) == 2:
             # Set goal_type
-            self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            if not up:
+                self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            else:
+                self.goal_type = self.detection_cfg['map']['goal_type']['garage']
 
             # Set pillars
             pillar1 = pillars[0]
