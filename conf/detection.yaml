@@ -37,15 +37,15 @@ map:
   search_algorithm: 'A_star' # 'A_star' or 'BFS'
   start_point: [ 250, 0 ]
   goal:
-    min_distance_threshold: 50  # in pixels ~ cm
+    min_distance_threshold: 65  # in pixels ~ cm
     gate_vector_magnitude: 0.25
   goal_type:
     'garage': 0
     'one_pillar': 1
     'two_pillars': 2
   restricted_area_type: 'rectangle' # 'rectangle' or 'octagon'
-  safety_margin_obstacles: 0.15
-  safety_margin_garage: 0.40
+  safety_margin_obstacles: 0.05
+  safety_margin_garage: 0.05
   vision_cone: [[0, 0], [0, 500], [30, 500], [230, 0], [500, 0], [500, 500], [470, 500], [270, 0]] # four points defining the vision cone of the robot (experimentally determined)
   max_id: 9
   id:

@@ -371,7 +371,7 @@ class Map:
             center = (int((p1[0] + p3[0]) / 2), int((p1[1] + p3[1]) / 2))
 
             # Get distance between the center and the corners of the garage
-            size = np.sqrt((p1[0] - center[0]) ** 2 + (p1[1] - center[1]) ** 2) / 2
+            size = garage_width/2 if garage_width > garage_length else garage_length/2
 
             # Draw the restricted area
             self.draw_restricted_area(center, size, convert=False)
@@ -678,7 +678,6 @@ class Map:
                 # Get the closest point of the garage (None if garage did not occur in the image)
                 garage_id = self.detection_cfg['map']['id']['garage']
                 closest_point = self.get_closest_point_on_map((x_robot, y_robot), garage_id)
-                print("closest X  ", closest_point[0], "  closest point Y   ", closest_point[1])
                 if closest_point is not None:
                     ref_object_x = closest_point[0]
                     ref_object_y = closest_point[1]
@@ -810,7 +809,7 @@ class Map:
         :param size: The size of the rectangle.
         :param color: The color of the rectangle.
         """
-        cv.rectangle(self.world_map, (center[0] - size, center[1] - size), (center[0] + size, center[-1] + size),
+        cv.rectangle(self.world_map, (int(center[0] - size), int(center[1] - size)), (int(center[0] + size), int(center[1] + size)),
                      color, -1)
 
     def draw_octagon(self, center, side_length, color) -> None:

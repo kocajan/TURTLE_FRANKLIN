@@ -275,6 +275,7 @@ class Move:
 
     # speed range from 0 to 1
     def rotate_degrees_no_compensation(self, degrees, speed):
+        damping = 0
         self.odometry_hard_reset()
         if abs(degrees) > 40:
             offset = 0.08
@@ -287,9 +288,14 @@ class Move:
 
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
                 act_rot = self.robot.get_odometry()[2]
+                #print(act_rot, "  goal-offset   ", goal-offset, "act - prev ", abs(act_rot - prev_rot))
                 if act_rot >= goal-offset or abs(act_rot - prev_rot) > 1:
+                    print(act_rot)
                     break
-                self.robot.cmd_velocity(angular = speed)
+                print(np.exp(damping)*speed)
+                self.robot.cmd_velocity(angular = np.exp(damping)*speed)
+                if damping >= -0.5:
+                    damping -= 0.01
                 prev_rot = act_rot
 
         elif degrees < 0:
@@ -299,9 +305,14 @@ class Move:
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
                 act_rot = self.robot.get_odometry()[2]
                 # print(act_rot, prev_rot)
+                #print(act_rot, "  goal-offset   ", goal-offset, "act - prev ", abs(act_rot - prev_rot))
                 if act_rot <= goal+offset or abs(act_rot - prev_rot) > 1:
+                    print(act_rot)
                     break
-                self.robot.cmd_velocity(angular = -speed)
+                print(-np.exp(damping)*speed)
+                self.robot.cmd_velocity(angular = -np.exp(damping)*speed)
+                if damping >= -0.5:
+                    damping -= 0.01
                 prev_rot = act_rot
 
     # degree input range have to be +-180 deg
