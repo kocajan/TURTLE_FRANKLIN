@@ -16,6 +16,7 @@ import yaml
 from rospy import Rate
 
 
+
 class regulated_move:
     def __init__(self, rob):
         self.robot = rob
@@ -40,6 +41,7 @@ class regulated_move:
         return new_path
 
     def go(self, path):
+        lowpass_const = 0.2 
         P = 2
         I = 0.05
         sum = 0
@@ -73,18 +75,23 @@ class regulated_move:
             else:
                 sum = error + sum
 
-            if self.calculate_distance(odometry_cm, setpoint) < 10:
-                if setpoint_idx + 10 >= len(path):
+            setpoint_distance = self.calculate_distance(odometry_cm, setpoint)
+            if setpoint_distance < 10:
+                if path[setpoint_idx] == path[-1] and setpoint_distance < 1:
                     break
-                setpoint_idx += 10
+                if setpoint_idx != -1:
+                    setpoint_idx += 10
+                if setpoint_idx >= len(path):
+                    setpoint_idx = -1
                 setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
-            #print(setpoint)
 
-            self.robot.cmd_velocity(linear=0.05, angular= P*error + I*sum) # speed 0.05
+            self.robot.cmd_velocity(linear=0.05, angular= lowpass_const*P*error + I*sum) # speed 0.05
             self.rate.sleep()
+            if lowpass_const < 1:
+                lowpass_const += 0.025
+            
 
     def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values):
-        import numpy as np
         """
         Calculate the error for the robot's regulator.
         It is represented as the difference between velocity vector and the vector from the robot to the goal.
@@ -101,7 +108,7 @@ class regulated_move:
         #velocity_vector = [-velocity_vector[0] , velocity_vector[1]]
 
         # Calculate the vector from the robot to the goal.
-        print("SETPOINT     ", setpoint, "      odometry     ", current_odometry_value)
+        #print("SETPOINT     ", setpoint, "      odometry     ", current_odometry_value)
         #setpoint = (-setpoint[0], setpoint[1])
         
         vector_to_goal = np.array(setpoint) - np.array(current_odometry_value)

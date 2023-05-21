@@ -37,7 +37,8 @@ map:
   search_algorithm: 'A_star' # 'A_star' or 'BFS'
   start_point: [ 250, 0 ]
   goal:
-    min_distance_threshold: 80  # in pixels ~ cm
+    min_distance_threshold: 50  # in pixels ~ cm
+    gate_vector_magnitude: 0.25
   goal_type:
     'garage': 0
     'one_pillar': 1

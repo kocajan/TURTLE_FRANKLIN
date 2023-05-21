@@ -217,6 +217,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
                     map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
+                print(map.get_goal_type())
                 # All conditions are met, we can start the parking sequence
                 break
         else:
@@ -324,6 +325,7 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
         vis.visualize_rgb()
         # vis.visualize_point_cloud()
         if goal is not None:
+            time.sleep(2)
             vis.visualize_map(path=path)
         else:
             vis.visualize_map()
@@ -350,7 +352,8 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
     # We assume that the robot is oriented towards the first pillar
     # Rotate the robot to the right two times
     for _ in range(2):
-        # Execute two small rotations
+        # Execute two small rotations(make the robot wait to finish the rotation)
+        time.sleep(2)
         small_rot_move.execute_small_rot_positive(5, 0.9)
         rotation_cnt += 1
 
@@ -367,14 +370,15 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
     if number_gate_pillars != 2:
         for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
-            time.sleep(1)
+            time.sleep(2)
             small_rot_move.execute_small_rot_negative(5, 0.9)
 
     # If the robot has not seen two pillars, rotate to the left two times
     rotation_cnt = 0
     if not both_seen:
         for i in range(2):
-            # Execute two small rotations
+            # Execute two small rotations (make the robot wait to finish the rotation)
+            time.sleep(2)
             small_rot_move.execute_small_rot_negative(5, 0.9)
             rotation_cnt += 1
 
@@ -390,7 +394,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
     if number_gate_pillars != 2:
         for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
-            time.sleep(1)
+            time.sleep(2)
             small_rot_move.execute_small_rot_positive(5, 0.9)
 
     return rob, map, number_gate_pillars

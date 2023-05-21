@@ -638,7 +638,8 @@ class Map:
 
             # Calculate perpendicular vector to the vector between the two pillars
             v = (pillar2[0] - pillar1[0], pillar2[1] - pillar1[1])
-            v_perp = (-v[1], v[0])
+            gate_vector_magnitude = self.detection_cfg['map']['goal']['gate_vector_magnitude']
+            v_perp = (-gate_vector_magnitude*v[1], gate_vector_magnitude*v[0])
 
             # Calculate the two points on the perpendicular vector which are on the line between the two pillars
             p1 = (int(center[0] + v_perp[0]), int(center[1] + v_perp[1]))
@@ -677,6 +678,7 @@ class Map:
                 # Get the closest point of the garage (None if garage did not occur in the image)
                 garage_id = self.detection_cfg['map']['id']['garage']
                 closest_point = self.get_closest_point_on_map((x_robot, y_robot), garage_id)
+                print("closest X  ", closest_point[0], "  closest point Y   ", closest_point[1])
                 if closest_point is not None:
                     ref_object_x = closest_point[0]
                     ref_object_y = closest_point[1]
@@ -689,6 +691,8 @@ class Map:
 
             # If the distance is smaller than the threshold, we are close enough to the reference object
             dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
+            print("Distance  ", distance)
+            print("Distance treshold (are we close?)", dist_threshold)                      
             if distance < dist_threshold:
                 # In this case, fit the garage rectangle to the garage points
                 p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
@@ -710,7 +714,9 @@ class Map:
                 v = (v[0] / distance, v[1] / distance)
 
                 # Calculate the point that is in the distance of the threshold from the pillar
-                dist_threshold = dist_threshold*0.9                         # Make the goal a bit closer
+                # Make the goal a bit closer
+                dist_threshold = dist_threshold*0.6
+                print("Distance treshold (go closer)", dist_threshold)                      
                 x_goal = ref_object_x - v[0] * dist_threshold
                 y_goal = ref_object_y - v[1] * dist_threshold
                 self.goal_calculated = (int(x_goal), int(y_goal))

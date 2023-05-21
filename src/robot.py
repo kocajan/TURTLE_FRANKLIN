@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-from turtlebot import Turtlebot
+from .turtlebot import Turtlebot
 from rospy import Rate
 
 
