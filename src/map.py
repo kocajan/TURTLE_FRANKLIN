@@ -211,7 +211,7 @@ class Map:
 
         # Obstacles
         for obstacle in self.obstacles:
-            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius(), angle=np.pi/4)
             self.fill_in_obstacle(obstacle)
 
         # Robot
@@ -373,8 +373,13 @@ class Map:
             # Get distance between the center and the corners of the garage
             size = garage_width/2 if garage_width > garage_length else garage_length/2
 
+            # Calculate angle of the garage (make it from 0 to pi/2)
+            angle = np.arctan2(p1[1] - p2[1], p1[0] - p2[0])
+            if angle > np.pi / 2:
+                angle -= np.pi / 2
+
             # Draw the restricted area
-            self.draw_restricted_area(center, size, convert=False)
+            self.draw_restricted_area(center, size, convert=False, angle=angle)
 
             # Fill the rectangle in the world map
             color = self.detection_cfg['map']['id']['garage']
@@ -405,7 +410,7 @@ class Map:
 
         # Robot can see only 1 side of the garage
         if len(lines) == 1:
-            # Get the line parameters (a, b: y=ax+b)
+            # Get the line paramethers (a, b : y = ax + b)
             a, b = lines[0][0]
 
             # Get the leftmost and rightmost points of the line (inliers)
@@ -464,8 +469,10 @@ class Map:
         # Robot can see 2 sides of the garage
         else:
             # Get the lines
+            print(lines)
             line1 = lines[0][0]
             line2 = lines[1][0]
+            
 
             # Get the intersection point of the lines
             inter_x = (line2[1] - line1[1]) / (line1[0] - line2[0])
@@ -547,12 +554,12 @@ class Map:
                 if min_diff == 0 or min_diff == 2:
                     print("here3.1")
                     if angle1 < angle2:
-                        first_line_length = garage_width
-                        second_line_length = garage_length
-                        angle = angle2
-                    else:
                         first_line_length = garage_length
                         second_line_length = garage_width
+                        angle = angle2
+                    else:
+                        first_line_length = garage_width
+                        second_line_length = garage_length
                         angle = angle1
                 # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
                 else:
@@ -627,7 +634,10 @@ class Map:
         # 2 pillars: we will try to get in front of the gate
         if len(pillars) == 2:
             # Set goal_type
-            self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            if not up:
+                self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            else:
+                self.goal_type = self.detection_cfg['map']['goal_type']['garage']
 
             # Set pillars
             pillar1 = pillars[0]
@@ -770,12 +780,14 @@ class Map:
             mapc += self.world_map.shape[0] // 2
         return mapc
 
-    def draw_restricted_area(self, center, size, convert=True) -> None:
+    def draw_restricted_area(self, center, size, convert=True, angle=0) -> None:
         """
         Draw restricted area around objects on the map.
         :param center: Center of the object.
         :param size: Size of the object.
         :param convert: If true, convert the real world parameters to map parameters.
+        :param angle: Angle of the object. (radians)
+        :return: None
         """
         if convert:
             # Convert real world parameters to map parameters
@@ -798,19 +810,28 @@ class Map:
         # Draw the restricted area as a square
         restricted_area_type = self.detection_cfg['map']['restricted_area_type']
         if restricted_area_type == 'rectangle':
-            self.draw_rectangle((x, y), size, id)
+            self.draw_rectangle((x, y), size, id, angle)
         elif restricted_area_type == 'octagon':
             self.draw_octagon((x, y), size, id)
 
-    def draw_rectangle(self, center, size, color) -> None:
+    def draw_rectangle(self, center, size, color, angle) -> None:
         """
         Draw a rectangle on the map.
         :param center: The center of the rectangle.
         :param size: The size of the rectangle.
         :param color: The color of the rectangle.
+        :param angle: The angle of the rectangle. (radians)
+        :return: None
         """
-        cv.rectangle(self.world_map, (int(center[0] - size), int(center[1] - size)), (int(center[0] + size), int(center[1] + size)),
-                     color, -1)
+        # Calculate the coordinates of the four vertices of the rectangle
+        vertices = []
+        for i in range(4):
+            x = int(center[0] + size * np.cos(2 * np.pi * i / 4 + angle + np.pi / 4))
+            y = int(center[1] + size * np.sin(2 * np.pi * i / 4 + angle + np.pi / 4))
+            vertices.append((x, y))
+
+        # Draw the rectangle
+        cv.fillConvexPoly(self.world_map, np.array(vertices), color)
 
     def draw_octagon(self, center, side_length, color) -> None:
         """

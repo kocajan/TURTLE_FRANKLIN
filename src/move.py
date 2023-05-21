@@ -292,9 +292,9 @@ class Move:
                 if act_rot >= goal-offset or abs(act_rot - prev_rot) > 1:
                     print(act_rot)
                     break
-                print(np.exp(damping)*speed)
-                self.robot.cmd_velocity(angular = np.exp(damping)*speed)
-                if damping >= -0.5:
+                #print(np.exp(damping)*speed)
+                self.robot.cmd_velocity(angular = np.exp(damping)*speed) #np.exp(damping)*
+                if damping >= -0.45:
                     damping -= 0.01
                 prev_rot = act_rot
 
@@ -309,9 +309,9 @@ class Move:
                 if act_rot <= goal+offset or abs(act_rot - prev_rot) > 1:
                     print(act_rot)
                     break
-                print(-np.exp(damping)*speed)
-                self.robot.cmd_velocity(angular = -np.exp(damping)*speed)
-                if damping >= -0.5:
+                #print(-np.exp(damping)*speed)
+                self.robot.cmd_velocity(angular = -np.exp(damping)*speed) #np.exp(damping)*
+                if damping >= -0.45:
                     damping -= 0.01
                 prev_rot = act_rot
 

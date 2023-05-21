@@ -244,4 +244,3 @@ class Turtlebot(object):
         # This function will be executed at each time interval specified
         timer = rospy.Timer(rospy.Duration(0.1), cb_reference)
         print("__________TIMER INITIALIZED_________")
-

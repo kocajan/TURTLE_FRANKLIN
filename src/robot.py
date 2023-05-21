@@ -67,21 +67,25 @@ class Robot(Turtlebot):
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self):
+    def timer_cb(self, event):
         if self.is_there_anything_close():
             self.set_stop(True)
             self.stop_motors()
-
+        pass
     def is_there_anything_close(self):
         """
         Check if there is anything close to the robot.
         :return: True if there is something close, False otherwise.
         """
+        import time
+        print('here')
+        start = time.time()
         x_range = (-0.3, 0.3)
         z_range = (0.1, 3.0)
 
         # Get the point cloud
         pc = self.take_point_cloud()
+        print(time.time() - start)
 
         if pc is None:
             return False
@@ -109,17 +113,11 @@ class Robot(Turtlebot):
         image = image[:240, :]
         # Show unique values up to 40
         unique = np.unique(image[np.where(image < 31)])
-        print("----------------------------------")
-        print("Unique values: \n", unique)
-        print("Number of unique values: ", len(unique))
-        print("----------------------------------")
         image1 = image[np.where(image <= 18)]
         image2 = image1[np.where(image1 > 0)]
 
         num_danger_points = len(image2)
-
         if num_danger_points > 350:
-            print(num_danger_points, ' DANGER POINTS!')
             return True
         else:
             return False
