@@ -219,9 +219,13 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
                     map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
                 print(map.get_goal_type())
                 # All conditions are met, we can start the parking sequence
-                break
-            else:
-                
+                if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
+                    break
+            elif map.get_goal_type() == detection_cfg['map']['goal_type']['garage'] and found_gate(rob, detection_cfg,
+                                                                                                   objects_cfg, small_rot_move):
+                # All conditions are met, we can start the parking sequence
+                if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
+                    break
         else:
             # Robot has stopped, we need to find the path again (and reset stop flag)
             rob.set_stop(False)
@@ -536,4 +540,23 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
 
     return intersection_point
+
+def found_gate(rob, detection_cfg, objects_cfg, small_rotation) -> bool:
+    """
+    Check if the robot sees the gate.
+    :param rob: Robot object
+    :param detection_cfg: Detection configuration
+    :param objects_cfg: Objects configuration
+    :return: True if the robot sees the gate, False otherwise
+    """
+    for i in range(10):
+        time.sleep(1)
+        small_rotation.execute_small_rot_positive(30, 1)
+        map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+
+        if number_gate_pillars != 0:
+            return True
+    return False
+
+
 
