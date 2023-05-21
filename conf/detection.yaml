@@ -42,6 +42,7 @@ map:
     'garage': 0
     'one_pillar': 1
     'two_pillars': 2
+  restricted_area_type: 'rectangle' # 'rectangle' or 'octagon'
   safety_margin_obstacles: 0.15
   safety_margin_garage: 0.40
   vision_cone: [[0, 0], [0, 500], [30, 500], [230, 0], [500, 0], [500, 500], [470, 500], [270, 0]] # four points defining the vision cone of the robot (experimentally determined)

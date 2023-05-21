@@ -791,7 +791,21 @@ class Map:
         id = self.detection_cfg['map']['id']['restricted']
 
         # Draw the restricted area as a square
-        self.draw_octagon((x, y), size, id)
+        restricted_area_type = self.detection_cfg['map']['restricted_area_type']
+        if restricted_area_type == 'rectangle':
+            self.draw_rectangle((x, y), size, id)
+        elif restricted_area_type == 'octagon':
+            self.draw_octagon((x, y), size, id)
+
+    def draw_rectangle(self, center, size, color) -> None:
+        """
+        Draw a rectangle on the map.
+        :param center: The center of the rectangle.
+        :param size: The size of the rectangle.
+        :param color: The color of the rectangle.
+        """
+        cv.rectangle(self.world_map, (center[0] - size, center[1] - size), (center[0] + size, center[-1] + size),
+                     color, -1)
 
     def draw_octagon(self, center, side_length, color) -> None:
         """
