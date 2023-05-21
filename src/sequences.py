@@ -220,6 +220,8 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
                 print(map.get_goal_type())
                 # All conditions are met, we can start the parking sequence
                 break
+            else:
+                
         else:
             # Robot has stopped, we need to find the path again (and reset stop flag)
             rob.set_stop(False)
