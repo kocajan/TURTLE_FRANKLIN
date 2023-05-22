@@ -45,19 +45,34 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         park(rob, detection_cfg, objects_cfg)
     else:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
+<<<<<<< HEAD
         import matplotlib.pyplot as plt
         world_map = world_map.get_world_map()
         plt.imshow(world_map)
+=======
+        world_map = map.get_world_map()
+        import matplotlib.pyplot as plt
+        import cv2 as cv
+        # Generate points on the lines and draw them on the map as circles via opencv
+>>>>>>> 77b967b80a9cd2390f9b82016d11cafcf6ba05a5
         for side in garage_sides:
-            a, b = side[0]
-            plt.plot([0, 500], [b, 500 * a + b], color='red')
+            a, b = side[0][0]
+            x = np.linspace(-1000, 1000, 100)
+            y = a * x + b
+            for i in range(len(x)):
+                x[i] = int(x[i])
+                y[i] = int(y[i])
+            for i in range(len(x)):
+                cv.circle(world_map, (x[i], y[i]), 1, 1, -1)
+        plt.imshow(world_map)
         plt.axis('equal')
         plt.show()
+
 
         back_side = None
         min_a = abs(garage_sides[0][0][0])
         for side in garage_sides:
-            a, b = side[0]
+            a, b = side[0][0]
             if abs(a) < min_a:
                 min_a = abs(a)
                 back_side = side
