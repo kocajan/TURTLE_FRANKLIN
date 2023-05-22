@@ -32,9 +32,10 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # Analyze the situation
     time.sleep(0.5)
-    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True ,fill_map=False)
+    map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
-    # Fill the map with garage points
+    # Get garage sides
+    garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
 
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
@@ -586,5 +587,40 @@ def found_gate(rob, detection_cfg, objects_cfg, small_rotation) -> bool:
             return True
     return False
 
+
+def get_garage_sides(rob, map, detection_cfg, objects_cfg):
+    """
+    Return the fitted sides of the garage. The sides are defined by a point and a vector.
+    :param rob: Robot object
+    :param map: Map object
+    :param detection_cfg: Detection configuration
+    :param objects_cfg: Objects configuration
+    :return: The fitted sides of the garage
+    """
+    # Get dimensions of the garage
+    garage_width = map.conv_real_to_map(map.garage.get_width())
+    garage_length = map.conv_real_to_map(map.garage.get_length())
+
+    # Get the detected points of the garage
+    points = map.garage.get_world_coordinates()
+
+    # Convert real world parameters to map parameters
+    xs = map.conv_real_to_map(points[0], add=True)
+    ys = map.conv_real_to_map(points[1])
+
+    # Fill the map with the detected points
+    map.fill_in_garage([])
+
+    visualizer = Visualizer(map, rob, detection_cfg, objects_cfg)
+    visualizer.visualize_map()
+
+    # Fit the lines (we will be able to get all 3 sides of the garage or less)
+    lines = []
+    # The robot can see only 2 sides of the garage at a time
+    # for i in range(2):
+    #     # Fit a line to the points
+    #     xs, ys, line, inliers = map.fit_line(xs, ys)
+    #     if line is not None:
+    #         lines.append([line, inliers])
 
 

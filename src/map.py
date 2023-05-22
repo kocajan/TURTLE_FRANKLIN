@@ -395,12 +395,11 @@ class Map:
         Fit a rectangle to the given points.
         :param xs: The x map coordinates of the points.
         :param ys: The y map coordinates of the points.
-        :param garage_width: The width of the garage. (map size) : TODO: swap width and length
+        :param garage_width: The width of the garage. (map size) TODO: swap width and length
         :param garage_length: The length of the garage. (map size)
         :return: The rectangle fitted to the points.
         """
         lines = []
-
         # The robot can see only 2 sides of the garage at a time
         for i in range(2):
             # Fit a line to the points
