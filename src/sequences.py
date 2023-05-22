@@ -47,18 +47,17 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
         import matplotlib.pyplot as plt
-        import cv2 as cv
-        # Generate points on the lines and draw them on the map as circles via opencv
+        # Generate points on the lines and draw them on the map as circles
         for side in garage_sides:
-            print(side)
-            a, b = side[0]
-            x = np.linspace(-1000, 1000, 100)
-            y = a * x + b
-            for i in range(len(x)):
-                x[i] = int(x[i])
-                y[i] = int(y[i])
-            for i in range(len(x)):
-                cv.circle(world_map, (x[i], y[i]), 1, 1, -1)
+            points = []
+            a, b = side[0][0]
+            for x in range(0, 1000):
+                y = a * x + b
+                points.append((x, y))
+            points = np.array(points)
+            points = points.astype(int)
+            world_map[points[:, 1], points[:, 0]] = 1
+
         plt.imshow(world_map)
         plt.axis('equal')
         plt.show()
@@ -270,7 +269,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
-        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
         #tmp = Move(rob, path, detection_cfg)
