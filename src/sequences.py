@@ -269,7 +269,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
-        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
         #tmp = Move(rob, path, detection_cfg)
