@@ -24,15 +24,15 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     small_rot_move = Move(rob, None, None)
 
     # Analyze the situation
-    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+    #map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Orient the robot towards the garage
-    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
-                                     parking=True)
+    #find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+                                    # parking=True)
 
     # Analyze the situation
     time.sleep(0.5)
-    map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
+    map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=False)
 
     # Get garage sides
     garage_sides, world_map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
@@ -51,6 +51,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         for side in garage_sides:
             points = []
             a, b = side[0]
+            print("a: ", a, " b: ", b)
             for x in range(500):
                 y = a * x + b
                 points.append((x, y))
@@ -69,13 +70,30 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                 print(np.dtype(point[1]))
                 cv.circle(world_map, (point[0], point[1]), 1, 1, -1)
 
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import ListedColormap
 
-        visualizer = Visualizer(None, None, map, None, None, detection_cfg)
-        visualizer.visualize_map()
+        color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
+                                    "silver"])
+        color_map = [color_map]
+
+        if path is not None:
+            path_col = detection_cfg["map"]["id"]["path"]
+            for point in path:
+                world_map[point[1], point[0]] = path_col
+
+        n = len(color_map)
+        fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
+        for [ax, cmap] in zip(axs.flat, color_map):
+            psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
+            fig.colorbar(psm, ax=ax)
+        plt.show()
+
+
 
 
         back_side = None
-        min_a = abs(garage_sides[0][0])
+        min_a = abs(garage_sides[0])
         for side in garage_sides:
             a, b = side[0]
             if abs(a) < min_a:
