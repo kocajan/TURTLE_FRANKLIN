@@ -212,7 +212,7 @@ class Map:
 
         # Obstacles
         for obstacle in self.obstacles:
-            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius(), angle=np.pi/4)
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius(), angle=0)
             self.fill_in_obstacle(obstacle)
 
         # Robot

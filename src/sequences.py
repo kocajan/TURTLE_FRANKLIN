@@ -110,22 +110,22 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         mid_front_point = np.array(mid_front_point).astype(np.int32)
 
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
-        world_map = map.get_world_map()
+        #world_map = map.get_world_map()
 
         # Generate points on the lines and draw them on the map as circles using numpy
-        X = np.arange(0, world_map.shape[1])
-        for line in garage_sides:
-            a, b = line
-            Y = a * X + b
-            points = np.array([X, Y]).T.astype(np.int32)
+        #X = np.arange(0, world_map.shape[1])
+        #for line in garage_sides:
+            #a, b = line
+            #Y = a * X + b
+            #points = np.array([X, Y]).T.astype(np.int32)
 
             # Take only valid pfor
-            for point in points:
-                world_map[point[1], point[0]] = 1
+            #for point in points:
+                #world_map[point[1], point[0]] = 1
 
-        world_map[intersection_point[1], intersection_point[0]] = 2
-        world_map[middle_point[1], middle_point[0]] = 3
-        world_map[mid_front_point[1], mid_front_point[0]] = 3
+        #world_map[intersection_point[1], intersection_point[0]] = 2
+        #world_map[middle_point[1], middle_point[0]] = 3
+        #world_map[mid_front_point[1], mid_front_point[0]] = 3
 
         # Create a path of points that the robot will follow from robot position to the closest point on the line
         search_algorithm = detection_cfg["map"]["search_algorithm"]
@@ -141,22 +141,22 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             end = np.array(end).astype(np.int32)
             path += map.find_way(start, end, search_algorithm)
 
-        for point in path:
-            world_map[point[1], point[0]] = 1
+        #for point in path:
+        #    world_map[point[1], point[0]] = 1
 
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import ListedColormap
+        #import matplotlib.pyplot as plt
+        #from matplotlib.colors import ListedColormap
 
-        color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
-                                    "silver"])
-        color_map = [color_map]
+        #color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
+                                    #"silver"])
+        #color_map = [color_map]
 
-        n = len(color_map)
-        fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
-        for [ax, cmap] in zip(axs.flat, color_map):
-            psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
-            fig.colorbar(psm, ax=ax)
-        plt.show()
+        #n = len(color_map)
+        #fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
+        #for [ax, cmap] in zip(axs.flat, color_map):
+        #    psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
+        #    fig.colorbar(psm, ax=ax)
+        #plt.show()
 
         # Follow the path
         move = regulated_move(rob)
@@ -355,7 +355,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
 
         # Analyze the world and find the best path and wait for the robot to stop
         time.sleep(0.5)
-        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
+        map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
 
         # Follow the path
         # tmp = Move(rob, path, detection_cfg)

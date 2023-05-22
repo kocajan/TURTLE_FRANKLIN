@@ -14,7 +14,7 @@ def main():
     rob.set_world_coordinates(robot_cfg['world_coordinates'])
 
     # Get to the gate
-    #get_to_gate(rob, detection_cfg, objects_cfg)
+    get_to_gate(rob, detection_cfg, objects_cfg)
     #print("Parking initiated")
 
     # Park the robot

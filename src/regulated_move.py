@@ -76,11 +76,11 @@ class regulated_move:
                 sum = error + sum
 
             setpoint_distance = self.calculate_distance(odometry_cm, setpoint)
-            if setpoint_distance < 10:
+            if setpoint_distance < 7:
                 if path[setpoint_idx] == path[-1] and setpoint_distance < 1:
                     break
                 if setpoint_idx != -1:
-                    setpoint_idx += 10
+                    setpoint_idx += 7
                 if setpoint_idx >= len(path):
                     setpoint_idx = -1
                 setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
