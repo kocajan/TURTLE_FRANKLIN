@@ -15,7 +15,7 @@ def main():
 
     # Get to the gate
     #get_to_gate(rob, detection_cfg, objects_cfg)
-    print("Parking initiated")
+    #print("Parking initiated")
 
     # Park the robot
     park(rob, detection_cfg, objects_cfg)

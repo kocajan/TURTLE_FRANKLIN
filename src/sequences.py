@@ -23,14 +23,14 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     small_rot_move = Move(rob, None, None)
 
     # Analyze the situation
-    #map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Orient the robot towards the garage
-    #find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
-                                     #parking=True)
+    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+                                     parking=True)
 
     # Analyze the situation
-    #time.sleep(0.5)
+    time.sleep(0.5)
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=False)
 
     # Get garage sides
