@@ -249,8 +249,11 @@ class Detector:
         if garage is not None:
             # Get rid of outliers
             w_coords = self.get_world_coordinates_using_contours(garage.get_contours())
-            w_coords = np.unique(w_coords, axis=1)
-            garage.set_world_coordinates(w_coords)
+            if w_coords is not None:
+                w_coords = np.unique(w_coords, axis=1)
+                garage.set_world_coordinates(w_coords)
+            else:
+                self.map.set_garage(None)
 
     # HELPER FUNCTIONS
     def get_world_coordinates_using_contours(self, contours: list) -> tuple:
