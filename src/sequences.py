@@ -55,6 +55,11 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             y2 = int(a * x2 + b)
             cv.line(world_map, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
+        # Show the map via opencv
+        cv.imshow("Map", world_map)
+        cv.waitKey(0)
+
+
 
 
 
@@ -628,7 +633,7 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     map.fill_in_garage([])
 
     # TODO: delete
-    visualizer = Visualizer(map, rob, detection_cfg, objects_cfg)
+    visualizer = Visualizer(None, None, map, None, None, detection_cfg)
     visualizer.visualize_map()
 
     # Fit the lines (we will be able to get all 3 sides of the garage or less)
