@@ -1,4 +1,3 @@
-
 import numpy as np
 import math
 import time
@@ -67,8 +66,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             # Get one point on each garage side (does not matter which one)
             garage_sides_points.append([0, b])
 
-
-
         # Get the angle between the two garage sides
         angle = np.arccos(np.dot(garage_sides_unit_vectors[0], garage_sides_unit_vectors[1]) / (
                 np.linalg.norm(garage_sides_unit_vectors[0]) * np.linalg.norm(garage_sides_unit_vectors[1])))
@@ -88,10 +85,18 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                                                      garage_sides_points[1], garage_sides_unit_vectors[1])
         intersection_point = np.array(intersection_point).astype(np.int32)
 
+        # Get garage dimensions
+        garage_length = objects_cfg['garage']['length']
+        garage_width = objects_cfg['garage']['width']
 
+        # Decide which side is the back side of the garage (it should usually be the first one)
+        back_side_idx = 0 if abs(garage_sides[0][0]) < abs(garage_sides[1][0]) else 1
+        front_side_idx = 1 - back_side_idx
 
-
-
+        # Get the point in the middle of the garage
+        middle_point = intersection_point + garage_sides_unit_vectors[back_side_idx] * garage_length / 2 \
+                       + garage_sides_unit_vectors[front_side_idx] * garage_width / 2
+        middle_point = middle_point.astype(np.int32)
 
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
@@ -111,6 +116,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                 world_map[point[1], point[0]] = 1
 
         world_map[intersection_point[1], intersection_point[0]] = 2
+        world_map[middle_point[1], middle_point[0]] = 3
 
         import matplotlib.pyplot as plt
         from matplotlib.colors import ListedColormap
@@ -125,20 +131,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
             fig.colorbar(psm, ax=ax)
         plt.show()
-
-
-
-
-        back_side = None
-        min_a = abs(garage_sides[0][0])
-        for side in garage_sides:
-            a, b = side
-            if abs(a) < min_a:
-                min_a = abs(a)
-                back_side = side
-
-
-
 
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
@@ -254,9 +246,9 @@ def park1(rob, detection_cfg, objects_cfg) -> None:
     # of the gate than the robot
     distance_from_gate = np.linalg.norm(np.array(pillar1) - np.array(pillar2))
     final_point1 = (gate_center_map[0] + perpendicular_vector[0] * distance_from_gate,
-                   gate_center_map[1] + perpendicular_vector[1] * distance_from_gate)
+                    gate_center_map[1] + perpendicular_vector[1] * distance_from_gate)
     final_point2 = (gate_center_map[0] - perpendicular_vector[0] * distance_from_gate,
-                     gate_center_map[1] - perpendicular_vector[1] * distance_from_gate)
+                    gate_center_map[1] - perpendicular_vector[1] * distance_from_gate)
 
     # Choose the one with greater y coordinate
     final_point = final_point1 if final_point1[1] > final_point2[1] else final_point2
@@ -287,11 +279,9 @@ def park1(rob, detection_cfg, objects_cfg) -> None:
     plt.legend()
     plt.show()
 
-
-
     # Execute path
-    #tmp = Move(rob, path, detection_cfg)
-    #tmp.execute_move()
+    # tmp = Move(rob, path, detection_cfg)
+    # tmp.execute_move()
     tmp = regulated_move(rob)
     tmp.go(path)
 
@@ -338,8 +328,8 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
-        #tmp = Move(rob, path, detection_cfg)
-        #tmp.execute_move()
+        # tmp = Move(rob, path, detection_cfg)
+        # tmp.execute_move()
         tmp = regulated_move(rob)
         tmp.go(path)
 
@@ -351,7 +341,8 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
                 if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
                     break
             elif map.get_goal_type() == detection_cfg['map']['goal_type']['garage'] and found_gate(rob, detection_cfg,
-                                                                                                   objects_cfg, small_rot_move):
+                                                                                                   objects_cfg,
+                                                                                                   small_rot_move):
                 # All conditions are met, we can start the parking sequence
                 if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
                     break
@@ -721,6 +712,4 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
         xs, ys, line, inliers = map.fit_line(xs, ys)
         if line is not None:
             lines.append(line)
-    return lines, map   # TODO: delete map
-
-
+    return lines, map  # TODO: delete map
