@@ -35,7 +35,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
     # Get garage sides
-    garage_sides, map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    garage_sides, world_map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
 
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
@@ -45,8 +45,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         park(rob, detection_cfg, objects_cfg)
     else:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
-        world_map, map = map.get_world_map()
         import matplotlib.pyplot as plt
+        world_map = world_map.get_world_map()
         plt.imshow(world_map)
         for side in garage_sides:
             a, b = side[0]
