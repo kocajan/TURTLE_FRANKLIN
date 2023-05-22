@@ -105,11 +105,13 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
         # Get the center point in front of the garage
         mid_front_point = find_closest_point_on_line(middle_point, garage_sides_unit_vectors[front_side_idx], robot_pos)
+        if mid_front_point[0] < 0:
+            mid_front_point[0] = 0
         mid_front_point = np.array(mid_front_point).astype(np.int32)
 
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
-        import cv2 as cv
+
         # Generate points on the lines and draw them on the map as circles using numpy
         X = np.arange(0, world_map.shape[1])
         for line in garage_sides:
