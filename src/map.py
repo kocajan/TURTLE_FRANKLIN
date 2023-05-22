@@ -339,9 +339,10 @@ class Map:
         if self.goal_calculated is not None:
             cv.circle(self.world_map, self.goal_calculated, 5, calculated_goal_id, -1)
 
-    def fit_and_fill_garage_rectangle(self) -> tuple:
+    def fit_and_fill_garage_rectangle(self, parking=False) -> tuple:
         """
         Fit a rectangle (garage size) to the garage points and fill it in the world map.
+        :param parking: The robot is parking
         :return: points of the fitted rectangle and the lengths of the lines used to fit the rectangle
         """
         # Get dimensions of the garage
@@ -379,7 +380,8 @@ class Map:
                 angle -= np.pi / 2
 
             # Draw the restricted area
-            self.draw_restricted_area(center, size, convert=False, angle=angle)
+            if not parking:
+                self.draw_restricted_area(center, size, convert=False, angle=angle)
 
             # Fill the rectangle in the world map
             color = self.detection_cfg['map']['id']['garage']
