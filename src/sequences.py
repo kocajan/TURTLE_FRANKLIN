@@ -44,20 +44,32 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         print("Only one garage side found! Try again...")
         park(rob, detection_cfg, objects_cfg)
     else:
-        # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
-        world_map = map.get_world_map()
-        import cv2 as cv
-        for line in garage_sides:
-            a, b = line
-            x1 = 0
-            y1 = int(a * x1 + b)
-            x2 = world_map.shape[1]
-            y2 = int(a * x2 + b)
-            cv.line(world_map, (x1, y1), (x2, y2), (255, 255, 255), 2)
+        # Get the one that is the most parallel to the x axis (the smallest '|a|' in y = ax + b)
+        back_side = None
+        min_a = abs(garage_sides[0][0][0])
+        for side in garage_sides:
+            a, b = side[0]
+            if abs(a) < min_a:
+                min_a = abs(a)
+                back_side = side
 
-        # Show the map via opencv
-        cv.imshow("Map", world_map)
-        cv.waitKey(0)
+
+
+        # # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
+        # world_map = map.get_world_map()
+        # import cv2 as cv
+        # for line in garage_sides:
+        #     a, b = line
+        #     x1 = 0
+        #     y1 = int(a * x1 + b)
+        #     x2 = world_map.shape[1]
+        #     y2 = int(a * x2 + b)
+        #     cv.line(world_map, (x1, y1), (x2, y2), (255, 255, 255), 2)
+        #
+        # # Show the map via opencv
+        # cv.imshow("Map", world_map)
+        # cv.waitKey(0)
+
 
 
 
