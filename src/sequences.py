@@ -94,8 +94,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         front_side_idx = 1 - back_side_idx
 
         # Get the point in the middle of the garage
-        middle_point = intersection_point + garage_sides_unit_vectors[back_side_idx] * garage_length / 2 \
-                       + garage_sides_unit_vectors[front_side_idx] * garage_width / 2
+        middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2 \
+                        - garage_sides_unit_vectors[front_side_idx] * garage_width / 2
         middle_point = middle_point.astype(np.int32)
 
         print("Middle point: ", middle_point)
