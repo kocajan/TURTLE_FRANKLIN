@@ -46,12 +46,16 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     else:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
-        import matplotlib.pyplot as plt
         # Generate points on the lines and draw them on the map as circles
         for side in garage_sides:
             points = []
+<<<<<<< HEAD
             a, b = side[0]
             for x in range(0, 1000):
+=======
+            a, b = side[0][0]
+            for x in range(500):
+>>>>>>> e78a4854270533a804d1ca78ceddd7059fa8fa19
                 y = a * x + b
                 points.append((x, y))
             points = np.array(points)
@@ -64,9 +68,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
             world_map[points[:, 1], points[:, 0]] = 1
 
-        plt.imshow(world_map)
-        plt.axis('equal')
-        plt.show()
+        visualizer = Visualizer(None, None, map, None, None, detection_cfg)
+        visualizer.visualize_map()
 
 
         back_side = None
@@ -662,9 +665,4 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     lines = []
     for i in range(3):
         # Fit a line to the points
-        xs, ys, line, inliers = map.fit_line(xs, ys)
-        if line is not None:
-            lines.append([line, inliers])
-    return lines, map   # TODO: delete map
-
-
+        xs, ys, line, inliers = map.fit_
