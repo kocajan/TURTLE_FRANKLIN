@@ -86,3 +86,6 @@ ransac_min_points: 20
 
 # Angle difference threshold for two lines to be still considered perpendicular
 perpendicular_angle_threshold: 15
+
+# Number of points for interpolation
+interpolation_points: 5

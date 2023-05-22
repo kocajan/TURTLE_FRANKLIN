@@ -144,9 +144,15 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
         # Create a path of points that the robot will follow from robot position to the closest point on the line
         search_algorithm = detection_cfg["map"]["search_algorithm"]
-        path1 = map.find_way(robot_pos, mid_front_point, search_algorithm)
-        path2 = map.find_way(mid_front_point, middle_point, search_algorithm)
-        path = path1 + path2
+        path = map.find_way(robot_pos, mid_front_point, search_algorithm)
+
+        # The second part of the path has to be interpolated
+        front_to_middle_vector = middle_point - mid_front_point
+        inter_points = detection_cfg["interpolation_points"]
+        for i in range(inter_points):
+            start = mid_front_point + front_to_middle_vector * i / inter_points
+            end = mid_front_point + front_to_middle_vector * (i + 1) / inter_points
+            path += map.find_way(start, end, search_algorithm)
 
         # Follow the path
         move = regulated_move(rob)
