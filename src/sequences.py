@@ -54,12 +54,12 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             Y = a * X + b
             points = np.array([X, Y]).T
 
-            # Draw the points on the map use opencv
+            # Take only valid points
+            points = points[(points[:, 1] >= 0) & (points[:, 1] < world_map.shape[0])]
+            points = points.astype(np.int32)
+
             for point in points:
-                print(point)
-                print(np.dtype(point[0]))
-                print(np.dtype(point[1]))
-                cv.circle(world_map, (point[0], point[1]), 1, 1, -1)
+                world_map[point[1], point[0]] = 1
 
         import matplotlib.pyplot as plt
         from matplotlib.colors import ListedColormap
@@ -67,11 +67,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
                                     "silver"])
         color_map = [color_map]
-
-        if path is not None:
-            path_col = detection_cfg["map"]["id"]["path"]
-            for point in path:
-                world_map[point[1], point[0]] = path_col
 
         n = len(color_map)
         fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
