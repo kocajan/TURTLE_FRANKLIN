@@ -56,6 +56,12 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                 points.append((x, y))
             points = np.array(points)
             points = points.astype(int)
+            dims = map.get_dimensions()
+            points = points[points[:, 0] >= 0] # Remove points with negative x
+            points = points[points[:, 0] < dims[0]] # Remove points with x greater than the map width
+            points = points[points[:, 1] >= 0] # Remove points with negative y
+            points = points[points[:, 1] < dims[1]] # Remove points with y greater than the map height
+
             world_map[points[:, 1], points[:, 0]] = 1
 
         plt.imshow(world_map)
