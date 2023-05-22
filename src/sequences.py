@@ -20,8 +20,14 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     :param objects_cfg: Configuration file for objects
     :return: None
     """
+    # Create small rotation move object (used for small rotations during the searching process)
+    small_rot_move = Move(rob, None, None)
+
+    # Analyze the situation
+    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg)
+
     # Orient the robot towards the garage
-    find_best_position_to_see_garage(rob, detection_cfg, objects_cfg)
+    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg)
 
     # Fit the back part of the garage
 
