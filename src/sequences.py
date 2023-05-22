@@ -94,8 +94,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         front_side_idx = 1 - back_side_idx
 
         # Get the point in the middle of the garage
-        middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2 \
-                        - garage_sides_unit_vectors[front_side_idx] * garage_width / 2
+        middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2.5 \
+                        - garage_sides_unit_vectors[front_side_idx] * garage_width / 2.5
         middle_point = middle_point.astype(np.int32)
 
         print("Middle point: ", middle_point)
@@ -115,12 +115,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         for line in garage_sides:
             a, b = line
             Y = a * X + b
-            points = np.array([X, Y]).T
+            points = np.array([X, Y]).T.astype(np.int32)
 
-            # Take only valid points
-            points = points[(points[:, 1] >= 0) & (points[:, 1] < world_map.shape[0])]
-            points = points.astype(np.int32)
-
+            # Take only valid pfor
             for point in points:
                 world_map[point[1], point[0]] = 1
 
@@ -128,15 +125,19 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         world_map[middle_point[1], middle_point[0]] = 3
         world_map[mid_front_point[1], mid_front_point[0]] = 3
 
-        vis = Visualizer(None, None, map, None, None, detection_cfg)
-        vis.visualize_map()
-
         # Create a path of points that the robot will follow from robot position to the closest point on the line
         search_algorithm = detection_cfg["map"]["search_algorithm"]
-        print("cau pico")
-        path1 = map.find_way(robot_pos, mid_front_point, search_algorithm)
-        path2 = map.find_way(mid_front_point, middle_point, search_algorithm)
-        path = path1 + path2
+        path = map.find_way(robot_pos, mid_front_point, search_algorithm)
+
+        # The second part of the path has to be interpolated
+        front_to_middle_vector = middle_point - mid_front_point
+        inter_points = detection_cfg["interpolation_points"]
+        for i in range(inter_points):
+            start = mid_front_point + front_to_middle_vector * i / inter_points
+            start = np.array(start).astype(np.int32)
+            end = mid_front_point + front_to_middle_vector * (i + 1) / inter_points
+            end = np.array(end).astype(np.int32)
+            path += map.find_way(start, end, search_algorithm)
 
         for point in path:
             world_map[point[1], point[0]] = 1
@@ -154,18 +155,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
             fig.colorbar(psm, ax=ax)
         plt.show()
-
-        # Create a path of points that the robot will follow from robot position to the closest point on the line
-        search_algorithm = detection_cfg["map"]["search_algorithm"]
-        path = map.find_way(robot_pos, mid_front_point, search_algorithm)
-
-        # The second part of the path has to be interpolated
-        front_to_middle_vector = middle_point - mid_front_point
-        inter_points = detection_cfg["interpolation_points"]
-        for i in range(inter_points):
-            start = mid_front_point + front_to_middle_vector * i / inter_points
-            end = mid_front_point + front_to_middle_vector * (i + 1) / inter_points
-            path += map.find_way(start, end, search_algorithm)
 
         # Follow the path
         move = regulated_move(rob)
