@@ -35,7 +35,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
     # Get garage sides
-    garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    garage_sides, map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
 
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
@@ -44,7 +44,16 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         print("Only one garage side found! Try again...")
         park(rob, detection_cfg, objects_cfg)
     else:
-        # Get the one that is the most parallel to the x axis (the smallest '|a|' in y = ax + b)
+        # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
+        world_map, map = map.get_world_map()
+        import matplotlib.pyplot as plt
+        plt.imshow(world_map)
+        for side in garage_sides:
+            a, b = side[0]
+            plt.plot([0, 500], [b, 500 * a + b], color='red')
+        plt.axis('equal')
+        plt.show()
+
         back_side = None
         min_a = abs(garage_sides[0][0][0])
         for side in garage_sides:
@@ -52,24 +61,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             if abs(a) < min_a:
                 min_a = abs(a)
                 back_side = side
-
-
-
-        # # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
-        # world_map = map.get_world_map()
-        # import cv2 as cv
-        # for line in garage_sides:
-        #     a, b = line
-        #     x1 = 0
-        #     y1 = int(a * x1 + b)
-        #     x2 = world_map.shape[1]
-        #     y2 = int(a * x2 + b)
-        #     cv.line(world_map, (x1, y1), (x2, y2), (255, 255, 255), 2)
-        #
-        # # Show the map via opencv
-        # cv.imshow("Map", world_map)
-        # cv.waitKey(0)
-
 
 
 
@@ -634,6 +625,10 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     :param objects_cfg: Objects configuration
     :return: The fitted sides of the garage
     """
+    # Get dimensions of the garage
+    garage_width = map.conv_real_to_map(map.garage.get_width())
+    garage_length = map.conv_real_to_map(map.garage.get_length())
+
     # Get the detected points of the garage
     points = map.garage.get_world_coordinates()
 
@@ -655,6 +650,6 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
         xs, ys, line, inliers = map.fit_line(xs, ys)
         if line is not None:
             lines.append([line, inliers])
-    return lines
+    return lines, map   # TODO: delete map
 
 
