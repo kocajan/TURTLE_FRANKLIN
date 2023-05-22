@@ -342,7 +342,7 @@ class Map:
     def fit_and_fill_garage_rectangle(self, parking=False) -> tuple:
         """
         Fit a rectangle (garage size) to the garage points and fill it in the world map.
-        :param parking: The robot is parking
+        :param parking: Boolean value if the robot is parking.
         :return: points of the fitted rectangle and the lengths of the lines used to fit the rectangle
         """
         # Get dimensions of the garage
@@ -360,7 +360,7 @@ class Map:
         if xs is not None and ys is not None:
             # The rectangle will be fitted to the points by fitting lines to the points
             # and finding the intersection points of these lines
-            p1, p2, p3, p4, first_line_len, second_line_len = self.fit_rectangle(xs, ys, garage_length, garage_width)
+            p1, p2, p3, p4, line_lengths = self.fit_rectangle(xs, ys, garage_length, garage_width, parking)
 
             # Make the points integers
             p1 = (int(p1[0]), int(p1[1]))
@@ -374,13 +374,13 @@ class Map:
             # Get distance between the center and the corners of the garage
             size = garage_width/2 if garage_width > garage_length else garage_length/2
 
-            # Calculate angle of the garage (make it from 0 to pi/2)
-            angle = np.arctan2(p1[1] - p2[1], p1[0] - p2[0])
-            if angle > np.pi / 2:
-                angle -= np.pi / 2
-
-            # Draw the restricted area
             if not parking:
+                # Calculate angle of the garage (make it from 0 to pi/2)
+                angle = np.arctan2(p1[1] - p2[1], p1[0] - p2[0])
+                if angle > np.pi / 2:
+                    angle -= np.pi / 2
+
+                # Draw the restricted area
                 self.draw_restricted_area(center, size, convert=False, angle=angle)
 
             # Fill the rectangle in the world map
@@ -390,20 +390,21 @@ class Map:
             cv.line(self.world_map, p3, p4, color, 2)
             cv.line(self.world_map, p4, p1, color, 2)
 
-            return p1, p2, p3, p4, first_line_len, second_line_len
+            return p1, p2, p3, p4, line_lengths[0], line_lengths[1], line_lengths[2]
 
-    def fit_rectangle(self, xs, ys, garage_width, garage_length) -> tuple:
+    def fit_rectangle(self, xs, ys, garage_width, garage_length, parking) -> tuple:
         """
         Fit a rectangle to the given points.
         :param xs: The x map coordinates of the points.
         :param ys: The y map coordinates of the points.
         :param garage_width: The width of the garage. (map size) TODO: swap width and length
         :param garage_length: The length of the garage. (map size)
+        :param parking: Boolean value if the robot is parking.
         :return: The rectangle fitted to the points.
         """
         lines = []
         # The robot can see only 2 sides of the garage at a time
-        for i in range(2):
+        for i in range(3):
             # Fit a line to the points
             xs, ys, line, inliers = self.fit_line(xs, ys)
             if line is not None:
@@ -705,7 +706,7 @@ class Map:
             print("Distance treshold (are we close?)", dist_threshold)                      
             if distance < dist_threshold:
                 # In this case, fit the garage rectangle to the garage points
-                p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
+                p1, p2, p3, p4, first_line_len, second_line_len, _ = self.fit_and_fill_garage_rectangle()
 
                 # Decide where are the pillars of the gate
                 if first_line_len > second_line_len:
