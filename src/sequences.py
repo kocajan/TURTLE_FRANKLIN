@@ -50,6 +50,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     else:
         # Get a unit vector for each garage side
         garage_sides_unit_vectors = []
+        garage_sides_points = []
         for side in garage_sides:
             a, b = side
             if a > 0:
@@ -63,12 +64,30 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             v_unit = v / np.linalg.norm(v)
             garage_sides_unit_vectors.append(v_unit)
 
+            # Get one point on each garage side (does not matter which one)
+            garage_sides_points.append([0, b])
+
+
+
         # Get the angle between the two garage sides
         angle = np.arccos(np.dot(garage_sides_unit_vectors[0], garage_sides_unit_vectors[1]) / (
                 np.linalg.norm(garage_sides_unit_vectors[0]) * np.linalg.norm(garage_sides_unit_vectors[1])))
 
         angle = np.degrees(angle)
         print("Angle between the two garage sides: ", angle)
+
+        # Check if the angle is around 90 degrees (if so try to fit it again)
+        if abs(angle - 90) > detection_cfg['perpendicular_angle_threshold']:
+            print("Fit error is too large! Try again...")
+            angle = np.random.randint(5, 20)
+            small_rot_move.execute_small_rot_negative(angle, 0.5)
+            park(rob, detection_cfg, objects_cfg)
+
+        # Get the intersection point of the two garage sides
+        intersection_point = find_intersection_point(garage_sides_points[0], garage_sides_unit_vectors[0],
+                                                     garage_sides_points[1], garage_sides_unit_vectors[1])
+
+
 
 
 
@@ -89,6 +108,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
             for point in points:
                 world_map[point[1], point[0]] = 1
+
+        world_map[intersection_point[1], intersection_point[0]] = 2
 
         import matplotlib.pyplot as plt
         from matplotlib.colors import ListedColormap

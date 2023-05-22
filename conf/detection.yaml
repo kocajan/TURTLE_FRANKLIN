@@ -83,3 +83,6 @@ ransac_inliers_threshold: 5
 
 # RANSAC minimum number of points
 ransac_min_points: 20
+
+# Angle difference threshold for two lines to be still considered perpendicular
+perpendicular_angle_threshold: 15
