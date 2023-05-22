@@ -50,7 +50,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         # Generate points on the lines and draw them on the map as circles
         for side in garage_sides:
             points = []
-            a, b = side[0][0]
+            a, b = side[0]
             for x in range(0, 1000):
                 y = a * x + b
                 points.append((x, y))
@@ -64,9 +64,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
 
         back_side = None
-        min_a = abs(garage_sides[0][0][0])
+        min_a = abs(garage_sides[0][0])
         for side in garage_sides:
-            a, b = side[0][0]
+            a, b = side[0]
             if abs(a) < min_a:
                 min_a = abs(a)
                 back_side = side
