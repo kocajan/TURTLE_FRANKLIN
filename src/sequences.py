@@ -27,7 +27,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Orient the robot towards the garage
-    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg)
+    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+                                     parking=True)
 
     # Fit the back part of the garage
 
@@ -426,7 +427,8 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
     return rob, map, number_gate_pillars
 
 
-def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg) -> None:
+def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+                                     parking=False) -> None:
     """
     When the robot sees the garage and does not see the gate, this function will rotate the robot to find the best
     position to see the garage. The number of garage points on the map is used as a metric.
@@ -436,6 +438,7 @@ def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pilla
     :param number_gate_pillars: Number of the gate pillars
     :param detection_cfg: Detection configuration
     :param objects_cfg: Objects configuration
+    :param parking: If the robot is parking
     :return: None
     """
     # Preset the variables
@@ -445,7 +448,7 @@ def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pilla
     # Rotate the robot until the best position is found
     while True:
         # If we can see gate, break from the loop
-        if number_gate_pillars != 0:
+        if number_gate_pillars != 0 and not parking:
             break
 
         # Get the number of the garage points on the map
@@ -560,6 +563,7 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     intersection_point = [point1[0] + t * vector1[0], point1[1] + t * vector1[1]]
 
     return intersection_point
+
 
 def found_gate(rob, detection_cfg, objects_cfg, small_rotation) -> bool:
     """
