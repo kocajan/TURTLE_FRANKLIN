@@ -36,6 +36,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     # Get garage sides
     garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    map.fit_and_fill_garage_rectangle(parking=True)
 
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
@@ -611,7 +612,7 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     # Fill the map with the detected points
     map.fill_in_garage([])
 
-    visualizer = Visualizer(map, rob, detection_cfg, objects_cfg)
+    visualizer = Visualizer(None, None, map, None, None, detection_cfg)
     visualizer.visualize_map()
 
     # Fit the lines (we will be able to get all 3 sides of the garage or less)
