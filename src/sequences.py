@@ -39,11 +39,40 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
+        angle = np.random.randint(5, 20)
+        small_rot_move.execute_small_rot_negative(angle, 0.5)
         park(rob, detection_cfg, objects_cfg)
     elif len(garage_sides) == 1:
         print("Only one garage side found! Try again...")
+        angle = np.random.randint(5, 20)
+        small_rot_move.execute_small_rot_negative(angle, 0.5)
         park(rob, detection_cfg, objects_cfg)
     else:
+        # Get a unit vector for each garage side
+        garage_sides_unit_vectors = []
+        for side in garage_sides:
+            a, b = side
+            if a > 0:
+                v = np.array([1, a])
+            elif a < 0:
+                v = np.array([-1, -a])
+            else:
+                v = np.array([0, 1])
+
+            # Make it a unit vector
+            v_unit = v / np.linalg.norm(v)
+            garage_sides_unit_vectors.append(v_unit)
+
+        # Get the angle between the two garage sides
+        angle = np.arccos(np.dot(garage_sides_unit_vectors[0], garage_sides_unit_vectors[1]) / (
+                np.linalg.norm(garage_sides_unit_vectors[0]) * np.linalg.norm(garage_sides_unit_vectors[1])))
+
+        angle = np.degrees(angle)
+        print("Angle between the two garage sides: ", angle)
+
+
+
+
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
         import cv2 as cv
