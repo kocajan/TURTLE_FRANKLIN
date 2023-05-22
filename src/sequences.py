@@ -35,7 +35,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
     # Get garage sides
-    garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    #garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
     map.fit_and_fill_garage_rectangle(parking=True)
 
 
