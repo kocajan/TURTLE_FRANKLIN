@@ -30,7 +30,11 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
                                      parking=True)
 
-    # Fit the back part of the garage
+    # Analyze the situation
+    time.sleep(0.5)
+    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True ,fill_map=False)
+
+    # Fill the map with garage points
 
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
