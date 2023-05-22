@@ -86,6 +86,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         # Get the intersection point of the two garage sides
         intersection_point = find_intersection_point(garage_sides_points[0], garage_sides_unit_vectors[0],
                                                      garage_sides_points[1], garage_sides_unit_vectors[1])
+        intersection_point = np.array(intersection_point).astype(np.int32)
 
 
 
