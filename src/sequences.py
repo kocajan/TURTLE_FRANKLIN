@@ -86,8 +86,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         intersection_point = np.array(intersection_point).astype(np.int32)
 
         # Get garage dimensions
-        garage_length = objects_cfg['garage']['length']
-        garage_width = objects_cfg['garage']['width']
+        garage_length = map.conv_real_to_map(objects_cfg['garage']['length'])
+        garage_width = map.conv_real_to_map(objects_cfg['garage']['width'])
 
         # Decide which side is the back side of the garage (it should usually be the first one)
         back_side_idx = 0 if abs(garage_sides[0][0]) < abs(garage_sides[1][0]) else 1
@@ -97,6 +97,8 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         middle_point = intersection_point + garage_sides_unit_vectors[back_side_idx] * garage_length / 2 \
                        + garage_sides_unit_vectors[front_side_idx] * garage_width / 2
         middle_point = middle_point.astype(np.int32)
+
+        print("Middle point: ", middle_point)
 
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
