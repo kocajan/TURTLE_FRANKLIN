@@ -24,11 +24,11 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     small_rot_move = Move(rob, None, None)
 
     # Analyze the situation
-    #map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
+    map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Orient the robot towards the garage
-    #find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
-                                    # parking=True)
+    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+                                     parking=True)
 
     # Analyze the situation
     time.sleep(0.5)
@@ -79,9 +79,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
 
         back_side = None
-        min_a = abs(garage_sides[0])
+        min_a = abs(garage_sides[0][0])
         for side in garage_sides:
-            a, b = side[0]
+            a, b = side
             if abs(a) < min_a:
                 min_a = abs(a)
                 back_side = side
@@ -663,17 +663,13 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     # Fill the map with the detected points
     map.fill_in_garage([])
 
-    # TODO: delete
-    visualizer = Visualizer(None, None, map, None, None, detection_cfg)
-    visualizer.visualize_map()
-
     # Fit the lines (we will be able to get all 3 sides of the garage or less)
     lines = []
-    for i in range(3):
+    for i in range(2):
         # Fit a line to the points
         xs, ys, line, inliers = map.fit_line(xs, ys)
         if line is not None:
-            lines.append([line, inliers])
+            lines.append(line)
     return lines, map   # TODO: delete map
 
 
