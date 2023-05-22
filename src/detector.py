@@ -249,6 +249,7 @@ class Detector:
         if garage is not None:
             # Get rid of outliers
             w_coords = self.get_world_coordinates_using_contours(garage.get_contours())
+            w_coords = np.unique(w_coords, axis=1)
             garage.set_world_coordinates(w_coords)
 
     # HELPER FUNCTIONS
@@ -256,7 +257,7 @@ class Detector:
         """
         Get the world coordinates of the object using the contours.
         :param contours: The contours.
-        :return: The world coordinates of the object.
+        :return: The world coordinates of the object. (xs, ys)
         """
         # Get the points in the contours
         points_in_contours = np.empty((0, 3))
