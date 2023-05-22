@@ -20,6 +20,20 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     :param objects_cfg: Configuration file for objects
     :return: None
     """
+    # Orient the robot towards the garage
+    find_best_position_to_see_garage(rob, detection_cfg, objects_cfg)
+
+    # Fit the back part of the garage
+
+
+def park1(rob, detection_cfg, objects_cfg) -> None:
+    """
+    Function that parks the robot when it is in front of the gate.
+    :param rob: Robot object
+    :param detection_cfg: Configuration file for detection
+    :param objects_cfg: Configuration file for objects
+    :return: None
+    """
     # Prepare variables
     pillar1 = None
     pillar2 = None
