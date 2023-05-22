@@ -35,8 +35,32 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
     # Get garage sides
-    #garage_sides = get_garage_sides(rob, map, detection_cfg, objects_cfg)
-    map.fit_and_fill_garage_rectangle(parking=True)
+    garage_sides, map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+
+    if garage_sides is None or len(garage_sides) == 0:
+        print("No garage sides found! Try again...")
+        park(rob, detection_cfg, objects_cfg)
+    elif len(garage_sides) == 1:
+        print("Only one garage side found! Try again...")
+        park(rob, detection_cfg, objects_cfg)
+    else:
+        # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
+        world_map, map = map.get_world_map()
+        import cv2 as cv
+        for line in garage_sides:
+            a, b = line[0]
+            x1 = 0
+            y1 = int(a * x1 + b)
+            x2 = world_map.shape[1]
+            y2 = int(a * x2 + b)
+            cv.line(world_map, (x1, y1), (x2, y2), (255, 255, 255), 2)
+
+        # Show the map via opencv
+        cv.imshow("Map", world_map)
+        cv.waitKey(0)
+
+
+
 
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
@@ -612,16 +636,17 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     # Fill the map with the detected points
     map.fill_in_garage([])
 
+    # TODO: delete
     visualizer = Visualizer(None, None, map, None, None, detection_cfg)
     visualizer.visualize_map()
 
     # Fit the lines (we will be able to get all 3 sides of the garage or less)
     lines = []
-    # The robot can see only 2 sides of the garage at a time
-    # for i in range(2):
-    #     # Fit a line to the points
-    #     xs, ys, line, inliers = map.fit_line(xs, ys)
-    #     if line is not None:
-    #         lines.append([line, inliers])
+    for i in range(3):
+        # Fit a line to the points
+        xs, ys, line, inliers = map.fit_line(xs, ys)
+        if line is not None:
+            lines.append([line, inliers])
+    return lines, map   # TODO: delete map
 
 
