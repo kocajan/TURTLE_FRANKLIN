@@ -47,21 +47,12 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
         import cv2 as cv
-        # Generate points on the lines and draw them on the map as circles
-        for side in garage_sides:
-            points = []
-            a, b = side[0]
-            print("a: ", a, " b: ", b)
-            for x in range(500):
-                y = a * x + b
-                points.append((x, y))
-            points = np.array(points)
-            points = points.astype(int)
-            dims = map.get_dimensions()
-            points = points[points[:, 0] >= 0] # Remove points with negative x
-            points = points[points[:, 0] < dims[0]] # Remove points with x greater than the map width
-            points = points[points[:, 1] >= 0] # Remove points with negative y
-            points = points[points[:, 1] < dims[1]] # Remove points with y greater than the map height
+        # Generate points on the lines and draw them on the map as circles using numpy
+        X = np.arange(0, world_map.shape[1])
+        for line in garage_sides:
+            a, b = line
+            Y = a * X + b
+            points = np.array([X, Y]).T
 
             # Draw the points on the map use opencv
             for point in points:
