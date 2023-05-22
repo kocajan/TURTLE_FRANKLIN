@@ -134,6 +134,18 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             fig.colorbar(psm, ax=ax)
         plt.show()
 
+        # Get the robot's position
+        robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
+                     map.conv_real_to_map(rob.get_world_coordinates()[1]))
+
+        # Create a path of points that the robot will follow from robot position to the closest point on the line
+        search_algorithm = detection_cfg["map"]["search_algorithm"]
+        path = map.find_way(robot_pos, middle_point, search_algorithm)
+
+        # Follow the path
+        move = regulated_move(rob)
+        move.go(path)
+
 
 def park1(rob, detection_cfg, objects_cfg) -> None:
     """
