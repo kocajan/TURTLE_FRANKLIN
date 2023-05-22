@@ -91,6 +91,7 @@ class Map:
         # Initialize the cost dictionary and parent dictionary
         cost = {start: 0}
         parent = {start: None}
+        print("start ", start, "goal ", goal)
 
         # Iterate until the goal is reached or the open set is empty
         while open_set:

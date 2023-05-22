@@ -101,11 +101,11 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         print("Middle point: ", middle_point)
 
         # Get the robot's position
-        robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
-                     map.conv_real_to_map(rob.get_world_coordinates()[1]))
+        robot_pos = detection_cfg['map']['start_point']
 
         # Get the center point in front of the garage
         mid_front_point = find_closest_point_on_line(middle_point, garage_sides_unit_vectors[front_side_idx], robot_pos)
+        mid_front_point = np.array(mid_front_point).astype(np.int32)
 
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
@@ -126,7 +126,20 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
         world_map[intersection_point[1], intersection_point[0]] = 2
         world_map[middle_point[1], middle_point[0]] = 3
-        world_map[mid_front_point[1], mid_front_point[0]] = 4
+        world_map[mid_front_point[1], mid_front_point[0]] = 3
+
+        vis = Visualizer(None, None, map, None, None, detection_cfg)
+        vis.visualize_map()
+
+        # Create a path of points that the robot will follow from robot position to the closest point on the line
+        search_algorithm = detection_cfg["map"]["search_algorithm"]
+        print("cau pico")
+        path1 = map.find_way(robot_pos, mid_front_point, search_algorithm)
+        path2 = map.find_way(mid_front_point, middle_point, search_algorithm)
+        path = path1 + path2
+
+        for point in path:
+            world_map[point[1], point[0]] = 1
 
         import matplotlib.pyplot as plt
         from matplotlib.colors import ListedColormap
