@@ -35,7 +35,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True, fill_map=False)
 
     # Get garage sides
-    garage_sides, map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    garage_sides, world_map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
 
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
