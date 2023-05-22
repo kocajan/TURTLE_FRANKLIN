@@ -91,8 +91,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
 
 
 
-
-
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
         import cv2 as cv
