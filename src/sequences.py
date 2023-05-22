@@ -46,6 +46,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     else:
         # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
         world_map = map.get_world_map()
+        import cv2 as cv
         # Generate points on the lines and draw them on the map as circles
         for side in garage_sides:
             points = []
@@ -61,7 +62,13 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             points = points[points[:, 1] >= 0] # Remove points with negative y
             points = points[points[:, 1] < dims[1]] # Remove points with y greater than the map height
 
-            world_map[points[:, 1], points[:, 0]] = 1
+            # Draw the points on the map use opencv
+            for point in points:
+                print(point)
+                print(np.dtype(point[0]))
+                print(np.dtype(point[1]))
+                cv.circle(world_map, (point[0], point[1]), 1, 1, -1)
+
 
         visualizer = Visualizer(None, None, map, None, None, detection_cfg)
         visualizer.visualize_map()
