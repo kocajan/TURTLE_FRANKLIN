@@ -20,14 +20,14 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
     :param move_cfg: Configuration file for movement
     :return: None
     """
-    # Create small rotation move object (used for small rotations during the searching process)
-    small_rot_move = Move(rob, None, None)
+    # Create RegulatedMove object
+    move = RegulatedMove(rob, move_cfg)
 
     # Analyze the situation
     map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Orient the robot towards the garage
-    find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+    find_best_position_to_see_garage(rob, move, map, number_gate_pillars, detection_cfg, objects_cfg,
                                      parking=True)
 
     # Analyze the situation
@@ -41,12 +41,12 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
         angle = np.random.randint(5, 20)
-        small_rot_move.execute_small_rot_negative(angle, 0.5)
+        move.execute_small_rot_negative(angle, 0.5)
         park(rob, detection_cfg, objects_cfg)
     elif len(garage_sides) == 1:
         print("Only one garage side found! Try again...")
         angle = np.random.randint(5, 20)
-        small_rot_move.execute_small_rot_negative(angle, 0.5)
+        move.execute_small_rot_negative(angle, 0.5)
         park(rob, detection_cfg, objects_cfg)
     else:
         # Get a unit vector for each garage side
@@ -78,7 +78,7 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         if abs(angle - 90) > detection_cfg['perpendicular_angle_threshold']:
             print("Fit error is too large! Try again...")
             angle = np.random.randint(5, 20)
-            small_rot_move.execute_small_rot_negative(angle, 0.5)
+            move.execute_small_rot_negative(angle, 0.5)
             park(rob, detection_cfg, objects_cfg)
 
         # Get the intersection point of the two garage sides and make its coordinates integers
@@ -126,7 +126,6 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
             path += map.find_way(start, end, search_algorithm)
 
         # Follow the path
-        move = RegulatedMove(rob, move_cfg)
         move.go(path)
 
 
@@ -139,8 +138,8 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
     :param move_cfg: Configuration file for movement
     :return: None
     """
-    # Create small rotation move object (used for small rotations during the searching process)
-    small_rot_move = Move(rob, None, None)
+    # Create RegulatedMove object
+    move = RegulatedMove(rob, move_cfg)
 
     # STATE AUTOMAT
     while True:
@@ -150,7 +149,7 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         # If no goal is set (robot does not see the garage [yellow] nor the gate [magenta]) then rotate and search
         if goal is None:
             # Rotate the robot
-            small_rot_move.execute_small_rot_positive(20, 0.9)
+            move.execute_small_rot_positive(20, 0.9)
             continue
 
         # We have found the garage/gate, try to improve the robot's position to make the goal easier to set
@@ -159,11 +158,11 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
             # The robot sees one pillar of the gate
             if number_gate_pillars == 1:
                 # Try to find the second pillar
-                find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg)
+                find_more_pillars(rob, move, map, number_gate_pillars, detection_cfg, objects_cfg)
             # The robot sees the garage but not the gate
             elif number_gate_pillars == 0:
                 # Try to find the best position to see the gate
-                find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg,
+                find_best_position_to_see_garage(rob, move, map, number_gate_pillars, detection_cfg,
                                                  objects_cfg)
         # END OF THE STATE AUTOMAT
         # -> find the best path to the goal and follow it
@@ -173,20 +172,19 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
         # Follow the path
-        tmp = RegulatedMove(rob, move_cfg)
-        tmp.go(path)
+        move.go(path)
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
                     map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
                 # All conditions are met, we can start the parking sequence
-                if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
+                if found_gate(rob, detection_cfg, objects_cfg, move):
                     break
             elif map.get_goal_type() == detection_cfg['map']['goal_type']['garage'] and found_gate(rob, detection_cfg,
                                                                                                    objects_cfg,
-                                                                                                   small_rot_move):
+                                                                                                   move):
                 # All conditions are met, we can start the parking sequence
-                if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
+                if found_gate(rob, detection_cfg, objects_cfg, move):
                     break
         else:
             # Robot has stopped, we need to find the path again (and reset stop flag)
@@ -260,12 +258,12 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
     return map, number_gate_pillars, goal, path
 
 
-def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg) -> (Robot, Map, int):
+def find_more_pillars(rob, move, map, number_gate_pillars, detection_cfg, objects_cfg) -> (Robot, Map, int):
     """
     When the robot sees one gate pillar, there is a possibility that it will see the second one if it rotates.
     This function will rotate the robot to find the second gate pillar.
     :param rob: Robot object
-    :param small_rot_move: move object
+    :param move: RegulatedMove object
     :param map: Map object
     :param number_gate_pillars: Number of the gate pillars
     :param detection_cfg: Detection configuration
@@ -281,7 +279,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
     for _ in range(2):
         # Execute two small rotations(make the robot wait to finish the rotation)
         time.sleep(2)
-        small_rot_move.execute_small_rot_positive(5, 0.9)
+        move.execute_small_rot_positive(5, 0.9)
         rotation_cnt += 1
 
         # Analyze the current situation
@@ -298,7 +296,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
         for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
             time.sleep(2)
-            small_rot_move.execute_small_rot_negative(5, 0.9)
+            move.execute_small_rot_negative(5, 0.9)
 
     # If the robot has not seen two pillars, rotate to the left two times
     rotation_cnt = 0
@@ -306,7 +304,7 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
         for i in range(2):
             # Execute two small rotations (make the robot wait to finish the rotation)
             time.sleep(2)
-            small_rot_move.execute_small_rot_negative(5, 0.9)
+            move.execute_small_rot_negative(5, 0.9)
             rotation_cnt += 1
 
             # Analyze the current situation
@@ -322,18 +320,18 @@ def find_more_pillars(rob, small_rot_move, map, number_gate_pillars, detection_c
         for _ in range(rotation_cnt):
             # Execute two small rotations (make the robot wait to finish the rotation)
             time.sleep(2)
-            small_rot_move.execute_small_rot_positive(5, 0.9)
+            move.execute_small_rot_positive(5, 0.9)
 
     return rob, map, number_gate_pillars
 
 
-def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pillars, detection_cfg, objects_cfg,
+def find_best_position_to_see_garage(rob, move, map, number_gate_pillars, detection_cfg, objects_cfg,
                                      parking=False) -> None:
     """
     When the robot sees the garage and does not see the gate, this function will rotate the robot to find the best
     position to see the garage. The number of garage points on the map is used as a metric.
     :param rob: Robot object
-    :param small_rot_move: move object
+    :param RegulatedMove: move object
     :param map: Map object
     :param number_gate_pillars: Number of the gate pillars
     :param detection_cfg: Detection configuration
@@ -363,14 +361,14 @@ def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pilla
             seen = True
 
         if max_val == -1:
-            small_rot_move.execute_small_rot_positive(2, 1)
+            move.execute_small_rot_positive(2, 1)
         else:
             if num_points >= max_val:
                 max_val = num_points
-                small_rot_move.execute_small_rot_negative(2, 1)
+                move.execute_small_rot_negative(2, 1)
             else:
                 # The robot has over-rotated, rotate back to the best position and end the searching process
-                small_rot_move.execute_small_rot_positive(2, 1)
+                move.execute_small_rot_positive(2, 1)
                 break
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
@@ -387,12 +385,12 @@ def rotate_vector(vector, angle) -> list:
     return [x, y]
 
 
-def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, objects_cfg) -> tuple:
+def search_for_pillar(side, angle, move, map, rob, detection_cfg, objects_cfg) -> tuple:
     """
     This function will rotate the robot to find the second gate pillar.
     :param side: Side of the first pillar to search for the second one
     :param angle: Angle to rotate by
-    :param small_rot_move: move object
+    :param RegulatedMove: move object
     :param map: Map object
     :param rob: Robot object
     :param detection_cfg: Detection configuration
@@ -405,10 +403,10 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
 
     # Turn to the side and search for the second pillar
     if side == "right":
-        small_rot_move.execute_small_rot_positive(angle, 0.5)
+        move.execute_small_rot_positive(angle, 0.5)
         angle = -angle
     else:
-        small_rot_move.execute_small_rot_negative(angle, 0.5)
+        move.execute_small_rot_negative(angle, 0.5)
 
     # Analyze the current situation
     time.sleep(0.5)
@@ -475,17 +473,18 @@ def find_intersection_point(point1, vector1, point2, vector2) -> list:
     return intersection_point
 
 
-def found_gate(rob, detection_cfg, objects_cfg, small_rotation) -> bool:
+def found_gate(rob, detection_cfg, objects_cfg, move) -> bool:
     """
     Check if the robot sees the gate.
     :param rob: Robot object
     :param detection_cfg: Detection configuration
     :param objects_cfg: Objects configuration
+    :param RegulatedMove: move object
     :return: True if the robot sees the gate, False otherwise
     """
     for i in range(10):
         time.sleep(1)
-        small_rotation.execute_small_rot_positive(30, 1)
+        move.execute_small_rot_positive(30, 1)
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
         if number_gate_pillars != 0:

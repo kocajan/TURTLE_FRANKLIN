@@ -1,9 +1,30 @@
+import sys
 import math
 import numpy as np
 
 from rospy import Rate
 
+class SingleMove:
+    def __init__(self, rotation, distance, straight):
+        self.rotation = rotation
+        self.distance = distance
+        self.straight = straight
 
+    # SETTERS
+    def set_rotation(self, rotation):
+        self.rotation = rotation
+
+    def set_distance(self, distance):
+        self.distance = distance
+
+    # GETTERS
+    def get_rotation(self):
+        return self.rotation
+
+    def get_distance(self):
+        return self.distance
+    def is_straight(self):
+        return self.straight
 class RegulatedMove:
     def __init__(self, robot, move_cfg):
         self.robot = robot
@@ -138,6 +159,56 @@ class RegulatedMove:
         angle = at2-at1
 
         return angle
+
+    # speed range from 0 to 1
+    def rotate_degrees_no_compensation(self, degrees, speed):
+        damping = 0
+        self.odometry_hard_reset()
+        if abs(degrees) > 40:
+            offset = 0.08
+        else:
+            offset = 0
+
+        if degrees > 0:
+            prev_rot = 0
+            goal = np.radians(degrees)
+
+            while not self.robot.is_shutting_down() and not self.robot.get_stop():
+                act_rot = self.robot.get_odometry()[2]
+                if act_rot >= goal-offset or abs(act_rot - prev_rot) > 1:
+                    print(act_rot)
+                    break
+                self.robot.cmd_velocity(angular = np.exp(damping)*speed)
+                if damping >= -0.45:
+                    damping -= 0.01
+                prev_rot = act_rot
+
+        elif degrees < 0:
+            prev_rot = 0
+            goal = np.radians(degrees)
+
+            while not self.robot.is_shutting_down() and not self.robot.get_stop():
+                act_rot = self.robot.get_odometry()[2]
+                if act_rot <= goal+offset or abs(act_rot - prev_rot) > 1:
+                    break
+                self.robot.cmd_velocity(angular = -np.exp(damping)*speed)
+                if damping >= -0.45:
+                    damping -= 0.01
+                prev_rot = act_rot
+    def execute_small_rot_positive(self, degrees, speed):
+        rotation = SingleMove(-degrees, 0, None)
+
+        if not self.robot.get_stop():
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+        else:
+            sys.exit()
+    def execute_small_rot_negative(self, degrees, speed):
+        rotation = SingleMove(degrees, 0, None)
+
+        if not self.robot.get_stop():
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+        else:
+            sys.exit()
 
     @staticmethod
     def calculate_difference(current_odometry_value, previous_odometry_values, n=1) -> tuple:
