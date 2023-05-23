@@ -42,12 +42,12 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         print("No garage sides found! Try again...")
         angle = np.random.randint(5, 20)
         move.execute_small_rot_negative(angle, 0.5)
-        park(rob, detection_cfg, objects_cfg)
+        park(rob, detection_cfg, objects_cfg, move_cfg)
     elif len(garage_sides) == 1:
         print("Only one garage side found! Try again...")
         angle = np.random.randint(5, 20)
         move.execute_small_rot_negative(angle, 0.5)
-        park(rob, detection_cfg, objects_cfg)
+        park(rob, detection_cfg, objects_cfg, move_cfg)
     else:
         # Get a unit vector for each garage side
         garage_sides_unit_vectors = []
@@ -79,7 +79,7 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
             print("Fit error is too large! Try again...")
             angle = np.random.randint(5, 20)
             move.execute_small_rot_negative(angle, 0.5)
-            park(rob, detection_cfg, objects_cfg)
+            park(rob, detection_cfg, objects_cfg, move_cfg)
 
         # Get the intersection point of the two garage sides and make its coordinates integers
         intersection_point = find_intersection_point(garage_sides_points[0], garage_sides_unit_vectors[0],
