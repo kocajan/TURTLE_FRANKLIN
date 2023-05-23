@@ -29,6 +29,7 @@ class SingleMove:
     def is_straight(self):
         return self.straight
 
+
 class Move:
     def __init__(self, robot, move_coords, detection_cfg):
         self.move_coords = move_coords

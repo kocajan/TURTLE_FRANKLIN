@@ -1,97 +1,113 @@
-# co je potreba?? pozice x a y podle odometrie, to vemem z move
-# spocitat error vuci ceste na konkretnim y
-# tento error x ka z odometrie a xka z cesty narveme feedackem do regulatoru
-
-
-#odometrie je v metrech
-# odometrie je + dopredu a - dozadu
-
-# ten error budeme cpat jen do rotace??
-# prvni zkusime jednpoduchy P regulator. Error x od x odometrie get_odometry[1], ten nacpeme nejak znasobeny do rotace?
-
-import sys
-import numpy as np
 import math
-import yaml
+import numpy as np
+
 from rospy import Rate
 
 
-
-class regulated_move:
-    def __init__(self, rob):
-        self.robot = rob
+class RegulatedMove:
+    def __init__(self, robot, move_cfg):
+        self.robot = robot
+        self.move_cfg = move_cfg
         self.rate = Rate(10)
 
-    def odometry_hard_reset(self):
+    def odometry_hard_reset(self) -> None:
         """
         Hard reset the robot's odometry.
+        :return: None
         """
         self.robot.reset_odometry()
         self.robot.wait_for_odometry()
         self.robot.reset_odometry()
 
+    def go(self, path) -> None:
+        """
+        Go along the path.
+        The algorithm is based on automatic control. The robot will go straight at constant speed so the only regulated
+        movement is the rotation. When the robot moves, we can calculate its velocity vector. The error we want to
+        minimize is the angle between the velocity vector and the vector from the robot to the current set-point.
+        Only every n-th path point is used as a set-point for the robot's regulator. The set-point
+        is updated when the robot is close enough to the current set-point. The robot will stop when it reaches the
+        last point in the path. PI regulator is used for the rotation.
+        Parameters mentioned above can be changed in the configuration file.
+        :param path: Path to follow.
+        :return: None
+        """
+        # Load the parameters from the configuration file
+        # -> Regulator parameters
+        P = self.move_cfg['regulator']['P']
+        I = self.move_cfg['regulator']['I']
+        linear_velocity = self.move_cfg['regulator']['linear_velocity']
+        anti_windup_constant = self.move_cfg['regulator']['anti_windup']
 
-    def calculate_distance(self, pt1, pt2):
-        return np.linalg.norm(np.array(pt2) - np.array(pt1))
+        # -> Lowpass filter parameters
+        lowpass_const = self.move_cfg['lowpass']['const']
+        lowpass_const_increment = self.move_cfg['lowpass']['const_increment']
 
-    def substract_offset(self, path, x_offset):
-        new_path = list()
-        for item in path:
-            new_path.append( (item[0]-x_offset, item[1]) )
-        return new_path
+        # -> Setpoint parameters and others
+        setpoint_idx_step = self.move_cfg['setpoint']['path_step']
+        setpoint_distance_threshold = self.move_cfg['setpoint']['distance_threshold']
+        goal_distance_threshold = self.move_cfg['goal_distance_threshold']
+        x_offset = self.move_cfg['x_offset']
 
-    def go(self, path):
-        lowpass_const = 0.2 
-        P = 2
-        I = 0.05
+        # Initialize the necessary variables
         sum = 0
-        x_offset = 250
-        path = self.substract_offset(path, x_offset)
-        setpoint_idx = 10
-        # neccessary shit for robot to rotate in wanted direction (3 hrs of work:))
-        setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1]) # protoze na prvnim stojime
+        setpoint_idx = setpoint_idx_step
 
+        # Offset the path
+        path = self.subtract_offset(path, x_offset)
+
+        # Set the first set-point (IMPORTANT)
+        setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
+
+        # Preset the odometry values
         prev_odometry_values = [(0, 0)]
 
-        goal = path[-1][0]
-
+        # Hard reset the odometry
         self.odometry_hard_reset()
 
         while not self.robot.is_shutting_down() and not self.robot.get_stop():
-
-            odometry_cm = self.robot.get_odometry()[:2]*100 # take actual odometry in cm [x,y,rot]
+            # Get the robot's odometry in cm [(y, x, angle) -> (x, y)]
+            odometry_cm = self.robot.get_odometry()[:2]*100
             odometry_cm = odometry_cm[::-1]
 
-            if len(prev_odometry_values) > 100:
+            # We wnat to keep only the last n odometry values
+            n = 100
+            if len(prev_odometry_values) > n:
                 prev_odometry_values.pop(0)
 
+            # Calculate the error
             error = self.calculate_error(setpoint, odometry_cm, prev_odometry_values)
-            #print("Error: ", np.rad2deg(error))
 
+            # Add the current odometry value to the list of previous odometry values
             prev_odometry_values.append(odometry_cm)
 
-            if abs(sum) > 20:
+            # Anti-windup
+            if abs(sum) > anti_windup_constant:
                 sum = 0
             else:
                 sum = error + sum
 
+            # Update the set-point if the robot is close enough to the current set-point
             setpoint_distance = self.calculate_distance(odometry_cm, setpoint)
-            if setpoint_distance < 7:
-                if path[setpoint_idx] == path[-1] and setpoint_distance < 1:
+            if setpoint_distance < setpoint_distance_threshold:
+                # If we are close enough to the last point of the path (goal), we end the movement
+                if path[setpoint_idx] == path[-1] and setpoint_distance < goal_distance_threshold:
                     break
                 if setpoint_idx != -1:
-                    setpoint_idx += 7
+                    setpoint_idx += setpoint_idx_step
                 if setpoint_idx >= len(path):
                     setpoint_idx = -1
                 setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
 
-            self.robot.cmd_velocity(linear=0.05, angular= lowpass_const*P*error + I*sum) # speed 0.05
+            # Execute the movement
+            self.robot.cmd_velocity(linear=linear_velocity, angular=lowpass_const*P*error + I*sum) # speed 0.05
             self.rate.sleep()
-            if lowpass_const < 1:
-                lowpass_const += 0.025
-            
 
-    def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values):
+            # Increment the lowpass constant if it is less than 1
+            if lowpass_const < 1:
+                lowpass_const += lowpass_const_increment
+
+    def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values) -> float:
         """
         Calculate the error for the robot's regulator.
         It is represented as the difference between velocity vector and the vector from the robot to the goal.
@@ -102,43 +118,29 @@ class regulated_move:
         :return: Error for the robot's regulator. (the angle)
         """
         # Calculate the difference between the current odometry value and the previous odometry value
-        # Take the n-th previous odometry value (It will represent the velocity vector)
+        # Take the n-th previous odometry value (it will represent the velocity vector)
         velocity_vector = self.calculate_difference(current_odometry_value, previous_odometry_values, n=1)
-        
-        #velocity_vector = [-velocity_vector[0] , velocity_vector[1]]
 
-        # Calculate the vector from the robot to the goal.
-        #print("SETPOINT     ", setpoint, "      odometry     ", current_odometry_value)
-        #setpoint = (-setpoint[0], setpoint[1])
-        
+        # Calculate the vector from the robot to the goal
         vector_to_goal = np.array(setpoint) - np.array(current_odometry_value)
 
-        #print("velocity   " , velocity_vector, "        goal       "  , vector_to_goal)
-        #print(vector_to_goal)
-        #vector_to_goal = [-vector_to_goal[0], vector_to_goal[1]]
-        #print(vector_to_goal)
-        #print('set: ', setpoint)
-        #print('odom: ', current_odometry_value)
-        #print("velocity vector ", velocity_vector/np.linalg.norm(velocity_vector))
-
-        # Calculate the angle between the vector from the robot to the goal and the robot's velocity vector
-        # The angle is in radians
+        # Calculate the angle (in radians) between the vector from the robot to the goal and the robot's velocity vector
         at1 = math.atan2(vector_to_goal[1], vector_to_goal[0])
         at2 = math.atan2(velocity_vector[1], velocity_vector[0])
-        #print(np.rad2deg(at1), "     " ,np.rad2deg(at2))
 
+        # Make sure that the angle is between 0 and 2*pi (the atan2 function returns values between -pi and pi)
         if at1 < 0:
             at1 = 2*np.pi+at1
         if at2 < 0:
             at2 = 2*np.pi+at2
 
+        # Calculate the angle between the two vectors
         angle = at2-at1
-        #print('ANGLE: ', np.rad2deg(angle))
 
         return angle
 
     @staticmethod
-    def calculate_difference(current_odometry_value, previous_odometry_values, n=1):
+    def calculate_difference(current_odometry_value, previous_odometry_values, n=1) -> tuple:
         """
         Calculate the difference between the current odometry value and the previous odometry value.
         Take the n-th previous odometry value.
@@ -150,21 +152,25 @@ class regulated_move:
         """
         return current_odometry_value - previous_odometry_values[-n]
 
-if __name__ == '__main__':
+    @staticmethod
+    def calculate_distance(pt1, pt2) -> float:
+        """
+        Calculate the distance between two points.
+        :param pt1: First point.
+        :param pt2: Second point.
+        :return: Distance between two points.
+        """
+        return np.linalg.norm(np.array(pt2) - np.array(pt1))
 
-    from robot import Robot
-    path = [(250, 0), (251, 1), (252, 2), (253, 3), (254, 4), (255, 5), (256, 6), (257, 7), (258, 8), (259, 9), (260, 10), (261, 11), (262, 12), (263, 13), (264, 14), (265, 15), (266, 16), (267, 17), (268, 18), (269, 19), (269, 20), (269, 21), (269, 22), (269, 23), (269, 24), (269, 25), (269, 26), (269, 27), (269, 28), (269, 29), (269, 30), (269, 31), (269, 32), (269, 33), (269, 34), (269, 35), (269, 36), (269, 37), (269, 38), (270, 39), (271, 40), (272, 41), (273, 42), (274, 43), (275, 44), (276, 45), (277, 46), (278, 47), (279, 48), (279, 49), (279, 50), (279, 51), (279, 52), (279, 53), (279, 54), (279, 55), (279, 56), (279, 57), (279, 58), (279, 59), (279, 60), (279, 61), (279, 62), (279, 63), (279, 64), (279, 65), (278, 66), (277, 67), (276, 68), (275, 69), (274, 70), (273, 71), (272, 72), (271, 73), (270, 74), (269, 75), (269, 76), (269, 77), (269, 78), (269, 79), (269, 80), (269, 81), (269, 82), (269, 83), (269, 84), (269, 85), (269, 86), (269, 87), (269, 88), (269, 89), (269, 90), (269, 91), (269, 92), (269, 93), (269, 94), (269, 95), (269, 96), (269, 97), (269, 98), (269, 99), (269, 100), (269, 101), (269, 102), (269, 103), (269, 104), (269, 105), (269, 106), (269, 107), (269, 108)]
-    #path = [(269, 75), (269, 76), (269, 77), (269, 78), (269, 79), (269, 80), (269, 81), (269, 82), (269, 83), (269, 84), (269, 85), (269, 86), (269, 87), (269, 88), (269, 89), (269, 90), (269, 91), (269, 92), (269, 93), (269, 94), (269, 95), (269, 96), (269, 97), (269, 98), (269, 99), (269, 100), (269, 101), (269, 102), (269, 103), (269, 104), (269, 105), (269, 106), (269, 107), (269, 108)]
-    #path = [(269, 0), (269, 1), (269, 2), (269, 3), (269, 4), (269, 5), (269, 6), (269, 7), (269, 8), (269, 9), (269, 10), (269, 11), (269, 12), (269, 13), (269, 14), (269, 15), (269, 16), (269, 17), (269, 18), (269, 19), (269, 20), (269, 21), (269, 22), (269, 23), (269, 24), (269, 25), (269, 26), (269, 27), (269, 28), (269, 29), (269, 30), (269, 31), (269, 32), (269, 33), (269, 34), (269, 35), (269, 36), (269, 37), (269, 38), (269, 39), (269, 40), (269, 41), (269, 42), (269, 43), (269, 44), (269, 45), (269, 46), (269, 47), (269, 48), (269, 49), (269, 50), (269, 51), (269, 52), (269, 53), (269, 54), (269, 55), (269, 56), (269, 57), (269, 58), (269, 59), (269, 60), (269, 61), (269, 62), (269, 63), (269, 64), (269, 65), (269, 66), (269, 67), (269, 68), (269, 69), (269, 70), (269, 71), (269, 72), (269, 73), (269, 74), (269, 75), (269, 76), (269, 77), (269, 78), (269, 79), (269, 80), (269, 81), (269, 82), (269, 83), (269, 84), (269, 85), (269, 86), (269, 87), (269, 88), (269, 89), (269, 90), (269, 91), (269, 92), (269, 93), (269, 94), (269, 95), (269, 96), (269, 97), (269, 98), (269, 99), (269, 100), (269, 101), (269, 102), (269, 103), (269, 104), (269, 105), (269, 106), (269, 107), (269, 108), (269, 109), (269, 110), (269, 111), (269, 112), (269, 113), (269, 114), (269, 115), (269, 116), (269, 117), (269, 118), (269, 119), (269, 120), (269, 121), (269, 122), (269, 123), (269, 124), (269, 125), (269, 126), (269, 127), (269, 128), (269, 129), (269, 130), (269, 131), (269, 132), (269, 133), (269, 134), (269, 135), (269, 136), (269, 137), (269, 138), (269, 139), (269, 140), (269, 141), (269, 142), (269, 143), (269, 144), (269, 145), (269, 146), (269, 147), (269, 148), (269, 149), (269, 150), (269, 151), (269, 152), (269, 153), (269, 154), (269, 155), (269, 156), (269, 157), (269, 158), (269, 159), (269, 160), (269, 161), (269, 162), (269, 163), (269, 164), (269, 165), (269, 166), (269, 167), (269, 168), (269, 169), (269, 170), (269, 171), (269, 172), (269, 173), (269, 174), (269, 175), (269, 176), (269, 177), (269, 178), (269, 179), (269, 180), (269, 181), (269, 182), (269, 183), (269, 184), (269, 185), (269, 186), (269, 187), (269, 188), (269, 189), (269, 190), (269, 191), (269, 192), (269, 193), (269, 194), (269, 195), (269, 196), (269, 197), (269, 198), (269, 199), (269, 200), (269, 201), (269, 202), (269, 203), (269, 204), (269, 205), (269, 206), (269, 207), (269, 208), (269, 209), (269, 210), (269, 211), (269, 212), (269, 213), (269, 214), (269, 215), (269, 216), (269, 217), (269, 218), (269, 219), (269, 220), (269, 221), (269, 222), (269, 223), (269, 224), (269, 225), (269, 226), (269, 227), (269, 228), (269, 229), (269, 230), (269, 231), (269, 232), (269, 233), (269, 234), (269, 235), (269, 236), (269, 237), (269, 238), (269, 239), (269, 240), (269, 241), (269, 242), (269, 243), (269, 244), (269, 245), (269, 246), (269, 247), (269, 248), (269, 249), (269, 250), (269, 251), (269, 252), (269, 253), (269, 254), (269, 255), (269, 256), (269, 257), (269, 258), (269, 259), (269, 260), (269, 261), (269, 262), (269, 263), (269, 264), (269, 265), (269, 266), (269, 267), (269, 268), (269, 269), (269, 270), (269, 271), (269, 272), (269, 273), (269, 274), (269, 275), (269, 276), (269, 277), (269, 278), (269, 279), (269, 280), (269, 281), (269, 282), (269, 283), (269, 284), (269, 285), (269, 286), (269, 287), (269, 288), (269, 289), (269, 290), (269, 291), (269, 292), (269, 293), (269, 294), (269, 295), (269, 296), (269, 297), (269, 298), (269, 299)]
-    path = [(250, 0), (250, 1), (250, 2), (250, 3), (250, 4), (250, 5), (250, 6), (250, 7), (250, 8), (250, 9), (250, 10), (250, 11), (250, 12), (250, 13), (250, 14), (250, 15), (250, 16), (250, 17), (250, 18), (250, 19), (250, 20), (250, 21), (250, 22), (250, 23), (250, 24), (250, 25), (250, 26), (250, 27), (250, 28), (250, 29), (250, 30), (250, 31), (250, 32), (250, 33), (250, 34), (250, 35), (250, 36), (250, 37), (250, 38), (250, 39), (250, 40), (250, 41), (250, 42), (250, 43), (250, 44), (250, 45), (250, 46), (250, 47), (250, 48), (250, 49), (250, 50), (250, 51), (250, 52), (250, 53), (250, 54), (250, 55), (250, 56), (250, 57), (250, 58), (250, 59), (250, 60), (250, 61), (250, 62), (250, 63), (250, 64), (250, 65), (250, 66), (250, 67), (250, 68), (250, 69), (250, 70), (250, 71), (250, 72), (250, 73), (250, 74), (250, 75), (250, 76), (250, 77), (250, 78), (250, 79), (250, 80), (250, 81), (250, 82), (250, 83), (250, 84), (250, 85), (250, 86), (250, 87), (250, 88), (250, 89), (250, 90), (250, 91), (250, 92), (250, 93), (250, 94), (250, 95), (250, 96), (250, 97), (250, 98), (250, 99), (250, 100), (250, 101), (250, 102), (250, 103), (250, 104), (250, 105), (250, 106), (250, 107), (250, 108), (250, 109), (250, 110), (250, 111), (250, 112), (250, 113), (250, 114), (250, 115), (250, 116), (250, 117), (250, 118), (250, 119), (250, 120), (250, 121), (250, 122), (250, 123), (250, 124), (250, 125), (250, 126), (250, 127), (250, 128), (250, 129), (250, 130), (250, 131), (250, 132), (250, 133), (250, 134), (250, 135), (250, 136), (250, 137), (250, 138), (250, 139), (250, 140), (250, 141), (250, 142), (250, 143), (250, 144), (250, 145), (250, 146), (250, 147), (250, 148), (250, 149), (251, 149), (252, 149), (253, 149), (254, 149), (255, 149), (256, 149), (257, 149), (258, 149), (259, 149), (260, 149), (261, 149), (262, 149), (263, 149), (264, 149), (265, 149), (266, 149), (267, 149), (268, 149), (269, 149), (270, 149), (271, 149), (272, 149), (273, 149), (274, 149), (275, 149), (276, 149), (277, 149), (278, 149), (279, 149), (280, 149), (281, 149), (282, 149), (283, 149), (284, 149), (285, 149), (286, 149), (287, 149), (288, 149), (289, 149), (290, 149), (291, 149), (292, 149), (293, 149), (294, 149), (295, 149), (296, 149), (297, 149), (298, 149), (299, 149), (300, 149), (301, 149)]
-    path = [(250, 0), (250, 1), (250, 2), (250, 3), (250, 4), (250, 5), (250, 6), (250, 7), (250, 8), (250, 9), (250, 10), (250, 11), (250, 12), (250, 13), (250, 14), (250, 15), (250, 16), (250, 17), (250, 18), (250, 19), (250, 20), (250, 21), (250, 22), (250, 23), (250, 24), (250, 25), (250, 26), (250, 27), (250, 28), (250, 29), (250, 30), (250, 31), (250, 32), (250, 33), (250, 34), (250, 35), (250, 36), (250, 37), (250, 38), (250, 39), (250, 40), (250, 41), (250, 42), (250, 43), (250, 44), (250, 45), (250, 46), (250, 47), (250, 48), (250, 49), (250, 50), (250, 51), (250, 52), (250, 53), (250, 54), (250, 55), (250, 56), (250, 57), (250, 58), (250, 59), (250, 60), (250, 61), (250, 62), (250, 63), (250, 64), (250, 65), (250, 66), (250, 67), (250, 68), (250, 69), (250, 70), (250, 71), (250, 72), (250, 73), (250, 74), (250, 75), (250, 76), (250, 77), (250, 78), (250, 79), (250, 80), (250, 81), (250, 82), (250, 83), (250, 84), (250, 85), (250, 86), (250, 87), (250, 88), (250, 89), (250, 90), (250, 91), (250, 92), (250, 93), (250, 94), (250, 95), (250, 96), (250, 97), (250, 98), (250, 99), (250, 100), (250, 101), (250, 102), (250, 103), (250, 104), (250, 105), (250, 106), (250, 107), (250, 108), (250, 109), (250, 110), (250, 111), (250, 112), (250, 113), (250, 114), (250, 115), (250, 116), (250, 117), (250, 118), (250, 119), (250, 120), (250, 121), (250, 122), (250, 123), (250, 124), (250, 125), (250, 126), (250, 127), (250, 128), (250, 129), (250, 130), (250, 131), (250, 132), (250, 133), (250, 134), (250, 135), (250, 136), (250, 137), (250, 138), (250, 139), (250, 140), (250, 141), (250, 142), (250, 143), (250, 144), (250, 145), (250, 146), (250, 147), (250, 148), (250, 149), (251, 149), (252, 149), (253, 149), (254, 149), (255, 149), (256, 149), (257, 149), (258, 149), (259, 149), (260, 149), (261, 149), (262, 149), (263, 149), (264, 149), (265, 149), (266, 149), (267, 149), (268, 149), (269, 149), (270, 149), (271, 149), (272, 149), (273, 149), (274, 149), (275, 149), (276, 149), (223, 149), (222, 149), (221, 149), (220, 149), (219, 149), (218, 149), (217, 149), (216, 149), (215, 149), (214, 149), (213, 149), (212, 149), (211, 149), (210, 149), (209, 149), (208, 149), (207, 149), (206, 149), (205, 149), (204, 149), (203, 149), (202, 149), (201, 149), (200, 149), (199, 149), (198, 149), (197, 149), (196, 149), (195, 149), (194, 149), (193, 149), (192, 149), (191, 149), (190, 149), (189, 149), (188, 149), (187, 149), (186, 149), (185, 149), (184, 149), (183, 149), (182, 149), (181, 149), (180, 149), (179, 149), (178, 149), (177, 149), (176, 149), (175, 149), (174, 149), (173, 149), (172, 149), (171, 149), (170, 149), (169, 149), (168, 149), (167, 149), (166, 149), (165, 149), (164, 149), (163, 149), (162, 149), (161, 149), (160, 149), (159, 149), (158, 149), (157, 149), (156, 149), (155, 149), (154, 149), (153, 149), (152, 149), (151, 149), (150, 149), (149, 149), (148, 149), (147, 149), (146, 149), (145, 149), (144, 149), (143, 149), (142, 149), (141, 149), (140, 149), (139, 149), (138, 149), (137, 149), (136, 149), (135, 149), (134, 149), (133, 149), (132, 149), (131, 149), (130, 149), (129, 149), (128, 149), (127, 149), (126, 149), (125, 149), (124, 149), (123, 149), (122, 149), (121, 149), (120, 149), (119, 149), (118, 149), (117, 149), (116, 149), (115, 149), (114, 149), (113, 149), (112, 149), (111, 149), (110, 149), (109, 149), (108, 149), (107, 149), (106, 149), (105, 149), (104, 149), (103, 149), (102, 149), (101, 149)]
-    path = [(250, 0), (250, 1), (250, 2), (250, 3), (250, 4), (250, 5), (250, 6), (250, 7), (250, 8), (250, 9), (250, 10), (250, 11), (250, 12), (250, 13), (250, 14), (250, 15), (250, 16), (250, 17), (250, 18), (250, 19), (250, 20), (250, 21), (250, 22), (250, 23), (250, 24), (250, 25), (250, 26), (250, 27), (250, 28), (250, 29), (250, 30), (250, 31), (250, 32), (250, 33), (250, 34), (250, 35), (250, 36), (250, 37), (250, 38), (250, 39), (249, 39), (248, 39), (247, 39), (246, 39), (245, 39), (244, 39), (243, 39), (242, 39), (241, 39), (240, 39), (239, 39), (238, 39), (237, 39), (236, 39), (235, 39), (234, 39), (233, 39), (232, 39), (231, 39), (230, 39), (229, 39), (228, 39), (227, 39), (226, 39), (225, 39), (224, 39), (223, 39), (222, 39), (221, 39), (220, 39), (219, 39), (218, 39), (217, 39), (216, 39), (215, 39), (214, 39), (213, 39), (212, 39), (211, 39)]
-    path = [(250, 0), (250, 1), (250, 2), (250, 3), (250, 4), (250, 5), (250, 6), (250, 7), (250, 8), (250, 9), (250, 10), (250, 11), (250, 12), (250, 13), (250, 14), (250, 15), (250, 16), (250, 17), (250, 18), (250, 19), (250, 20), (250, 21), (250, 22), (250, 23), (250, 24), (250, 25), (250, 26), (250, 27), (250, 28), (250, 29), (250, 30), (250, 31), (250, 32), (250, 33), (250, 34), (250, 35), (250, 36), (250, 37), (250, 38), (250, 39), (250, 39), (251, 39), (252, 39), (253, 39), (254, 39), (255, 39), (256, 39), (257, 39), (258, 39), (259, 39), (260, 39), (261, 39), (262, 39), (263, 39), (264, 39), (265, 39), (266, 39), (267, 39), (268, 39), (269, 39), (270, 39), (271, 39), (272, 39), (273, 39), (274, 39), (275, 39), (276, 39), (277, 39), (278, 39), (279, 39), (280, 39), (281, 39), (282, 39), (283, 39), (284, 39), (285, 39), (286, 39), (287, 39), (288, 39), (289, 39)]
-    detection_cfg = yaml.safe_load(open('../conf/detection.yaml', 'r'))
-    objects_cfg = yaml.safe_load(open('../conf/objects.yaml', 'r'))
-    robot_cfg = objects_cfg['robot']
-    rob = Robot(robot_cfg['radius'], robot_cfg['height'], robot_cfg['color'])
-    rob.set_world_coordinates(robot_cfg['world_coordinates'])
-
-    tmp = regulated_move(rob)
-    tmp.go(path)
+    @staticmethod
+    def subtract_offset(path, x_offset) -> list:
+        """
+        Subtract the x offset from the path.
+        :param path: Path to subtract the offset from.
+        :param x_offset: Offset to subtract.
+        :return: Path with the offset subtracted.
+        """
+        new_path = list()
+        for item in path:
+            new_path.append((item[0]-x_offset, item[1]))
+        return new_path

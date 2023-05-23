@@ -156,7 +156,7 @@ class Gate:
         # Calculate the angle between the gate and the horizontal axis
         self.orientation_rgb = np.arctan2(y1 - y2, x1 - x2)
 
-    def remove_pillar(self, pillar):
+    def remove_pillar(self, pillar) -> None:
         """
         Remove a pillar from the gate.
         :param pillar: the pillar to remove

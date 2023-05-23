@@ -1,0 +1,23 @@
+# Low-pass constant for the velocity filter
+lowpass:
+  const: 0.2
+  const_increment: 0.025
+
+# PI regulator constants
+regulator:
+  P: 2
+  I: 0.05
+  linear_velocity: 0.05
+  anti_windup: 20
+
+setpoint:
+  # Setpoint distance threshold
+  distance_threshold: 7
+  # Setpoint idx (in path) step
+  idx_step: 7
+
+# Goal distance threshold
+goal_distance_threshold: 1
+
+# x-offset to compensate for the difference between map and robot coordinate systems
+x_offset: 250

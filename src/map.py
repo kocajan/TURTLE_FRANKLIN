@@ -854,7 +854,7 @@ class Map:
     def draw_vision_cone(self) -> None:
         """
         Tha camera does not see the whole square in front of it, but only a triangle.
-        This function draws restricted area around the vision cone of the camera.
+        This method draws restricted area around the vision cone of the camera.
         :return: None
         """
         # Get 8 map points of the vision cone from configuration file

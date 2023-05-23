@@ -21,10 +21,12 @@ class Visualizer:
         self.obstacles = self.map.get_obstacles()
         self.detection_cfg = detection_cfg
 
-    def visualize_rgb(self):
+    def visualize_rgb(self) -> None:
         """
         Visualize the RGB image
+        :return: None
         """
+        # Copy the RGB image to keep the original image
         copy_img = self.rgb_img.copy()
 
         # draw contours of the gate
@@ -73,7 +75,7 @@ class Visualizer:
             cv.line(copy_img, center, (int(center[0] + 100 * np.cos(angle + np.pi / 2)),
                                   int(center[1] + 100 * np.sin(angle + np.pi / 2))), (0, 255, 0), 2)
 
-            # Draw a parallel vector to the x axis in the center of the gate
+            # Draw a parallel vector to the x-axis in the center of the gate
             cv.line(copy_img, center, (int(center[0] + 100),
                                   int(center[1])), (255, 0, 0), 2)
 
@@ -83,9 +85,11 @@ class Visualizer:
             cv.imshow("RGB", final)
             cv.waitKey(0)
 
-    def visualize_map(self, path=None):
+    def visualize_map(self, path=None) -> None:
         """
         Visualize the map
+        :param path: path to be visualized (in the form of a list of points)
+        :return: None
         """
         color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
                                     "silver"])
@@ -104,9 +108,10 @@ class Visualizer:
             fig.colorbar(psm, ax=ax)
         plt.show()
 
-    def visualize_point_cloud(self):
+    def visualize_point_cloud(self) -> None:
         """
         Visualize the point cloud
+        :return: None
         """
         # Get the x, y and z coordinates of the point cloud
         xs = self.point_cloud[:, :, 0]
@@ -140,11 +145,12 @@ class Visualizer:
 
         # Draw both point clouds
         ax = fig.add_subplot(111, projection='3d')
-        # ax.scatter(xs, ys, zs, c='r', s=0.1)
+        ax.scatter(xs, ys, zs, c='r', s=0.1)
         ax.scatter(xs_p, ys_p, zs_p, c='b', s = 0.1)
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
         ax.set_zlabel('Z Label')
+
         # find the min and max of the point clouds
         min_x = min(np.nanmin(xs), np.nanmin(xs_p))
         max_x = max(np.nanmax(xs), np.nanmax(xs_p))
@@ -152,6 +158,7 @@ class Visualizer:
         max_y = max(np.nanmax(ys), np.nanmax(ys_p))
         min_z = min(np.nanmin(zs), np.nanmin(zs_p))
         max_z = max(np.nanmax(zs), np.nanmax(zs_p))
+
         # set the limits of the graph
         ax.set_xlim(min_x, max_x)
         ax.set_ylim(min_y, max_y)

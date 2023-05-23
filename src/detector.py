@@ -16,7 +16,7 @@ class Detector:
         self.processed_point_cloud = []
 
     # BEGIN: RGB image processing
-    # CORE FUNCTION
+    # CORE METHODS
     def process_rgb(self) -> None:
         """
         Process the RGB image to detect the garage, gate, obstacles.
@@ -66,7 +66,7 @@ class Detector:
                 print('ERROR: Unknown color')
                 exit(-1)
 
-    # HELPER FUNCTIONS
+    # HELPER METHODS
     def find_bounding_rects(self, contours: list) -> list:
         """
         Find the smallest bounding rectangles of the contours.
@@ -214,7 +214,7 @@ class Detector:
     # END: RGB image processing
 
     # BEGIN: Point cloud processing
-    # CORE FUNCTION
+    # CORE METHODS
     def process_point_cloud(self) -> None:
         """
         Process the point cloud to detect how far things are.
@@ -258,7 +258,7 @@ class Detector:
             else:
                 self.map.set_garage(None)
 
-    # HELPER FUNCTIONS
+    # HELPER METHODS
     def get_world_coordinates_using_contours(self, contours: list) -> tuple:
         """
         Get the world coordinates of the object using the contours.
