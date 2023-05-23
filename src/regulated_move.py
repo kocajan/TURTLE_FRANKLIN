@@ -1,58 +1,168 @@
-# co je potreba?? pozice x a y podle odometrie, to vemem z move
-# spocitat error vuci ceste na konkretnim y
-# tento error x ka z odometrie a xka z cesty narveme feedackem do regulatoru
-
-
-#odometrie je v metrech
-# odometrie je + dopredu a - dozadu
-
-# ten error budeme cpat jen do rotace??
-# prvni zkusime jednpoduchy P regulator. Error x od x odometrie get_odometry[1], ten nacpeme nejak znasobeny do rotace?
-
 import sys
-import numpy as np
 import math
-import yaml
+import numpy as np
+
 from rospy import Rate
 
-class regulated_move:
-    def __init__(self, rob):
-        self.robot = rob
+class SingleMove:
+    def __init__(self, rotation, distance, straight):
+        self.rotation = rotation
+        self.distance = distance
+        self.straight = straight
 
-    def go_straight(self, length, dir):
-        slow_start_cnt = 0
-        slowdown = False
-        odometry_x_y = []
-        # path_integrated = list()
-        self.odometry_hard_reset()
-        while not self.robot.is_shutting_down() and not self.robot.get_stop():
-            # print(slow_start_cnt)
-            if slow_start_cnt < 1.0 and not slowdown:
-                slow_start_cnt += 0.15
-            elif slowdown and slow_start_cnt >= 0.25:  # 0.17
-                slow_start_cnt -= 0.1
+    # SETTERS
+    def set_rotation(self, rotation):
+        self.rotation = rotation
 
-            odometry_x_y = self.robot.get_odometry()[:1]
-            if abs(odometry_x_y[0]) >= (length / 100):
-                break
-            self.robot.cmd_velocity(linear=(0.2 * dir) * slow_start_cnt)  # TODO add as yaml const
-            self.rate.sleep()
-            # print((abs(odometry_x_y[0])/2), ((length/100)/2))
-            if (abs(odometry_x_y[0])) > ((length / 100) / 1.8):  # /1.3
-                slowdown = True
-        # path_integrated.append(odometry_x_y[0])
-        # path_integrated.append(odometry_x_y[1])
-        return None  # list(odometry_x_y[0], odometry_x_y[1])
+    def set_distance(self, distance):
+        self.distance = distance
 
-    def odometry_hard_reset(self):
+    # GETTERS
+    def get_rotation(self):
+        return self.rotation
+
+    def get_distance(self):
+        return self.distance
+    def is_straight(self):
+        return self.straight
+class RegulatedMove:
+    def __init__(self, robot, move_cfg):
+        self.robot = robot
+        self.move_cfg = move_cfg
+        self.rate = Rate(10)
+
+    def odometry_hard_reset(self) -> None:
         """
         Hard reset the robot's odometry.
+        :return: None
         """
         self.robot.reset_odometry()
         self.robot.wait_for_odometry()
         self.robot.reset_odometry()
 
+    def go(self, path) -> None:
+        """
+        Go along the path.
+        The algorithm is based on automatic control. The robot will go straight at constant speed so the only regulated
+        movement is the rotation. When the robot moves, we can calculate its velocity vector. The error we want to
+        minimize is the angle between the velocity vector and the vector from the robot to the current set-point.
+        Only every n-th path point is used as a set-point for the robot's regulator. The set-point
+        is updated when the robot is close enough to the current set-point. The robot will stop when it reaches the
+        last point in the path. PI regulator is used for the rotation.
+        Parameters mentioned above can be changed in the configuration file.
+        :param path: Path to follow.
+        :return: None
+        """
+        # Load the parameters from the configuration file
+        # -> Regulator parameters
+        P = self.move_cfg['regulator']['P']
+        I = self.move_cfg['regulator']['I']
+        linear_velocity = self.move_cfg['regulator']['linear_velocity']
+        anti_windup_constant = self.move_cfg['regulator']['anti_windup']
+
+        # -> Lowpass filter parameters
+        lowpass_const = self.move_cfg['lowpass']['const']
+        lowpass_const_increment = self.move_cfg['lowpass']['const_increment']
+
+        # -> Setpoint parameters and others
+        setpoint_idx_step = self.move_cfg['setpoint']['path_step']
+        setpoint_distance_threshold = self.move_cfg['setpoint']['distance_threshold']
+        goal_distance_threshold = self.move_cfg['goal_distance_threshold']
+        x_offset = self.move_cfg['x_offset']
+
+        # Initialize the necessary variables
+        sum = 0
+        setpoint_idx = setpoint_idx_step
+
+        # Offset the path
+        path = self.subtract_offset(path, x_offset)
+
+        # Set the first set-point (IMPORTANT)
+        setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
+
+        # Preset the odometry values
+        prev_odometry_values = [(0, 0)]
+
+        # Hard reset the odometry
+        self.odometry_hard_reset()
+
+        while not self.robot.is_shutting_down() and not self.robot.get_stop():
+            # Get the robot's odometry in cm [(y, x, angle) -> (x, y)]
+            odometry_cm = self.robot.get_odometry()[:2]*100
+            odometry_cm = odometry_cm[::-1]
+
+            # We wnat to keep only the last n odometry values
+            n = 100
+            if len(prev_odometry_values) > n:
+                prev_odometry_values.pop(0)
+
+            # Calculate the error
+            error = self.calculate_error(setpoint, odometry_cm, prev_odometry_values)
+
+            # Add the current odometry value to the list of previous odometry values
+            prev_odometry_values.append(odometry_cm)
+
+            # Anti-windup
+            if abs(sum) > anti_windup_constant:
+                sum = 0
+            else:
+                sum = error + sum
+
+            # Update the set-point if the robot is close enough to the current set-point
+            setpoint_distance = self.calculate_distance(odometry_cm, setpoint)
+            if setpoint_distance < setpoint_distance_threshold:
+                # If we are close enough to the last point of the path (goal), we end the movement
+                if path[setpoint_idx] == path[-1] and setpoint_distance < goal_distance_threshold:
+                    break
+                if setpoint_idx != -1:
+                    setpoint_idx += setpoint_idx_step
+                if setpoint_idx >= len(path):
+                    setpoint_idx = -1
+                setpoint = (-path[setpoint_idx][0], path[setpoint_idx][1])
+
+            # Execute the movement
+            self.robot.cmd_velocity(linear=linear_velocity, angular=lowpass_const*P*error + I*sum) # speed 0.05
+            self.rate.sleep()
+
+            # Increment the lowpass constant if it is less than 1
+            if lowpass_const < 1:
+                lowpass_const += lowpass_const_increment
+
+    def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values) -> float:
+        """
+        Calculate the error for the robot's regulator.
+        It is represented as the difference between velocity vector and the vector from the robot to the goal.
+        The odometry value is in the form of (y, x).
+        :param setpoint: Setpoint for the robot's regulator.
+        :param current_odometry_value: Current odometry value.
+        :param previous_odometry_values: List of previous odometry values.
+        :return: Error for the robot's regulator. (the angle)
+        """
+        # Calculate the difference between the current odometry value and the previous odometry value
+        # Take the n-th previous odometry value (it will represent the velocity vector)
+        velocity_vector = self.calculate_difference(current_odometry_value, previous_odometry_values, n=1)
+
+        # Calculate the vector from the robot to the goal
+        vector_to_goal = np.array(setpoint) - np.array(current_odometry_value)
+
+        # Calculate the angle (in radians) between the vector from the robot to the goal and the robot's velocity vector
+        at1 = math.atan2(vector_to_goal[1], vector_to_goal[0])
+        at2 = math.atan2(velocity_vector[1], velocity_vector[0])
+
+        # Make sure that the angle is between 0 and 2*pi (the atan2 function returns values between -pi and pi)
+        if at1 < 0:
+            at1 = 2*np.pi+at1
+        if at2 < 0:
+            at2 = 2*np.pi+at2
+
+        # Calculate the angle between the two vectors
+        angle = at2-at1
+
+        return angle
+
+    # speed range from 0 to 1
     def rotate_degrees_no_compensation(self, degrees, speed):
+        damping = 0
         self.odometry_hard_reset()
         if abs(degrees) > 40:
             offset = 0.08
@@ -66,8 +176,11 @@ class regulated_move:
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
                 act_rot = self.robot.get_odometry()[2]
                 if act_rot >= goal-offset or abs(act_rot - prev_rot) > 1:
+                    print(act_rot)
                     break
-                self.robot.cmd_velocity(angular = speed)
+                self.robot.cmd_velocity(angular = np.exp(damping)*speed)
+                if damping >= -0.45:
+                    damping -= 0.01
                 prev_rot = act_rot
 
         elif degrees < 0:
@@ -76,53 +189,59 @@ class regulated_move:
 
             while not self.robot.is_shutting_down() and not self.robot.get_stop():
                 act_rot = self.robot.get_odometry()[2]
-                # print(act_rot, prev_rot)
                 if act_rot <= goal+offset or abs(act_rot - prev_rot) > 1:
                     break
-                self.robot.cmd_velocity(angular = -speed)
+                self.robot.cmd_velocity(angular = -np.exp(damping)*speed)
+                if damping >= -0.45:
+                    damping -= 0.01
                 prev_rot = act_rot
+    def execute_small_rot_positive(self, degrees, speed):
+        rotation = SingleMove(-degrees, 0, None)
 
-    def go(self, path):
+        if not self.robot.get_stop():
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+        else:
+            sys.exit()
+    def execute_small_rot_negative(self, degrees, speed):
+        rotation = SingleMove(degrees, 0, None)
 
-        # reset odometry??
-        # kdyz jsme v dostatecne blizkosti pozadovaneho setpointu tak posunem index v path
-        P = 1
-        error = 0
-        setpoint = 1 # protoze na prvnim stojime
-        goal = path[-1][0]
+        if not self.robot.get_stop():
+            self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
+        else:
+            sys.exit()
 
-        # Example array
-        odometry_cm = np.array()
+    @staticmethod
+    def calculate_difference(current_odometry_value, previous_odometry_values, n=1) -> tuple:
+        """
+        Calculate the difference between the current odometry value and the previous odometry value.
+        Take the n-th previous odometry value.
+        The odometry value is in the form of (y, x).
+        :param current_odometry_value: Current odometry value.
+        :param previous_odometry_values: List of previous odometry values.
+        :param n: Take the n-th previous odometry value.
+        :return: Difference between the current odometry value and the previous odometry value.
+        """
+        return current_odometry_value - previous_odometry_values[-n]
 
-        # pri jizde dopredu se nemeni get_odometry[1] - odometry[1] je ve svete robota x
-        # odometry[0] je ve
-        # takze pro pocitani erroru je pro nas dulezite odometry[]
+    @staticmethod
+    def calculate_distance(pt1, pt2) -> float:
+        """
+        Calculate the distance between two points.
+        :param pt1: First point.
+        :param pt2: Second point.
+        :return: Distance between two points.
+        """
+        return np.linalg.norm(np.array(pt2) - np.array(pt1))
 
-        # pro index v path plati ze bereme zaokrouhlenou get_odometry[0]
-        # pro error jizdy plati ze bereme get_odometry[1]
-
-        while(True):
-            #if near_to_goal :
-            #    break
-            odometry_cm = self.robot.get_odometry()*100 # take actual odometry in cm [x,y,rot]
-
-            error = path[round(odometry_cm[0] + 1)][0] - odometry_cm[1]
-            self.robot.cmd_velocity(linear=0.1, angular=P*error)
-            self.rate.sleep()
-
-            #if dostatecne blizko
-            #    setpoint += 1
-
-        # pocitame error pri kazde iteraci
-if __name__ == '__main__':
-    from robot import Robot
-    path = [(250, 0), (251, 1), (252, 2), (253, 3), (254, 4), (255, 5), (256, 6), (257, 7), (258, 8), (259, 9), (260, 10), (261, 11), (262, 12), (263, 13), (264, 14), (265, 15), (266, 16), (267, 17), (268, 18), (269, 19), (269, 20), (269, 21), (269, 22), (269, 23), (269, 24), (269, 25), (269, 26), (269, 27), (269, 28), (269, 29), (269, 30), (269, 31), (269, 32), (269, 33), (269, 34), (269, 35), (269, 36), (269, 37), (269, 38), (270, 39), (271, 40), (272, 41), (273, 42), (274, 43), (275, 44), (276, 45), (277, 46), (278, 47), (279, 48), (279, 49), (279, 50), (279, 51), (279, 52), (279, 53), (279, 54), (279, 55), (279, 56), (279, 57), (279, 58), (279, 59), (279, 60), (279, 61), (279, 62), (279, 63), (279, 64), (279, 65), (278, 66), (277, 67), (276, 68), (275, 69), (274, 70), (273, 71), (272, 72), (271, 73), (270, 74), (269, 75), (269, 76), (269, 77), (269, 78), (269, 79), (269, 80), (269, 81), (269, 82), (269, 83), (269, 84), (269, 85), (269, 86), (269, 87), (269, 88), (269, 89), (269, 90), (269, 91), (269, 92), (269, 93), (269, 94), (269, 95), (269, 96), (269, 97), (269, 98), (269, 99), (269, 100), (269, 101), (269, 102), (269, 103), (269, 104), (269, 105), (269, 106), (269, 107), (269, 108)]
-    
-    detection_cfg = yaml.safe_load(open('../conf/detection.yaml', 'r'))
-    objects_cfg = yaml.safe_load(open('../conf/objects.yaml', 'r'))
-    robot_cfg = objects_cfg['robot']
-    rob = Robot(robot_cfg['radius'], robot_cfg['height'], robot_cfg['color'])
-    rob.set_world_coordinates(robot_cfg['world_coordinates'])
-
-    tmp = regulated_move(rob)
-    tmp.go(path)
+    @staticmethod
+    def subtract_offset(path, x_offset) -> list:
+        """
+        Subtract the x offset from the path.
+        :param path: Path to subtract the offset from.
+        :param x_offset: Offset to subtract.
+        :return: Path with the offset subtracted.
+        """
+        new_path = list()
+        for item in path:
+            new_path.append((item[0]-x_offset, item[1]))
+        return new_path

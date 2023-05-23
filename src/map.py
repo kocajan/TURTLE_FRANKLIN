@@ -91,6 +91,7 @@ class Map:
         # Initialize the cost dictionary and parent dictionary
         cost = {start: 0}
         parent = {start: None}
+        print("start ", start, "goal ", goal)
 
         # Iterate until the goal is reached or the open set is empty
         while open_set:
@@ -211,7 +212,7 @@ class Map:
 
         # Obstacles
         for obstacle in self.obstacles:
-            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius())
+            self.draw_restricted_area(obstacle.get_world_coordinates(), obstacle.get_radius(), angle=0)
             self.fill_in_obstacle(obstacle)
 
         # Robot
@@ -359,7 +360,7 @@ class Map:
         if xs is not None and ys is not None:
             # The rectangle will be fitted to the points by fitting lines to the points
             # and finding the intersection points of these lines
-            p1, p2, p3, p4, first_line_len, second_line_len = self.fit_rectangle(xs, ys, garage_length, garage_width)
+            p1, p2, p3, p4, line_length1, line_length2 = self.fit_rectangle(xs, ys, garage_length, garage_width)
 
             # Make the points integers
             p1 = (int(p1[0]), int(p1[1]))
@@ -371,10 +372,15 @@ class Map:
             center = (int((p1[0] + p3[0]) / 2), int((p1[1] + p3[1]) / 2))
 
             # Get distance between the center and the corners of the garage
-            size = np.sqrt((p1[0] - center[0]) ** 2 + (p1[1] - center[1]) ** 2) / 2
+            size = garage_width/2 if garage_width > garage_length else garage_length/2
+
+            # Calculate angle of the garage (make it from 0 to pi/2)
+            angle = np.arctan2(p1[1] - p2[1], p1[0] - p2[0])
+            if angle > np.pi / 2:
+                angle -= np.pi / 2
 
             # Draw the restricted area
-            self.draw_restricted_area(center, size, convert=False)
+            self.draw_restricted_area(center, size, convert=False, angle=angle)
 
             # Fill the rectangle in the world map
             color = self.detection_cfg['map']['id']['garage']
@@ -383,21 +389,20 @@ class Map:
             cv.line(self.world_map, p3, p4, color, 2)
             cv.line(self.world_map, p4, p1, color, 2)
 
-            return p1, p2, p3, p4, first_line_len, second_line_len
+            return p1, p2, p3, p4, line_length1, line_length2
 
     def fit_rectangle(self, xs, ys, garage_width, garage_length) -> tuple:
         """
         Fit a rectangle to the given points.
         :param xs: The x map coordinates of the points.
         :param ys: The y map coordinates of the points.
-        :param garage_width: The width of the garage. (map size) : TODO: swap width and length
+        :param garage_width: The width of the garage. (map size) TODO: swap width and length
         :param garage_length: The length of the garage. (map size)
         :return: The rectangle fitted to the points.
         """
         lines = []
-
         # The robot can see only 2 sides of the garage at a time
-        for i in range(2):
+        for i in range(3):
             # Fit a line to the points
             xs, ys, line, inliers = self.fit_line(xs, ys)
             if line is not None:
@@ -405,7 +410,7 @@ class Map:
 
         # Robot can see only 1 side of the garage
         if len(lines) == 1:
-            # Get the line parameters (a, b: y=ax+b)
+            # Get the line paramethers (a, b : y = ax + b)
             a, b = lines[0][0]
 
             # Get the leftmost and rightmost points of the line (inliers)
@@ -464,8 +469,10 @@ class Map:
         # Robot can see 2 sides of the garage
         else:
             # Get the lines
+            print(lines)
             line1 = lines[0][0]
             line2 = lines[1][0]
+            
 
             # Get the intersection point of the lines
             inter_x = (line2[1] - line1[1]) / (line1[0] - line2[0])
@@ -547,12 +554,12 @@ class Map:
                 if min_diff == 0 or min_diff == 2:
                     print("here3.1")
                     if angle1 < angle2:
-                        first_line_length = garage_width
-                        second_line_length = garage_length
-                        angle = angle2
-                    else:
                         first_line_length = garage_length
                         second_line_length = garage_width
+                        angle = angle2
+                    else:
+                        first_line_length = garage_width
+                        second_line_length = garage_length
                         angle = angle1
                 # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
                 else:
@@ -627,7 +634,10 @@ class Map:
         # 2 pillars: we will try to get in front of the gate
         if len(pillars) == 2:
             # Set goal_type
-            self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            if not up:
+                self.goal_type = self.detection_cfg['map']['goal_type']['two_pillars']
+            else:
+                self.goal_type = self.detection_cfg['map']['goal_type']['garage']
 
             # Set pillars
             pillar1 = pillars[0]
@@ -638,7 +648,8 @@ class Map:
 
             # Calculate perpendicular vector to the vector between the two pillars
             v = (pillar2[0] - pillar1[0], pillar2[1] - pillar1[1])
-            v_perp = (-v[1], v[0])
+            gate_vector_magnitude = self.detection_cfg['map']['goal']['gate_vector_magnitude']
+            v_perp = (-gate_vector_magnitude*v[1], gate_vector_magnitude*v[0])
 
             # Calculate the two points on the perpendicular vector which are on the line between the two pillars
             p1 = (int(center[0] + v_perp[0]), int(center[1] + v_perp[1]))
@@ -689,6 +700,8 @@ class Map:
 
             # If the distance is smaller than the threshold, we are close enough to the reference object
             dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
+            print("Distance  ", distance)
+            print("Distance treshold (are we close?)", dist_threshold)                      
             if distance < dist_threshold:
                 # In this case, fit the garage rectangle to the garage points
                 p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
@@ -710,7 +723,9 @@ class Map:
                 v = (v[0] / distance, v[1] / distance)
 
                 # Calculate the point that is in the distance of the threshold from the pillar
-                dist_threshold = dist_threshold*0.9                         # Make the goal a bit closer
+                # Make the goal a bit closer
+                dist_threshold = dist_threshold*0.6
+                print("Distance treshold (go closer)", dist_threshold)                      
                 x_goal = ref_object_x - v[0] * dist_threshold
                 y_goal = ref_object_y - v[1] * dist_threshold
                 self.goal_calculated = (int(x_goal), int(y_goal))
@@ -765,12 +780,14 @@ class Map:
             mapc += self.world_map.shape[0] // 2
         return mapc
 
-    def draw_restricted_area(self, center, size, convert=True) -> None:
+    def draw_restricted_area(self, center, size, convert=True, angle=0) -> None:
         """
         Draw restricted area around objects on the map.
         :param center: Center of the object.
         :param size: Size of the object.
         :param convert: If true, convert the real world parameters to map parameters.
+        :param angle: Angle of the object. (radians)
+        :return: None
         """
         if convert:
             # Convert real world parameters to map parameters
@@ -791,7 +808,30 @@ class Map:
         id = self.detection_cfg['map']['id']['restricted']
 
         # Draw the restricted area as a square
-        self.draw_octagon((x, y), size, id)
+        restricted_area_type = self.detection_cfg['map']['restricted_area_type']
+        if restricted_area_type == 'rectangle':
+            self.draw_rectangle((x, y), size, id, angle)
+        elif restricted_area_type == 'octagon':
+            self.draw_octagon((x, y), size, id)
+
+    def draw_rectangle(self, center, size, color, angle) -> None:
+        """
+        Draw a rectangle on the map.
+        :param center: The center of the rectangle.
+        :param size: The size of the rectangle.
+        :param color: The color of the rectangle.
+        :param angle: The angle of the rectangle. (radians)
+        :return: None
+        """
+        # Calculate the coordinates of the four vertices of the rectangle
+        vertices = []
+        for i in range(4):
+            x = int(center[0] + size * np.cos(2 * np.pi * i / 4 + angle + np.pi / 4))
+            y = int(center[1] + size * np.sin(2 * np.pi * i / 4 + angle + np.pi / 4))
+            vertices.append((x, y))
+
+        # Draw the rectangle
+        cv.fillConvexPoly(self.world_map, np.array(vertices), color)
 
     def draw_octagon(self, center, side_length, color) -> None:
         """
@@ -814,7 +854,7 @@ class Map:
     def draw_vision_cone(self) -> None:
         """
         Tha camera does not see the whole square in front of it, but only a triangle.
-        This function draws restricted area around the vision cone of the camera.
+        This method draws restricted area around the vision cone of the camera.
         :return: None
         """
         # Get 8 map points of the vision cone from configuration file
