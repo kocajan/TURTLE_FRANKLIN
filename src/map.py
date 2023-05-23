@@ -415,9 +415,20 @@ class Map:
             length_diff = np.abs(length - garage_length)
             width_diff = np.abs(length - garage_width)
 
-            # Decide which side of the garage the robot sees
-            visible_side_length = garage_length if length_diff < width_diff else garage_width
-            non_visible_side_length = garage_width if length_diff < width_diff else garage_length
+            # Decide which side of the garage the robot sees # TODO: maybe wrong?
+            visible_side_length = garage_width if length_diff > width_diff or length > garage_length else garage_length
+            non_visible_side_length = garage_length if visible_side_length == garage_width else garage_width
+
+            # Check what was the last visible side and change the visible side if needed
+            if self.robot.last_visible_side == "width":
+                visible_side_length = garage_width
+                non_visible_side_length = garage_length
+                self.robot.last_visible_side = "length"
+
+            # Store the information about the last visible side
+            # (ATTENTION: in the outer scope the width and length are swapped)
+            if visible_side_length == garage_length:
+                self.robot.last_visible_side = "width"
 
             # Find the rectangle points
             if angle < np.pi/2:

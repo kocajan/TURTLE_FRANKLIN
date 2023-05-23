@@ -256,6 +256,7 @@ class Robot:
         self.height = height
         self.color = color
         self.world_coordinates = None
+        self.last_visible_side = None
 
     # Setters
     def set_radius(self, radius):
@@ -270,6 +271,9 @@ class Robot:
     def set_world_coordinates(self, world_coordinates):
         self.world_coordinates = world_coordinates
 
+    def set_last_visible_side(self, last_visible_side):
+        self.last_visible_side = last_visible_side
+
     # Getters
     def get_radius(self):
         return self.radius
@@ -282,3 +286,6 @@ class Robot:
 
     def get_world_coordinates(self):
         return self.world_coordinates
+
+    def get_last_visible_side(self):
+        return self.last_visible_side
