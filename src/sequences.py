@@ -125,8 +125,11 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
             end = np.array(end).astype(np.int32)
             path += map.find_way(start, end, search_algorithm)
 
+        if path == None:
+            print("Warning: Path not found!")
         # Follow the path
-        move.go(path)
+        else:
+            move.go(path)
 
 
 def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
@@ -171,8 +174,11 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         time.sleep(0.5)
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=True)
 
+        if path == None:
+            print("Warning: Path not found!")
         # Follow the path
-        move.go(path)
+        else:
+            move.go(path)
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
