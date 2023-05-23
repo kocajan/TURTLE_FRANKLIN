@@ -13,6 +13,7 @@ class Robot(Turtlebot):
         self.world_coordinates = None
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
+        self.last_visible_side = None
 
         #super().timer_start(self.timer_cb)
 
@@ -142,6 +143,9 @@ class Robot(Turtlebot):
     def set_stop(self, stop):
         self.stop = stop
 
+    def set_last_visible_side(self, last_visible_side):
+        self.last_visible_side = last_visible_side
+
     # GETTERS
     def get_radius(self):
         return self.radius
@@ -157,3 +161,6 @@ class Robot(Turtlebot):
 
     def get_stop(self):
         return self.stop
+
+    def get_last_visible_side(self):
+        return self.last_visible_side

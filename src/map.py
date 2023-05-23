@@ -420,15 +420,15 @@ class Map:
             non_visible_side_length = garage_length if visible_side_length == garage_width else garage_width
 
             # Check what was the last visible side and change the visible side if needed
-            if self.robot.last_visible_side == "width":
+            if self.robot.get_last_visible_side() == "width":
                 visible_side_length = garage_width
                 non_visible_side_length = garage_length
-                self.robot.last_visible_side = "length"
+                self.robot.set_last_visible_side("length")
 
             # Store the information about the last visible side
             # (ATTENTION: in the outer scope the width and length are swapped)
             if visible_side_length == garage_length:
-                self.robot.last_visible_side = "width"
+                self.robot.set_last_visible_side("width")
 
             # Find the rectangle points
             if angle < np.pi/2:
