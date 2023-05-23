@@ -65,7 +65,7 @@ class RegulatedMove:
         lowpass_const_increment = self.move_cfg['lowpass']['const_increment']
 
         # -> Setpoint parameters and others
-        setpoint_idx_step = self.move_cfg['setpoint']['path_step']
+        setpoint_idx_step = self.move_cfg['setpoint']['idx_step']
         setpoint_distance_threshold = self.move_cfg['setpoint']['distance_threshold']
         goal_distance_threshold = self.move_cfg['goal_distance_threshold']
         x_offset = self.move_cfg['x_offset']

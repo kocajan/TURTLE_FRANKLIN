@@ -291,7 +291,6 @@ class Move:
                 act_rot = self.robot.get_odometry()[2]
                 #print(act_rot, "  goal-offset   ", goal-offset, "act - prev ", abs(act_rot - prev_rot))
                 if act_rot >= goal-offset or abs(act_rot - prev_rot) > 1:
-                    print(act_rot)
                     break
                 #print(np.exp(damping)*speed)
                 self.robot.cmd_velocity(angular = np.exp(damping)*speed) #np.exp(damping)*
@@ -308,7 +307,6 @@ class Move:
                 # print(act_rot, prev_rot)
                 #print(act_rot, "  goal-offset   ", goal-offset, "act - prev ", abs(act_rot - prev_rot))
                 if act_rot <= goal+offset or abs(act_rot - prev_rot) > 1:
-                    print(act_rot)
                     break
                 #print(-np.exp(damping)*speed)
                 self.robot.cmd_velocity(angular = -np.exp(damping)*speed) #np.exp(damping)*

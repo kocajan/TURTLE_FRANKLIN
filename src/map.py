@@ -91,7 +91,6 @@ class Map:
         # Initialize the cost dictionary and parent dictionary
         cost = {start: 0}
         parent = {start: None}
-        print("start ", start, "goal ", goal)
 
         # Iterate until the goal is reached or the open set is empty
         while open_set:
@@ -469,7 +468,6 @@ class Map:
         # Robot can see 2 sides of the garage
         else:
             # Get the lines
-            print(lines)
             line1 = lines[0][0]
             line2 = lines[1][0]
             
@@ -512,15 +510,6 @@ class Map:
             width_diff1 = np.abs(length1 - garage_width)
             width_diff2 = np.abs(length2 - garage_width)
 
-            # TODO: ------------------------------- DELETE THIS -------------------------------
-            print("garage_length, garage_width")
-            print(garage_length, garage_width)
-            print("length1, length2")
-            print(length1, length2)
-            print("length_diff1, length_diff2, width_diff1, width_diff2, angle1, angle2")
-            print(length_diff1, length_diff2, width_diff1, width_diff2, angle1, angle2)
-            # TODO: ----------------------------------------------------------------------------
-
             # Decide which sides of the garage the robot sees
             # --------------------------------------
             # First case: the first line is the width of the garage and the second line is the length
@@ -533,7 +522,6 @@ class Map:
                     first_line_length = garage_width
                     second_line_length = garage_length
                     angle = angle1
-                print("here1")
             # Second case: the first line is the length of the garage and the second line is the width
             elif length2 > garage_length and length_diff1 < width_diff1:
                 if angle2 < angle1:
@@ -544,15 +532,12 @@ class Map:
                     first_line_length = garage_width
                     second_line_length = garage_length
                     angle = angle2
-                print("here2")
             # Third case: Something is wrong (the smallest difference will decide)
             else:
-                print("here3")
                 diffs = np.array([length_diff1, length_diff2, width_diff1, width_diff2])
                 min_diff = np.argmin(diffs)
                 # If the smallest difference is 0 or 2, then the first line is the length and the second is the width
                 if min_diff == 0 or min_diff == 2:
-                    print("here3.1")
                     if angle1 < angle2:
                         first_line_length = garage_length
                         second_line_length = garage_width
@@ -563,7 +548,6 @@ class Map:
                         angle = angle1
                 # If the smallest difference is 1 or 3, then the first line is the width and the second is the length
                 else:
-                    print("here3.2")
                     if angle2 < angle1:
                         first_line_length = garage_length
                         second_line_length = garage_width
@@ -699,9 +683,7 @@ class Map:
             distance = np.sqrt((ref_object_x - x_robot)**2 + (ref_object_y - y_robot)**2)
 
             # If the distance is smaller than the threshold, we are close enough to the reference object
-            dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']
-            print("Distance  ", distance)
-            print("Distance treshold (are we close?)", dist_threshold)                      
+            dist_threshold = self.detection_cfg['map']['goal']['min_distance_threshold']                   
             if distance < dist_threshold:
                 # In this case, fit the garage rectangle to the garage points
                 p1, p2, p3, p4, first_line_len, second_line_len = self.fit_and_fill_garage_rectangle()
@@ -724,8 +706,7 @@ class Map:
 
                 # Calculate the point that is in the distance of the threshold from the pillar
                 # Make the goal a bit closer
-                dist_threshold = dist_threshold*0.6
-                print("Distance treshold (go closer)", dist_threshold)                      
+                dist_threshold = dist_threshold*0.6                    
                 x_goal = ref_object_x - v[0] * dist_threshold
                 y_goal = ref_object_y - v[1] * dist_threshold
                 self.goal_calculated = (int(x_goal), int(y_goal))
@@ -955,93 +936,3 @@ class Map:
 
     def get_goal_type(self):
         return self.goal_type
-
-
-if __name__ == "__main__":
-
-    # Create a map
-    import yaml
-    import matplotlib.pyplot as plt
-
-    detection_cfg = yaml.safe_load(open('conf/detection.yaml', 'r'))
-    objects_cfg = yaml.safe_load(open('conf/objects.yaml', 'r'))
-
-    dims = detection_cfg['map']['dimensions']
-    res = detection_cfg['map']['resolution']
-
-    map = Map(dims, res, detection_cfg)
-
-
-    if True:
-        from robot import Robot
-        from detector import Detector
-        # Set up robot -------------------------------
-        rad = objects_cfg['robot']['radius']
-        hei = objects_cfg['robot']['height']
-        col = objects_cfg['robot']['color']
-
-        rob = Robot(rad, col, 'black')
-        print('robot object created')
-        print('bumper initialized')
-
-        rob.set_world_coordinates((0, 0))
-        map.set_robot(rob)
-        # --------------------------------------------
-
-        img = rob.take_rgb_img()
-        pc = rob.take_point_cloud()
-
-        det = Detector(map, img, pc, detection_cfg, objects_cfg)
-        det.process_rgb()
-        det.process_point_cloud()
-
-        map.fill_world_map()
-        search_algorithm = detection_cfg['map']['search_algorithm']
-        
-        path = map.find_way((250, 0), tuple(map.get_goal()), search_algorithm)
-
-        gar_coord = map.get_garage().get_world_coordinates()
-        gar_map_x = map.conv_real_to_map(gar_coord[0], True)
-        gar_map_y = map.conv_real_to_map(gar_coord[1])
-
-        garage_points = np.array([gar_map_x, gar_map_y])
-
-        # Save garage coordinates to file
-        print('saving')
-        np.save("garage_coordinates.npy", garage_points)
-
-        from visualizer import Visualizer
-        vis = Visualizer(img, pc, map, det.get_processed_rgb(), det.get_processed_point_cloud(), detection_cfg)
-        vis.visualize_rgb()
-
-    # Get garage dimensions
-    garage_length = objects_cfg['garage']['length']
-    garage_width = objects_cfg['garage']['width']
-
-    # Convert garage dimensions to map coordinates
-    garage_length_map = map.conv_real_to_map(garage_length)
-    garage_width_map = map.conv_real_to_map(garage_width)
-
-    # Generate garage points
-    # garage_points =
-    # generate_rectangle_points(garage_length_map, garage_width_map)
-    # print(garage_points.shape)
-    name = 'kratka.npy'
-    # Load garage points from file
-    #garage_points = np.load(name)
-    print(name)
-    print(garage_points.shape)
-
-    # Fit a rectangle to the garage points
-    p1, p2, p3, p4, len1, len2 = map.fit_rectangle(garage_points[0], garage_points[1], garage_length_map, garage_width_map)
-
-    print(p1, p2, p3, p4, len1, len2)
-
-    # Show the rectangle
-    plt.scatter(garage_points[0], garage_points[1])
-    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color='black')
-    plt.plot([p2[0], p3[0]], [p2[1], p3[1]], color='green')
-    plt.plot([p3[0], p4[0]], [p3[1], p4[1]], color='pink')
-    plt.plot([p4[0], p1[0]], [p4[1], p1[1]], color='yellow')
-    plt.axis('equal')
-    plt.show()

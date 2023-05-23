@@ -231,7 +231,6 @@ class Detector:
                 obstacle.set_world_coordinates(w_coords)
             else:
                 self.map.get_obstacles().remove(obstacle)
-
         # Gate
         gate = self.map.get_gate()
         if gate is not None:
