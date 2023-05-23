@@ -85,15 +85,11 @@ class Robot(Turtlebot):
         Check if there is anything close to the robot.
         :return: True if there is something close, False otherwise.
         """
-        import time
-        print('here')
-        start = time.time()
         x_range = (-0.3, 0.3)
         z_range = (0.1, 3.0)
 
         # Get the point cloud
         pc = self.take_point_cloud()
-        print(time.time() - start)
 
         if pc is None:
             return False
