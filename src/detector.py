@@ -228,12 +228,9 @@ class Detector:
         for obstacle in self.map.get_obstacles():
             w_coords = self.get_world_coordinates_using_bounding_rect(obstacle.get_bounding_rect())
             if w_coords is not None:
-                print("here")
                 obstacle.set_world_coordinates(w_coords)
             else:
-                print(self.map.get_obstacles())
                 self.map.get_obstacles().remove(obstacle)
-                print(self.map.get_obstacles())
         # Gate
         gate = self.map.get_gate()
         if gate is not None:
