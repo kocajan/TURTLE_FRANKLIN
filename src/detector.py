@@ -31,20 +31,12 @@ class Detector:
             lower = np.array(color['lower'])
             upper = np.array(color['upper'])
             mask = cv.inRange(hsv, lower, upper)
-            output = cv.bitwise_and(img, img, mask=mask)
-
-            # Get rid of noise
-            kernel = np.ones((5, 5), np.uint8)
-            output = cv.morphologyEx(output, cv.MORPH_OPEN, kernel)
-
-            # Make the image binary
-            output = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
 
             # Save output
-            self.processed_rgb.append(output)
+            self.processed_rgb.append(mask)
 
             # Find contours
-            contours, _ = cv.findContours(output, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+            contours, _ = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
             # Get the smallest rectangle that contains the contour (not for the garage)
             bounding_rects = None

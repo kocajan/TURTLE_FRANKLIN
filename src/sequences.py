@@ -3,7 +3,6 @@ import math
 import time
 
 from .robot import Robot
-from .move import Move
 from .regulated_move import RegulatedMove
 from .map import Map
 from .visualizer import Visualizer
@@ -95,7 +94,7 @@ def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
         front_side_idx = 1 - back_side_idx
 
         # Get the point in the middle of the garage and make its coordinates integers
-        middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2.5 \
+        middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2.3 \
                         - garage_sides_unit_vectors[front_side_idx] * garage_width / 2.5
         middle_point = middle_point.astype(np.int32)
 
@@ -165,8 +164,9 @@ def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
             # The robot sees the garage but not the gate
             elif number_gate_pillars == 0:
                 # Try to find the best position to see the gate
-                find_best_position_to_see_garage(rob, move, map, number_gate_pillars, detection_cfg,
+                find_best_position_to_see_garage(rob, move, map, number_gate_pillars, detection_cfg, 
                                                  objects_cfg)
+                pass                                                 
         # END OF THE STATE AUTOMAT
         # -> find the best path to the goal and follow it
 

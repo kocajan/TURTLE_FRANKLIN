@@ -248,37 +248,3 @@ class Gate:
 
     def get_num_pillars(self):
         return self.num_pillars
-
-
-class Robot:
-    def __init__(self, radius, height, color):
-        self.radius = radius
-        self.height = height
-        self.color = color
-        self.world_coordinates = None
-
-    # Setters
-    def set_radius(self, radius):
-        self.radius = radius
-
-    def set_height(self, height):
-        self.height = height
-
-    def set_color(self, color):
-        self.color = color
-
-    def set_world_coordinates(self, world_coordinates):
-        self.world_coordinates = world_coordinates
-
-    # Getters
-    def get_radius(self):
-        return self.radius
-
-    def get_height(self):
-        return self.height
-
-    def get_color(self):
-        return self.color
-
-    def get_world_coordinates(self):
-        return self.world_coordinates
