@@ -2,6 +2,7 @@ import numpy as np
 
 from rospy import Rate
 from .turtlebot import Turtlebot
+import time as time
 
 
 class Robot(Turtlebot):
@@ -13,7 +14,10 @@ class Robot(Turtlebot):
         self.world_coordinates = None
         self.stop = False
         self.register_bumper_event_cb(self.bumper_cb)
+        self.register_button_event_cb(self.button_cb)
         self.last_visible_side = None
+        self.first_time = True
+        self.start_button = False
 
         #super().timer_start(self.timer_cb)
 
@@ -146,6 +150,9 @@ class Robot(Turtlebot):
     def set_last_visible_side(self, last_visible_side):
         self.last_visible_side = last_visible_side
 
+    def set_first_time(self, first_time):
+        self.first_time = first_time
+
     # GETTERS
     def get_radius(self):
         return self.radius
@@ -164,3 +171,17 @@ class Robot(Turtlebot):
 
     def get_last_visible_side(self):
         return self.last_visible_side
+
+    def get_first_time(self):
+        return self.first_time
+
+    def get_start(self):
+        return self.start_button
+
+    def button_cb(self, event):
+        self.start_button = True
+
+    def end_music(self):
+        self.play_sound(1)
+        time.sleep(1)
+        self.play_sound()

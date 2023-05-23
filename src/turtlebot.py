@@ -9,6 +9,7 @@ import tf
 from std_msgs.msg import Empty
 import numpy as np
 
+
 # Constants
 topic_odom = '/odom'
 topic_cmd_vel = '/mobile_base/commands/velocity'
@@ -102,6 +103,7 @@ class Turtlebot(object):
         self.depth_msg = None
         self.pc_msg = None
         #self.timer_start(cb)
+
 
     def reset_odometry(self):
         t_start = rospy.get_time()

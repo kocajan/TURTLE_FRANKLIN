@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+#from robolab_turtlebot import Turtlebot, sleep
+
+import sys
+# setting path
+sys.path.append('home/TUTLE_FRANKLIN/src/robolab_turtlebot')
+
 from robolab_turtlebot import Turtlebot, sleep
-
-
+from rospy import Rate
 
 def main():
     turtle = Turtlebot()

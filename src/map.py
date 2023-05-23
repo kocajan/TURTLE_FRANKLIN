@@ -401,8 +401,8 @@ class Map:
             right_dist = np.linalg.norm(rightmost - robot_point)
 
             # Choose the closer point as the reference point
-            ref_point = leftmost if left_dist < right_dist else rightmost
-            other_point = rightmost if left_dist < right_dist else leftmost
+            ref_point = leftmost
+            other_point = rightmost
             # --------------------------------------
 
             # Get the angle of the line from the two points
@@ -416,8 +416,10 @@ class Map:
             width_diff = np.abs(length - garage_width)
 
             # Decide which side of the garage the robot sees # TODO: maybe wrong?
+            print(length, length_diff, width_diff, garage_length, garage_width)
             visible_side_length = garage_width if length_diff > width_diff or length > garage_length else garage_length
             non_visible_side_length = garage_length if visible_side_length == garage_width else garage_width
+            print(visible_side_length, non_visible_side_length)
 
             # Check what was the last visible side and change the visible side if needed
             if self.robot.get_last_visible_side() == "width":
@@ -427,18 +429,16 @@ class Map:
 
             # Store the information about the last visible side
             # (ATTENTION: in the outer scope the width and length are swapped)
-            if visible_side_length == garage_length:
+            if visible_side_length == garage_length and not self.robot.get_first_time():
                 self.robot.set_last_visible_side("width")
+            elif visible_side_length == garage_length and self.robot.get_first_time():
+                self.robot.set_first_time(False)
 
-            # Find the rectangle points
-            if angle < np.pi/2:
-                angle += np.pi
-                visible_side_length = -visible_side_length 
-                
+            # Find the rectangle points    
             p1 = ref_point
             p2 = self.calculate_next_point(p1, angle, visible_side_length)
-            p3 = self.calculate_next_point(p2, angle - np.pi/2, non_visible_side_length)
-            p4 = self.calculate_next_point(p3, angle - np.pi, visible_side_length)
+            p3 = self.calculate_next_point(p2, angle + np.pi/2, non_visible_side_length)
+            p4 = self.calculate_next_point(p3, angle + np.pi, visible_side_length)
 
             # Rename the sides
             first_line_length = visible_side_length
