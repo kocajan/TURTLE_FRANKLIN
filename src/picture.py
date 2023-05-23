@@ -13,7 +13,7 @@ counter = 0
 shoot = True
 
 
-def capture_images():
+def capture_images() -> None:
     """Captures images from the camera and saves them to the given directory
     :param camera: Camera object
     :param directory: Directory to save the images to

@@ -4,19 +4,20 @@ import time
 
 from .robot import Robot
 from .move import Move
-from .regulated_move import regulated_move
+from .regulated_move import RegulatedMove
 from .map import Map
 from .visualizer import Visualizer
 from .detector import Detector
 
 
 # SEQUENCE FUNCTIONS
-def park(rob, detection_cfg, objects_cfg) -> None:
+def park(rob, detection_cfg, objects_cfg, move_cfg) -> None:
     """
     Function that parks the robot when it is in front of the gate.
     :param rob: Robot object
     :param detection_cfg: Configuration file for detection
     :param objects_cfg: Configuration file for objects
+    :param move_cfg: Configuration file for movement
     :return: None
     """
     # Create small rotation move object (used for small rotations during the searching process)
@@ -34,8 +35,9 @@ def park(rob, detection_cfg, objects_cfg) -> None:
     map, _, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=False)
 
     # Get garage sides
-    garage_sides, world_map = get_garage_sides(rob, map, detection_cfg, objects_cfg)
+    garage_sides = get_garage_sides(map)
 
+    # Check if the garage sides were found
     if garage_sides is None or len(garage_sides) == 0:
         print("No garage sides found! Try again...")
         angle = np.random.randint(5, 20)
@@ -71,7 +73,6 @@ def park(rob, detection_cfg, objects_cfg) -> None:
                 np.linalg.norm(garage_sides_unit_vectors[0]) * np.linalg.norm(garage_sides_unit_vectors[1])))
 
         angle = np.degrees(angle)
-        print("Angle between the two garage sides: ", angle)
 
         # Check if the angle is around 90 degrees (if so try to fit it again)
         if abs(angle - 90) > detection_cfg['perpendicular_angle_threshold']:
@@ -80,7 +81,7 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             small_rot_move.execute_small_rot_negative(angle, 0.5)
             park(rob, detection_cfg, objects_cfg)
 
-        # Get the intersection point of the two garage sides
+        # Get the intersection point of the two garage sides and make its coordinates integers
         intersection_point = find_intersection_point(garage_sides_points[0], garage_sides_unit_vectors[0],
                                                      garage_sides_points[1], garage_sides_unit_vectors[1])
         intersection_point = np.array(intersection_point).astype(np.int32)
@@ -93,45 +94,28 @@ def park(rob, detection_cfg, objects_cfg) -> None:
         back_side_idx = 0 if abs(garage_sides[0][0]) < abs(garage_sides[1][0]) else 1
         front_side_idx = 1 - back_side_idx
 
-        # Get the point in the middle of the garage
+        # Get the point in the middle of the garage and make its coordinates integers
         middle_point = intersection_point - garage_sides_unit_vectors[back_side_idx] * garage_length / 2.5 \
                         - garage_sides_unit_vectors[front_side_idx] * garage_width / 2.5
         middle_point = middle_point.astype(np.int32)
-
-        print("Middle point: ", middle_point)
 
         # Get the robot's position
         robot_pos = detection_cfg['map']['start_point']
 
         # Get the center point in front of the garage
         mid_front_point = find_closest_point_on_line(middle_point, garage_sides_unit_vectors[front_side_idx], robot_pos)
+
+        # Check if the point is inside the map (if not, correct it)
         if mid_front_point[0] < 0:
             mid_front_point[0] = 0
         mid_front_point = np.array(mid_front_point).astype(np.int32)
 
-        # Show the lines on the map (the lines are in format of (a, b) where y = ax + b)
-        #world_map = map.get_world_map()
-
-        # Generate points on the lines and draw them on the map as circles using numpy
-        #X = np.arange(0, world_map.shape[1])
-        #for line in garage_sides:
-            #a, b = line
-            #Y = a * X + b
-            #points = np.array([X, Y]).T.astype(np.int32)
-
-            # Take only valid pfor
-            #for point in points:
-                #world_map[point[1], point[0]] = 1
-
-        #world_map[intersection_point[1], intersection_point[0]] = 2
-        #world_map[middle_point[1], middle_point[0]] = 3
-        #world_map[mid_front_point[1], mid_front_point[0]] = 3
-
-        # Create a path of points that the robot will follow from robot position to the closest point on the line
+        # Create a path of points that the robot will follow from robot position to the closest point on the center line
         search_algorithm = detection_cfg["map"]["search_algorithm"]
         path = map.find_way(robot_pos, mid_front_point, search_algorithm)
 
-        # The second part of the path has to be interpolated
+        # The second part of the path has to be interpolated (we do not need the optimal path, just a straight line)
+        # -> take a vector from the middle point to the middle point in front of the garage and gradually scale it
         front_to_middle_vector = middle_point - mid_front_point
         inter_points = detection_cfg["interpolation_points"]
         for i in range(inter_points):
@@ -141,187 +125,18 @@ def park(rob, detection_cfg, objects_cfg) -> None:
             end = np.array(end).astype(np.int32)
             path += map.find_way(start, end, search_algorithm)
 
-        #for point in path:
-        #    world_map[point[1], point[0]] = 1
-
-        #import matplotlib.pyplot as plt
-        #from matplotlib.colors import ListedColormap
-
-        #color_map = ListedColormap(["white", "black", "green", "pink", "yellow", "magenta", "red", "blue", "grey",
-                                    #"silver"])
-        #color_map = [color_map]
-
-        #n = len(color_map)
-        #fig, axs = plt.subplots(1, n, figsize=(10, 10), constrained_layout=True, squeeze=False)
-        #for [ax, cmap] in zip(axs.flat, color_map):
-        #    psm = ax.pcolormesh(world_map, cmap=cmap, rasterized=True, vmin=0, vmax=detection_cfg["map"]["max_id"])
-        #    fig.colorbar(psm, ax=ax)
-        #plt.show()
-
         # Follow the path
-        move = regulated_move(rob)
+        move = RegulatedMove(rob, move_cfg)
         move.go(path)
 
 
-def park1(rob, detection_cfg, objects_cfg) -> None:
-    """
-    Function that parks the robot when it is in front of the gate.
-    :param rob: Robot object
-    :param detection_cfg: Configuration file for detection
-    :param objects_cfg: Configuration file for objects
-    :return: None
-    """
-    # Prepare variables
-    pillar1 = None
-    pillar2 = None
-
-    # Create small rotation move object (used for small rotations during the searching process)
-    small_rot_move = Move(rob, None, None)
-
-    # Then search for both of the pillars (we will probably see only one of them at a time)
-    while True:
-        # Turn to the left and search for the pillars
-        print("Searching for the pillars...")
-        map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
-
-        # Check if we see at least one pillar
-        if number_gate_pillars != 0:
-            print("Found at least one pillar!")
-            break
-        small_rot_move.execute_small_rot_positive(10, 0.5)
-
-    # If we have one pillar, then we need to find the second one
-    if number_gate_pillars == 1:
-        # Set angle
-        angle = 20
-        print(f"Found one pillar, searching for the second one... (angle = {angle})")
-
-        # Get the first pillar and compensate for the angle
-        pillar1 = map.get_gate().get_world_coordinates()[0]
-        print("First pillar: ", pillar1)
-        pillar1 = rotate_vector(pillar1, -angle)
-        print("First pillar (rotated): ", pillar1)
-
-        # Turn to the right and search for the second pillar
-        print("Turning to the right...")
-        tmp_pillar, pillar2 = search_for_pillar("right", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
-
-        # If we haven't found the second pillar, so we need to turn back to the first one and turn to the left
-        if pillar2 is None:
-            print("The second pillar was not found, turning back to the first one...")
-            # Turn back to the first pillar
-            small_rot_move.execute_small_rot_negative(angle, 0.5)
-
-            # Just to be sure, analyze the world again
-            map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
-
-            # Get the first pillar and compensate for the angle
-            pillar1 = map.get_gate().get_world_coordinates()[0]
-            print("Redefined first pillar: ", pillar1)
-            pillar1 = rotate_vector(pillar1, -angle)
-            print("Redefined first pillar (rotated): ", pillar1)
-
-            print("Turning to the left...")
-            # Turn to the left and search for the second pillar
-            tmp_pillar, pillar2 = search_for_pillar("left", angle, small_rot_move, map, rob, detection_cfg, objects_cfg)
-
-            # If we haven't found the second pillar, then we are v piči
-            if pillar2 is None:
-                # TODO:
-                print("We are v piči. They stole our precious.")
-                exit(-1)
-
-        print("Found the second pillar!")
-        # We have found both pillars
-        # If they are both from the same picture, we can find their map coordinates
-        if tmp_pillar is not None:
-            print("Both pillars are from the same picture, we can find their map coordinates.")
-            pillar1 = tmp_pillar
-    elif number_gate_pillars == 2:
-        # Get the pillars
-        pillar1 = map.get_gate().get_world_coordinates()[0]
-        pillar2 = map.get_gate().get_world_coordinates()[1]
-        print("Found both pillars!")
-
-    print("First pillar: ", pillar1)
-    print("Second pillar: ", pillar2)
-
-    # We have now found both pillars, we can get map coordinates of the gate
-    pillar1_map = (map.conv_real_to_map(pillar1[0], add=True), map.conv_real_to_map(pillar1[1]))
-    pillar2_map = (map.conv_real_to_map(pillar2[0], add=True), map.conv_real_to_map(pillar2[1]))
-
-    print("First pillar (map): ", pillar1_map)
-    print("Second pillar (map): ", pillar2_map)
-
-    # Get the center of the gate
-    gate_center_map = ((pillar1_map[0] + pillar2_map[0]) // 2, (pillar1_map[1] + pillar2_map[1]) // 2)
-    print("Gate center (map): ", gate_center_map)
-
-    # Get perpendicular vector to the gate (normalized)
-    perpendicular_vector = (pillar2_map[1] - pillar1_map[1], pillar1_map[0] - pillar2_map[0])
-    perpendicular_vector = np.array(perpendicular_vector)
-    perpendicular_vector = perpendicular_vector / np.linalg.norm(perpendicular_vector)
-
-    # Get the robot's position
-    robot_pos = (map.conv_real_to_map(rob.get_world_coordinates()[0], add=True),
-                 map.conv_real_to_map(rob.get_world_coordinates()[1]))
-
-    # Find the closest point on a line leading through the gate's center and perpendicular to the gate
-    closest_point = find_closest_point_on_line(gate_center_map, perpendicular_vector, robot_pos)
-
-    # Convert the closest point to whole numbers (pixels)
-    closest_point = (int(closest_point[0]), int(closest_point[1]))
-
-    # Get a point on the line going through the gate's center and perpendicular to the gate that is on the other side
-    # of the gate than the robot
-    distance_from_gate = np.linalg.norm(np.array(pillar1) - np.array(pillar2))
-    final_point1 = (gate_center_map[0] + perpendicular_vector[0] * distance_from_gate,
-                    gate_center_map[1] + perpendicular_vector[1] * distance_from_gate)
-    final_point2 = (gate_center_map[0] - perpendicular_vector[0] * distance_from_gate,
-                    gate_center_map[1] - perpendicular_vector[1] * distance_from_gate)
-
-    # Choose the one with greater y coordinate
-    final_point = final_point1 if final_point1[1] > final_point2[1] else final_point2
-
-    # Convert the final point to whole numbers (pixels)
-    final_point = (int(final_point[0]), int(final_point[1]))
-
-    # Create a path of points that the robot will follow from robot position to the closest point on the line
-    search_algorithm = detection_cfg["map"]["search_algorithm"]
-    print("start point: ", robot_pos, "\nend point: ", closest_point)
-    path1 = map.find_way(robot_pos, closest_point, search_algorithm)
-    path2 = map.find_way(closest_point, final_point, search_algorithm)
-    path = path1 + path2
-    print('path: ', path)
-
-    # TODO: delete this
-    # Visualize the situation (path, points, ...)
-    # Show the map
-    import matplotlib.pyplot as plt
-    plt.scatter(robot_pos[0], robot_pos[1], color='red', label='robot position', s=20)
-    plt.scatter(closest_point[0], closest_point[1], color='green', label='closest point', s=10)
-    plt.scatter(gate_center_map[0], gate_center_map[1], color='blue', label='gate center', s=10)
-    plt.scatter(pillar1_map[0], pillar1_map[1], color='yellow', label='pillar1', s=10)
-    plt.scatter(pillar2_map[0], pillar2_map[1], color='orange', label='pillar2', s=10)
-    plt.scatter(np.array(path)[:, 0], np.array(path)[:, 1], color='black', label='path', s=1)
-    plt.xlim(0, 500)
-    plt.ylim(0, 500)
-    plt.legend()
-    plt.show()
-
-    # Execute path
-    # tmp = Move(rob, path, detection_cfg)
-    # tmp.execute_move()
-    tmp = regulated_move(rob)
-    tmp.go(path)
-
-
-def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
+def get_to_gate(rob, detection_cfg, objects_cfg, move_cfg) -> None:
     """
     Function that gets the robot to the gate.
     :param rob: Robot object
     :param detection_cfg: Configuration file for detection
     :param objects_cfg: Configuration file for objects
+    :param move_cfg: Configuration file for movement
     :return: None
     """
     # Create small rotation move object (used for small rotations during the searching process)
@@ -358,15 +173,12 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
         map, number_gate_pillars, goal, path = world_analysis(rob, detection_cfg, objects_cfg, visualize=False)
 
         # Follow the path
-        # tmp = Move(rob, path, detection_cfg)
-        # tmp.execute_move()
-        tmp = regulated_move(rob)
+        tmp = RegulatedMove(rob, move_cfg)
         tmp.go(path)
 
         if not rob.get_stop():
             if map.get_goal_type() == detection_cfg['map']['goal_type']['two_pillars'] or \
                     map.get_goal_type() == detection_cfg['map']['goal_type']['one_pillar']:
-                print(map.get_goal_type())
                 # All conditions are met, we can start the parking sequence
                 if found_gate(rob, detection_cfg, objects_cfg, small_rot_move):
                     break
@@ -382,47 +194,6 @@ def get_to_gate(rob, detection_cfg, objects_cfg) -> None:
 
 
 # HELPER FUNCTIONS
-def parking_analysis(rob, detection_cfg, objects_cfg) -> (Map, int):
-    """
-    Function that takes image and point cloud from the robot and extracts information about the surrounding world
-    during the parking sequence.
-    :param rob: Robot object
-    :param detection_cfg: Configuration file for detection
-    :param objects_cfg: Configuration file for objects
-    :return: The map, number of pillars of the gate
-    """
-    # Wait for the robot ot fully stop
-    time.sleep(0.5)
-
-    # Load map parameters
-    map_dimensions = detection_cfg['map']['dimensions']
-    map_resolution = detection_cfg['map']['resolution']
-
-    # Take image and point cloud
-    img = rob.take_rgb_img()
-    pc = rob.take_point_cloud()
-
-    # Create map object
-    map = Map(map_dimensions, map_resolution, detection_cfg)
-    map.set_robot(rob)
-
-    # Create detector object
-    det = Detector(map, img, pc, detection_cfg, objects_cfg)
-
-    # Process image and point cloud
-    det.process_rgb()
-    det.process_point_cloud()
-
-    # Get information to return
-    gate = map.get_gate()
-    if gate is not None:
-        number_gate_pillars = gate.get_num_pillars()
-    else:
-        number_gate_pillars = 0
-
-    return map, number_gate_pillars
-
-
 def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=True) -> (Map, int, tuple, list):
     """
     Function that takes image and point cloud from the robot and extracts information about the surrounding world.
@@ -431,7 +202,7 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
     :param objects_cfg: Configuration file for objects
     :param visualize: Boolean value that determines if the process should be visualized
     :param fill_map: Boolean value that determines if the map should be filled with information
-    :return: The map, number of pillars of the gate and goal object
+    :return: The map, number of pillars of the gate, goal object and path to the goal
     """
     # Load map parameters
     map_dimensions = detection_cfg['map']['dimensions']
@@ -463,9 +234,9 @@ def world_analysis(rob, detection_cfg, objects_cfg, visualize=False, fill_map=Tr
     else:
         number_gate_pillars = 0
 
+    # Get goal and initialize path
     goal = map.get_goal()
     path = None
-
     if goal is not None:
         # Select search algorithm
         search_algorithm = detection_cfg['map']['search_algorithm']
@@ -604,7 +375,7 @@ def find_best_position_to_see_garage(rob, small_rot_move, map, number_gate_pilla
         map, number_gate_pillars, goal, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
 
-def rotate_vector(vector, angle):
+def rotate_vector(vector, angle) -> list:
     """
     Rotate a vector by a given angle
     :param vector: Vector to rotate
@@ -626,7 +397,7 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
     :param rob: Robot object
     :param detection_cfg: Detection configuration
     :param objects_cfg: Objects configuration
-    :return: None
+    :return: pillar1, pillar2 (each could be None)
     """
     # Set the first pillar
     pillar1 = map.get_gate().get_world_coordinates()[0]
@@ -640,7 +411,8 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
         small_rot_move.execute_small_rot_negative(angle, 0.5)
 
     # Analyze the current situation
-    map, number_gate_pillars = parking_analysis(rob, detection_cfg, objects_cfg)
+    time.sleep(0.5)
+    map, number_gate_pillars, _, _ = world_analysis(rob, detection_cfg, objects_cfg, fill_map=False)
 
     # Check if we see at least one pillar
     if number_gate_pillars == 2:
@@ -665,7 +437,11 @@ def search_for_pillar(side, angle, small_rot_move, map, rob, detection_cfg, obje
 
 def find_closest_point_on_line(line_point, line_vector, point) -> list:
     """
-    Find the closest point on the line to the given point. The line is defined by a point and a vector.
+    Find a point on the line that is the closest to the given point. The line is defined by a point and a vector.
+    :param line_point: Point on the line
+    :param line_vector: Vector of the line
+    :param point: Point to find the closest point on the line to
+    :return: Closest point on the line [x, y]
     """
     # Get a vector perpendicular to the line
     perp_vector = [line_vector[1], -line_vector[0]]
@@ -679,6 +455,11 @@ def find_closest_point_on_line(line_point, line_vector, point) -> list:
 def find_intersection_point(point1, vector1, point2, vector2) -> list:
     """
     Find the intersection point of two lines. The lines are defined by a point and a vector.
+    :param point1: Point on the first line
+    :param vector1: Vector of the first line
+    :param point2: Point on the second line
+    :param vector2: Vector of the second line
+    :return: Intersection point [x, y]
     """
     # Calculate the determinant of the matrix
     det = vector1[0] * vector2[1] - vector1[1] * vector2[0]
@@ -712,19 +493,12 @@ def found_gate(rob, detection_cfg, objects_cfg, small_rotation) -> bool:
     return False
 
 
-def get_garage_sides(rob, map, detection_cfg, objects_cfg):
+def get_garage_sides(map):
     """
-    Return the fitted sides of the garage. The sides are defined by a point and a vector.
-    :param rob: Robot object
+    Return the fitted sides of the garage (RANSAC). The sides are defined by (a, b) where y = ax + b.
     :param map: Map object
-    :param detection_cfg: Detection configuration
-    :param objects_cfg: Objects configuration
     :return: The fitted sides of the garage
     """
-    # Get dimensions of the garage
-    garage_width = map.conv_real_to_map(map.garage.get_width())
-    garage_length = map.conv_real_to_map(map.garage.get_length())
-
     # Get the detected points of the garage
     points = map.garage.get_world_coordinates()
 
@@ -735,11 +509,11 @@ def get_garage_sides(rob, map, detection_cfg, objects_cfg):
     # Fill the map with the detected points
     map.fill_in_garage([])
 
-    # Fit the lines (we will be able to get all 3 sides of the garage or less)
+    # Fit the lines (it is sufficient to fit only two sides)
     lines = []
     for i in range(2):
         # Fit a line to the points
         xs, ys, line, inliers = map.fit_line(xs, ys)
         if line is not None:
             lines.append(line)
-    return lines, map  # TODO: delete map
+    return lines

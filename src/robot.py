@@ -1,7 +1,7 @@
 import numpy as np
-import cv2 as cv
-from .turtlebot import Turtlebot
+
 from rospy import Rate
+from .turtlebot import Turtlebot
 
 
 class Robot(Turtlebot):
@@ -16,7 +16,7 @@ class Robot(Turtlebot):
 
         #super().timer_start(self.timer_cb)
 
-    def take_rgb_img(self):
+    def take_rgb_img(self) -> np.ndarray:
         """
         Take RGB photo and return it as numpy array.
         :return: RGB photo as numpy array.
@@ -29,7 +29,7 @@ class Robot(Turtlebot):
 
         return rgb
 
-    def take_point_cloud(self):
+    def take_point_cloud(self) -> np.ndarray:
         """
         Get point cloud from the robot.
         :return: Point cloud as numpy array.
@@ -41,7 +41,7 @@ class Robot(Turtlebot):
         pc = self.get_point_cloud()
         return pc
 
-    def take_depth_img(self):
+    def take_depth_img(self) -> np.ndarray:
         """
         Get depth image from the robot.
         :return: Depth image as numpy array.
@@ -52,27 +52,35 @@ class Robot(Turtlebot):
         depth = self.get_depth_image()
         return depth
 
-    def stop_motors(self):
+    def stop_motors(self) -> None:
         """
         Force stop the robot.
+        :return: None
         """
         self.cmd_velocity(linear=0)
         self.cmd_velocity(angular=0)
 
-    def bumper_cb(self, msg):
+    def bumper_cb(self, msg) -> None:
         """
         Bumper callback.
         :param msg: Bumper message.
+        :return: None
         """
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self, event):
+    def timer_cb(self, event) -> None:
+        """
+        Timer callback.
+        :param event: Timer event.
+        :return: None
+        """
         if self.is_there_anything_close():
             self.set_stop(True)
             self.stop_motors()
         pass
-    def is_there_anything_close(self):
+
+    def is_there_anything_close(self) -> bool:
         """
         Check if there is anything close to the robot.
         :return: True if there is something close, False otherwise.
@@ -94,7 +102,6 @@ class Robot(Turtlebot):
         pc[np.isnan(pc)] = 0
         pc[np.isinf(pc)] = 0
 
-
         # Mask out floor points
         mask = pc[:, :, 1] > x_range[0]
 
@@ -111,16 +118,18 @@ class Robot(Turtlebot):
         # Assign depth i.e. distance to image
         image[mask] = np.int16(pc[:, :, 2][mask] / 3.0 * 255)
         image = image[:240, :]
-        # Show unique values up to 40
-        unique = np.unique(image[np.where(image < 31)])
+
+        # Get rid of points that are far enough or not defined
         image1 = image[np.where(image <= 18)]
         image2 = image1[np.where(image1 > 0)]
 
+        # Check how many points are too close
         num_danger_points = len(image2)
         if num_danger_points > 350:
             return True
         else:
             return False
+
     # SETTERS
     def set_radius(self, radius):
         self.radius = radius
@@ -152,12 +161,3 @@ class Robot(Turtlebot):
 
     def get_stop(self):
         return self.stop
-
-
-if __name__ == '__main__':
-    my_robot = Robot(1, 1, 1)
-    path = [(250, 0), (251, 1), (252, 2), (253, 3), (253, 4), (253, 5), (253, 6), (253, 7), (253, 8), (253, 9), (253, 10), (253, 11), (253, 12), (253, 13), (253, 14), (253, 15), (253, 16), (253, 17), (253, 18), (253, 19), (253, 20), (253, 21), (253, 22), (253, 23), (253, 24), (253, 25), (253, 26), (253, 27), (253, 28), (253, 29), (253, 30), (253, 31), (253, 32), (253, 33), (253, 34), (253, 35), (253, 36), (253, 37), (253, 38), (253, 39), (253, 40), (253, 41), (253, 42), (253, 43), (253, 44), (253, 45), (253, 46), (253, 47), (253, 48), (253, 49), (253, 50), (253, 51), (253, 52), (253, 53), (253, 54), (253, 55), (253, 56), (253, 57), (253, 58), (253, 59), (253, 60), (253, 61), (253, 62), (253, 63), (253, 64), (253, 65), (253, 66), (253, 67)]
-    tmp = move(my_robot, path)
-    # tmp.move_sequence()
-    tmp.execute_move()
-
