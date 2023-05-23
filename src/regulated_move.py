@@ -41,6 +41,8 @@ class RegulatedMove:
         self.robot.reset_odometry()
 
     def go(self, path) -> None:
+        error_angle = list()
+        regulator_out = list()
         """
         Go along the path.
         The algorithm is based on automatic control. The robot will go straight at constant speed so the only regulated
@@ -127,6 +129,7 @@ class RegulatedMove:
             # Increment the lowpass constant if it is less than 1
             if lowpass_const < 1:
                 lowpass_const += lowpass_const_increment
+        
 
     def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values) -> float:
         """
