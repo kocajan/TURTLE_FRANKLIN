@@ -4,38 +4,6 @@ import heapq
 import queue
 
 
-# TODO: ------------------------ DELETE THIS ------------------------------
-def generate_rectangle_points(rect_length, rect_width):
-    """
-    Generate 100 points on the sides of a rectangle with given length and width.
-    """
-    # Define number of points to generate
-    num_points = 1000
-
-    # Generate points on the sides of the rectangle
-    X = np.zeros((2, num_points))
-    X[0, :num_points//4] = np.linspace(0, rect_length, num_points//4)
-    X[0, num_points//4:num_points//2] = rect_length
-    X[0, num_points//2:3*num_points//4] = np.linspace(rect_length, 0, num_points//4)
-    X[0, 3*num_points//4:] = 0
-    X[1, :num_points//4] = 0
-    X[1, num_points//4:num_points//2] = np.linspace(0, rect_width//2, num_points//4)
-    # X[1, num_points//2:3*num_points//4] = rect_width
-    # X[1, 3*num_points//4:] = np.linspace(rect_width, 0, num_points//4)
-
-    # Add noise to the points
-    X += np.random.normal(0, 0.5, X.shape)
-
-    # Randomly shift and rotate the points (but keep it a rectangle) Be careful about the dimensions
-    theta = np.random.uniform(-np.pi/2, np.pi/2)
-    shift = np.random.uniform(5, 10, 2)
-    X = (np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), X).T + shift).T
-
-    return X
-
-# TODO: -------------------------------------------------------------------------------------
-
-
 class Map:
     def __init__(self, dimensions, resolution, detection_cfg):
         self.dimensions = dimensions
