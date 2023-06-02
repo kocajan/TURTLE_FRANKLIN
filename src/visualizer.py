@@ -11,6 +11,15 @@ matplotlib.use('TkAgg')
 class Visualizer:
     def __init__(self, rgb_img: np.ndarray, point_cloud: np.ndarray, map: object, processed_rgb_imgs: np.ndarray,
                  processed_pc: np.ndarray, detection_cfg: dict):
+        """
+        Visualizer objects are used to visualize the RGB image, point cloud and map.
+        :param rgb_img: RGB image.
+        :param point_cloud: Point cloud.
+        :param map: Map object.
+        :param processed_rgb_imgs: Processed RGB images.
+        :param processed_pc: Processed point cloud.
+        :param detection_cfg: Detection configuration.
+        """
         self.rgb_img = rgb_img
         self.processed_rgb_imgs = processed_rgb_imgs
         self.point_cloud = point_cloud
@@ -147,9 +156,9 @@ class Visualizer:
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(xs, ys, zs, c='r', s=0.1)
         ax.scatter(xs_p, ys_p, zs_p, c='b', s = 0.1)
-        ax.set_xlabel('X Label')
-        ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')
+        ax.set_xlabel('Y')
+        ax.set_ylabel('X')
+        ax.set_zlabel('Z')
 
         # find the min and max of the point clouds
         min_x = min(np.nanmin(xs), np.nanmin(xs_p))

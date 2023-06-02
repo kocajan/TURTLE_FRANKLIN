@@ -6,7 +6,16 @@ import time as time
 
 
 class Robot(Turtlebot):
-    def __init__(self, radius, height, color, rgb=True, depth=True, pc=True):
+    def __init__(self, radius: float, height: float, color: str, rgb=True, depth=True, pc=True):
+        """
+        Robot objects are used to represent and control the robot. It inherits from Turtlebot class.
+        :param radius: Robot radius.
+        :param height: Robot height.
+        :param color: Robot color.
+        :param rgb: True if RGB camera is used.
+        :param depth: True if depth camera is used.
+        :param pc: True if point cloud is used.
+        """
         super().__init__(rgb=rgb, depth=depth, pc=pc)
         self.radius = radius
         self.height = height
@@ -65,7 +74,7 @@ class Robot(Turtlebot):
         self.cmd_velocity(linear=0)
         self.cmd_velocity(angular=0)
 
-    def bumper_cb(self, msg) -> None:
+    def bumper_cb(self, msg: str) -> None:
         """
         Bumper callback.
         :param msg: Bumper message.
@@ -74,7 +83,7 @@ class Robot(Turtlebot):
         self.stop = True
         self.stop_motors()
 
-    def timer_cb(self, event) -> None:
+    def timer_cb(self, event: str) -> None:
         """
         Timer callback.
         :param event: Timer event.

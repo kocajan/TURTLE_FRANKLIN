@@ -2,7 +2,17 @@ import numpy as np
 
 
 class Obstacle:
-    def __init__(self, radius, height, color, contour, bounding_rect, world_coordinates=None):
+    def __init__(self, radius: float, height: float, color: str, contour: list, bounding_rect: list,
+                 world_coordinates: list=None):
+        """
+        Obstacle objects are used to store information about the obstacles detected by the robot.
+        :param radius: Radius of the obstacle.
+        :param height: Height of the obstacle.
+        :param color: Color of the obstacle.
+        :param contour: Contour of the obstacle.
+        :param bounding_rect: Bounding rectangle of the obstacle.
+        :param world_coordinates: World coordinates of the obstacle.
+        """
         self.radius = radius
         self.height = height
         self.color = color
@@ -50,7 +60,15 @@ class Obstacle:
 
 
 class Garage:
-    def __init__(self, length, width, height, color, contours):
+    def __init__(self, length: float, width: float, height: float, color: str, contours: list):
+        """
+        Garage objects are used to store information about the garage detected by the robot.
+        :param length: Length of the garage.
+        :param width: Width of the garage.
+        :param height: Height of the garage.
+        :param color: Color of the garage.
+        :param contours: Contours of the garage.
+        """
         self.length = length
         self.width = width
         self.height = height
@@ -105,9 +123,25 @@ class Garage:
 
 
 class Gate:
-    def __init__(self, width, height, color, contours, bounding_rects, pillars_distance, lowest_points,
-                 garage_dimensions_lwh, world_coordinates=None, orientation=None, orientation_rgb=None, center=None):
-        # all this information is related to the pillars of the gate
+    def __init__(self, width: float, height: float, color: str, contours: list, bounding_rects: list,
+                 pillars_distance: float, lowest_points: list, garage_dimensions_lwh: list,
+                 world_coordinates: list=None, orientation: float=None, orientation_rgb: float=None, center: list=None):
+        """
+        Gate objects are used to store information about the gate detected by the robot.
+        All this information is related to the pillars of the gate.
+        :param width: Width of the gate.
+        :param height: Height of the gate.
+        :param color: Color of the gate.
+        :param contours: Contours of the gate.
+        :param bounding_rects: Bounding rectangles of the gate.
+        :param pillars_distance: Distance between the pillars of the gate.
+        :param lowest_points: Lowest points of the pillars of the gate.
+        :param garage_dimensions_lwh: Dimensions of the garage (length, width, height).
+        :param world_coordinates: World coordinates of the gate.
+        :param orientation: Orientation of the gate.
+        :param orientation_rgb: Orientation of the gate (RGB).
+        :param center: Center of the gate.
+        """
         self.width = width
         self.height = height
         self.color = color

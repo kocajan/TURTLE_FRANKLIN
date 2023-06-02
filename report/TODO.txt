@@ -1,0 +1,10 @@
+
+- thresholds tabulka
+- doplneni v sekci implementace
+- srovnat odevzdanou verzi s git verzí (docstrings)
+- řešení nenalezení cesty
+- bumper
+
+
+- cíl v mapě, výpočet
+- 

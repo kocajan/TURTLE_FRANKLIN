@@ -3,9 +3,16 @@ import math
 import numpy as np
 
 from rospy import Rate
+from .robot import Robot
 
 class SingleMove:
-    def __init__(self, rotation, distance, straight):
+    def __init__(self, rotation: float, distance: float, straight: bool):
+        """
+        Single move objects are used to store information about a single move.
+        :param rotation: Rotation angle in radians.
+        :param distance: Distance in meters.
+        :param straight: True if the robot should go straight, False if it should rotate.
+        """
         self.rotation = rotation
         self.distance = distance
         self.straight = straight
@@ -25,8 +32,15 @@ class SingleMove:
         return self.distance
     def is_straight(self):
         return self.straight
+
+
 class RegulatedMove:
-    def __init__(self, robot, move_cfg):
+    def __init__(self, robot: Robot, move_cfg: dict):
+        """
+        RegulatedMove object is used to move the robot along a path.
+        :param robot: Robot object.
+        :param move_cfg: Configuration file.
+        """
         self.robot = robot
         self.move_cfg = move_cfg
         self.rate = Rate(10)
@@ -40,9 +54,7 @@ class RegulatedMove:
         self.robot.wait_for_odometry()
         self.robot.reset_odometry()
 
-    def go(self, path) -> None:
-        error_angle = list()
-        regulator_out = list()
+    def go(self, path: list) -> None:
         """
         Go along the path.
         The algorithm is based on automatic control. The robot will go straight at constant speed so the only regulated
@@ -131,7 +143,8 @@ class RegulatedMove:
                 lowpass_const += lowpass_const_increment
         
 
-    def calculate_error(self, setpoint, current_odometry_value, previous_odometry_values) -> float:
+    def calculate_error(self, setpoint: list, current_odometry_value: np.ndarray,
+                        previous_odometry_values: np.ndarray) -> float:
         """
         Calculate the error for the robot's regulator.
         It is represented as the difference between velocity vector and the vector from the robot to the goal.
@@ -163,8 +176,13 @@ class RegulatedMove:
 
         return angle
 
-    # speed range from 0 to 1
-    def rotate_degrees_no_compensation(self, degrees, speed):
+    def rotate_degrees_no_compensation(self, degrees: float, speed: float) -> None:
+        """
+        Rotate the robot for a given number of degrees without compensating for the robot's rotation.
+        :param degrees: Number of degrees to rotate the robot.
+        :param speed: Speed of the robot's rotation. (from 0 to 1)
+        :return: None
+        """
         damping = 0
         self.odometry_hard_reset()
         if abs(degrees) > 40:
@@ -198,14 +216,28 @@ class RegulatedMove:
                 if damping >= -0.45:
                     damping -= 0.01
                 prev_rot = act_rot
-    def execute_small_rot_positive(self, degrees, speed):
+
+    def execute_small_rot_positive(self, degrees: float, speed: float) -> None:
+        """
+        Rotate the robot for a given number of degrees. (in the positive direction)
+        :param degrees: Number of degrees to rotate the robot.
+        :param speed: Speed of the robot's rotation. (from 0 to 1)
+        :return: None
+        """
         rotation = SingleMove(-degrees, 0, None)
 
         if not self.robot.get_stop():
             self.rotate_degrees_no_compensation(rotation.get_rotation(), speed)
         else:
             sys.exit()
-    def execute_small_rot_negative(self, degrees, speed):
+
+    def execute_small_rot_negative(self, degrees: float, speed: float) -> None:
+        """
+        Rotate the robot for a given number of degrees. (in the negative direction)
+        :param degrees: Number of degrees to rotate the robot.
+        :param speed: Speed of the robot's rotation. (from 0 to 1)
+        :return: None
+        """
         rotation = SingleMove(degrees, 0, None)
 
         if not self.robot.get_stop():
@@ -214,7 +246,7 @@ class RegulatedMove:
             sys.exit()
 
     @staticmethod
-    def calculate_difference(current_odometry_value, previous_odometry_values, n=1) -> tuple:
+    def calculate_difference(current_odometry_value: np.ndarray, previous_odometry_values: np.ndarray, n=1) -> tuple:
         """
         Calculate the difference between the current odometry value and the previous odometry value.
         Take the n-th previous odometry value.
@@ -227,7 +259,7 @@ class RegulatedMove:
         return current_odometry_value - previous_odometry_values[-n]
 
     @staticmethod
-    def calculate_distance(pt1, pt2) -> float:
+    def calculate_distance(pt1: list, pt2: list) -> float:
         """
         Calculate the distance between two points.
         :param pt1: First point.
@@ -237,7 +269,7 @@ class RegulatedMove:
         return np.linalg.norm(np.array(pt2) - np.array(pt1))
 
     @staticmethod
-    def subtract_offset(path, x_offset) -> list:
+    def subtract_offset(path: list, x_offset: int) -> list:
         """
         Subtract the x offset from the path.
         :param path: Path to subtract the offset from.

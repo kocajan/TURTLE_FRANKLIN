@@ -3,9 +3,17 @@ import cv2 as cv
 import heapq
 import queue
 
+from .objects import Obstacle
+
 
 class Map:
-    def __init__(self, dimensions, resolution, detection_cfg):
+    def __init__(self, dimensions: list, resolution: float, detection_cfg: dict):
+        """
+        Map objects are used to represent the world map and to find the way from the robot to the garage.
+        :param dimensions: The dimensions of the map in meters.
+        :param resolution: The resolution of the map.
+        :param detection_cfg: The configuration dictionary for the detection module.
+        """
         self.dimensions = dimensions
         self.resolution = resolution
         self.detection_cfg = detection_cfg
@@ -22,7 +30,7 @@ class Map:
         self.goal_type = None
 
     # BEGIN: Path searching
-    def find_way(self, start, goal, search_algorithm) -> list:
+    def find_way(self, start: list, goal: list, search_algorithm: str) -> list:
         """
         Find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -42,7 +50,7 @@ class Map:
         else:
             raise ValueError("Unknown search algorithm")
 
-    def a_star(self, start, goal) -> list:
+    def a_star(self, start: list, goal: list) -> list:
         """
         Use A* algorithm to find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -101,7 +109,7 @@ class Map:
         # If the goal cannot be reached
         return []
 
-    def heuristic(self, a, b) -> float:
+    def heuristic(self, a: list, b: list) -> float:
         """
         Calculate the heuristic distance between two points.
         :param a: The first point.
@@ -124,7 +132,7 @@ class Map:
         else:
             raise ValueError("Unknown heuristic")
 
-    def bfs(self, start, goal) -> list:
+    def bfs(self, start: list, goal: list) -> list:
         """
         Use BFS algorithm to find the way from the robot to the garage on the map.
         :param start: The starting point.
@@ -143,7 +151,7 @@ class Map:
                 path.append(node)
                 q.put(node)
 
-    def expand(self, node_to_expand) -> list:
+    def expand(self, node_to_expand: list) -> list:
         """
         Expand the node.
         :param node_to_expand: The node to expand.
@@ -194,7 +202,7 @@ class Map:
         self.correct_goal()
         self.fill_in_goal()
 
-    def fill_in_garage(self, pillars) -> None:
+    def fill_in_garage(self, pillars: list) -> None:
         """
         Fill the garage in the world map.
         :param pillars: The map coordinates of the gate's pillars.
@@ -261,7 +269,7 @@ class Map:
                 cv.circle(self.world_map, (x, y), radius, gate_id, -1)
         return pillars
 
-    def fill_in_obstacle(self, obstacle: object) -> None:
+    def fill_in_obstacle(self, obstacle: Obstacle) -> None:
         """
         Fill the obstacle in the world map.
         :param obstacle: The obstacle to be filled in.
@@ -358,7 +366,7 @@ class Map:
 
             return p1, p2, p3, p4, line_length1, line_length2
 
-    def fit_rectangle(self, xs, ys, garage_width, garage_length) -> tuple:
+    def fit_rectangle(self, xs: np.ndarray, ys: np.ndarray, garage_width: int, garage_length: int) -> tuple:
         """
         Fit a rectangle to the given points.
         :param xs: The x map coordinates of the points.
@@ -545,7 +553,7 @@ class Map:
 
         return p1, p2, p3, p4, first_line_length, second_line_length
 
-    def fit_line(self, xs, ys) -> (np.ndarray, np.ndarray, (float, float), np.ndarray):
+    def fit_line(self, xs: np.ndarray, ys: np.ndarray) -> (np.ndarray, np.ndarray, (float, float), np.ndarray):
         """
         Fit a line to the given points using RANSAC.
         :param xs: The x coordinates of the points.
@@ -587,7 +595,7 @@ class Map:
         else:
             return xs, ys, None, None
 
-    def calculate_goal(self, pillars, up=False) -> None:
+    def calculate_goal(self, pillars: list, up=False) -> None:
         """
         Set the goal of OUR JOURNEY:). (policy differs based on the number of pillars)
         :param pillars: The map coordinates of the gate's pillars.
@@ -724,7 +732,7 @@ class Map:
         # Return the map coordinates of the closest point
         return indices[1][closest_index], indices[0][closest_index]
 
-    def conv_real_to_map(self, realc, add=False) -> int:
+    def conv_real_to_map(self, realc: np.ndarray, add=False) -> int:
         """
         Convert realc to map.
         :param realc: The real dims.
@@ -740,7 +748,7 @@ class Map:
             mapc += self.world_map.shape[0] // 2
         return mapc
 
-    def draw_restricted_area(self, center, size, convert=True, angle=0) -> None:
+    def draw_restricted_area(self, center: list, size: float, convert=True, angle=0) -> None:
         """
         Draw restricted area around objects on the map.
         :param center: Center of the object.
@@ -774,7 +782,7 @@ class Map:
         elif restricted_area_type == 'octagon':
             self.draw_octagon((x, y), size, id)
 
-    def draw_rectangle(self, center, size, color, angle) -> None:
+    def draw_rectangle(self, center: list, size: float, color: int, angle: float) -> None:
         """
         Draw a rectangle on the map.
         :param center: The center of the rectangle.
@@ -793,7 +801,7 @@ class Map:
         # Draw the rectangle
         cv.fillConvexPoly(self.world_map, np.array(vertices), color)
 
-    def draw_octagon(self, center, side_length, color) -> None:
+    def draw_octagon(self, center: list, side_length: float, color: int) -> None:
         """
         Draw a octagon on the map.
         :param center: The center of the pentagon.
@@ -840,7 +848,7 @@ class Map:
         cv.fillPoly(self.world_map, [np.array([p0, p1, p2, p3])], id)
 
     @staticmethod
-    def calculate_next_point(point, angle, distance) -> tuple:
+    def calculate_next_point(point: list, angle: float, distance: float) -> tuple:
         """
         Calculate the next point based on the current point, the angle and the distance.
         :param point: The current point.

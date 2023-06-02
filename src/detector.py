@@ -7,6 +7,14 @@ from .map import Map
 
 class Detector:
     def __init__(self, map: Map, rgb_img: np.ndarray, point_cloud: np.ndarray, detection_cfg: dict, objects_cfg: dict):
+        """
+        Detector objects are used to process the RGB image and the point cloud to detect objects.
+        :param map: The map object.
+        :param rgb_img: The RGB image.
+        :param point_cloud: The point cloud.
+        :param detection_cfg: The detection configuration.
+        :param objects_cfg: The objects configuration.
+        """
         self.map = map
         self.rgb_img = rgb_img
         self.point_cloud = point_cloud
